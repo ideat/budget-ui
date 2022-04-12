@@ -56,8 +56,21 @@ public class AccountRestTemplate {
         params.put("id", id);
 
         HttpHeaders headers = new HttpHeaders();
-        HttpEntity<Account[]> entity = new HttpEntity<>(headers);
+        HttpEntity<Account> entity = new HttpEntity<>(headers);
         ResponseEntity<Account> response = restTemplate.exchange(uri,HttpMethod.GET,entity,Account.class,params);
         return response.getBody();
     }
+
+    public List<Account> cloneAccount(Integer origin, Integer posting){
+        final String uri = url + "/v1/account/cloneAccount/{origin}/{destination}";
+        Map<String,Integer> params = new HashMap<>();
+        params.put("origin",origin);
+        params.put("destination",posting);
+
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<Account[]> entity = new HttpEntity<>(headers);
+        ResponseEntity<Account[]> response = restTemplate.exchange(uri,HttpMethod.POST,entity,Account[].class,params);
+        return Arrays.asList(response.getBody());
+    }
+
 }

@@ -10,10 +10,7 @@ import com.mindware.ui.layout.size.Horizontal;
 import com.mindware.ui.layout.size.Top;
 import com.mindware.ui.util.css.BoxSizing;
 import com.mindware.ui.views.SplitViewFrame;
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.KeyModifier;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -44,7 +41,6 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
 
     private List<Supplier> supplierList = new ArrayList<>();
 
-
     private Button btnNew;
 
     private ListDataProvider<Supplier> dataProvider;
@@ -71,7 +67,7 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
         btnNew.addClickListener(e -> {
-
+            UI.getCurrent().navigate(SupplierRegisterView.class,"NUEVO");
         });
 
         HorizontalLayout topLayout = new HorizontalLayout();
@@ -99,8 +95,11 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
         Grid<Supplier> grid = new Grid<>();
         grid.setMultiSort(true);
         grid.setSizeFull();
-
         grid.setDataProvider(dataProvider);
+        grid.addSelectionListener(event -> {
+            UI.getCurrent().navigate(SupplierRegisterView.class,event.getFirstSelectedItem().get().getId().toString());
+        });
+
         grid.addColumn(Supplier::getName)
                 .setFlexGrow(1)
                 .setKey("name")

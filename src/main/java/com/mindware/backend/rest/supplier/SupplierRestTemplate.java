@@ -50,4 +50,17 @@ public class SupplierRestTemplate {
         return Arrays.asList(response.getBody());
 
     }
+
+    public Supplier getById(String id){
+        final String uri = url + "/v1/supplier/getById/{id}";
+        Map<String,String> params = new HashMap<>();
+        params.put("id",id);
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<Supplier> entity = new HttpEntity<>(headers);
+        ResponseEntity<Supplier> response = restTemplate.exchange(uri,HttpMethod.GET,entity,Supplier.class,params);
+        return response.getBody();
+
+    }
+
+
 }

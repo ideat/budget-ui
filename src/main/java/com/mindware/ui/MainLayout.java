@@ -1,7 +1,9 @@
 package com.mindware.ui;
 
 import com.mindware.ui.views.config.account.AccountView;
+import com.mindware.ui.views.config.basicServiceProvider.BasicServiceProviderView;
 import com.mindware.ui.views.config.parameter.ParameterView;
+import com.mindware.ui.views.contract.ContractView;
 import com.mindware.ui.views.supplier.SupplierView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasElement;
@@ -125,20 +127,22 @@ public class MainLayout extends FlexBoxLayout
 	 */
 	private void initNaviItems() {
 		NaviMenu menu = naviDrawer.getMenu();
-		menu.addNaviItem(VaadinIcon.HOME, "Home", Home.class);
-		menu.addNaviItem(VaadinIcon.INSTITUTION, "Accounts", Accounts.class);
-		menu.addNaviItem(VaadinIcon.CREDIT_CARD, "Payments", Payments.class);
-		menu.addNaviItem(VaadinIcon.CHART, "Statistics", Statistics.class);
-
-		NaviItem personnel = menu.addNaviItem(VaadinIcon.USERS, "Personnel",
-				null);
-		menu.addNaviItem(personnel, "Accountants", Accountants.class);
-		menu.addNaviItem(personnel, "Managers", Managers.class);
+//		menu.addNaviItem(VaadinIcon.HOME, "Home", Home.class);
+//		menu.addNaviItem(VaadinIcon.INSTITUTION, "Accounts", Accounts.class);
+//		menu.addNaviItem(VaadinIcon.CREDIT_CARD, "Payments", Payments.class);
+//		menu.addNaviItem(VaadinIcon.CHART, "Statistics", Statistics.class);
+//
+//		NaviItem personnel = menu.addNaviItem(VaadinIcon.USERS, "Personnel",
+//				null);
+//		menu.addNaviItem(personnel, "Accountants", Accountants.class);
+//		menu.addNaviItem(personnel, "Managers", Managers.class);
 
 		menu.addNaviItem(VaadinIcon.GROUP,"Proveedores", SupplierView.class);
+		menu.addNaviItem(VaadinIcon.FILE_TEXT, "Contratos", ContractView.class);
 		NaviItem configuration = menu.addNaviItem(VaadinIcon.COGS, "Configuracion",null);
 		menu.addNaviItem(configuration,"Parametros", ParameterView.class);
 		menu.addNaviItem(configuration, "Cuentas", AccountView.class);
+		menu.addNaviItem(configuration, "Servicios Basicos", BasicServiceProviderView.class);
 	}
 
 	/**

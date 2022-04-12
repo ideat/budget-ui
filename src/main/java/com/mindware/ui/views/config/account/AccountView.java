@@ -23,8 +23,11 @@ import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
@@ -66,6 +69,9 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
     private DetailsDrawerHeader detailsDrawerHeader;
     private DetailsDrawerFooter footer;
 
+    private DetailsDrawer detailsDrawerCloneAccount;
+    private DetailsDrawerHeader detailDrawHeaderCloneAccount;
+
     private Account current;
 
     @Override
@@ -96,11 +102,16 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         cmbPeriod.setItems(utilValues.getValueParameterByCategory("PERIODO"));
         cmbPeriod.setAutoOpen(true);
 
+        Button btnClone = new Button("Copiar Cuentas");
+        btnClone.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
+        btnClone.addClickListener(event -> {
+           showCloneAccount();
+        });
 
         HorizontalLayout topLayout = new HorizontalLayout();
         topLayout.setWidth("100%");
-        topLayout.add(cmbPeriod, btnNew);
-        topLayout.setVerticalComponentAlignment(FlexComponent.Alignment.END,btnNew);
+        topLayout.add(cmbPeriod, btnNew, btnClone);
+        topLayout.setVerticalComponentAlignment(FlexComponent.Alignment.END,btnNew, btnClone);
         topLayout.setSpacing(true);
         topLayout.setPadding(true);
 
@@ -305,6 +316,67 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         UIUtils.setColSpan(2,currencyItem);
 
         return form;
+    }
+
+    private DetailsDrawer createDetailDrawCloneAccount(){
+        detailsDrawerCloneAccount = new DetailsDrawer(DetailsDrawer.Position.RIGHT);
+
+        detailDrawHeaderCloneAccount = new DetailsDrawerHeader("");
+        detailDrawHeaderCloneAccount.addCloseListener(event -> detailsDrawerCloneAccount.hide());
+        detailsDrawerCloneAccount.setHeader(detailDrawHeaderCloneAccount);
+
+
+        return detailsDrawerCloneAccount;
+    }
+
+    private VerticalLayout createFormCloneAccount(){
+        VerticalLayout layout = new VerticalLayout();
+
+        ComboBox<String> cmbPosting = new ComboBox<>("Periodo Destino");
+        cmbPosting.setAutoOpen(true);
+        cmbPosting.setWidthFull();
+
+        ComboBox<String> cmbOriginal = new ComboBox<>("Periodo Origen");
+        cmbOriginal.setAutoOpen(true);
+        cmbOriginal.setWidthFull();
+        cmbOriginal.setItems(utilValues.getValueParameterByCategory("PERIODO"));
+        cmbOriginal.addValueChangeListener(event ->{
+           List<String> listPosting =  utilValues.getValueParameterByCategory("PERIODO");
+           listPosting.remove(event.getValue());
+           cmbPosting.clear();
+           cmbPosting.setItems(listPosting);
+        });
+
+        Button btnCopy = new Button("Copiar");
+        btnCopy.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        btnCopy.addClickListener(event -> {
+            try {
+                List<Account> list = restTemplate.cloneAccount(Integer.parseInt(cmbOriginal.getValue()), Integer.parseInt(cmbPosting.getValue()));
+                accountList.addAll(list);
+                dataProvider.refreshAll();
+                detailsDrawerCloneAccount.hide();
+                Notification notification = new Notification();
+                notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                notification.setPosition(Notification.Position.TOP_CENTER);
+                notification.show("Cuentas Copiadas");
+            }catch(Exception e){
+                Notification notification = Notification.show(e.getMessage());
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                notification.setPosition(Notification.Position.TOP_CENTER);
+            }
+        });
+        layout.add(cmbOriginal,cmbPosting,btnCopy);
+
+
+        return layout;
+    }
+
+    private void showCloneAccount(){
+        setViewDetails(createDetailDrawCloneAccount());
+        setViewDetailsPosition(Position.RIGHT);
+        detailDrawHeaderCloneAccount.setTitle("Copiar Cuentas");
+        detailsDrawerCloneAccount.setContent(createFormCloneAccount());
+        detailsDrawerCloneAccount.show();
     }
 
 

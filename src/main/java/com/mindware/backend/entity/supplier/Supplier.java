@@ -15,9 +15,9 @@ public class Supplier {
 
     private String name;
 
-    private String areaWork; //rubro
+    private String legalRepresentative;
 
-    private String typeService;
+    private String areaWork; //rubro
 
     private String typeBusinessCompany;//srl, sa, unipersonal
 

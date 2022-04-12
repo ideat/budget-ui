@@ -69,7 +69,8 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
 
     private Parameter current;
 
-    private String[] param = {"CARGOS","MONEDA","OFICINAS","PERIODO","TIPO SOCIEDAD","ACTIVIDAD"};
+    private String[] param = {"ACTIVIDAD","CARGOS","MONEDA", "OBLIGACIONES Y POLIZAS","OFICINAS","PERIODO",
+            "RUBRO","SERVICIOS RECURRENTES","TIPO SERVICIO BASICO", "TIPO SOCIEDAD"};
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
@@ -212,17 +213,14 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
 
         ComboBox<String> cmbCategory = new ComboBox<>();
         cmbCategory.setItems(param);
-//        cmbCategory.setValue(Optional.ofNullable(parameter.getCategory()).orElse(""));
         cmbCategory.setWidth("100%");
         cmbCategory.setRequired(true);
 
         TextField txtValue = new TextField();
-//        txtValue.setValue(Optional.ofNullable(parameter.getValue()).orElse(""));
         txtValue.setRequired(true);
         txtValue.setWidth("100%");
 
         TextArea txtDescription = new TextArea();
-//        txtDescription.setValue(Optional.ofNullable(parameter.getDetails()).orElse(""));
         txtDescription.setRequired(true);
         txtDescription.setWidth("100%");
 

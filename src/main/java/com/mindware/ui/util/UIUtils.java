@@ -37,7 +37,7 @@ public class UIUtils {
 	private static final ThreadLocal<DecimalFormat> decimalFormat = ThreadLocal
 			.withInitial(() -> new DecimalFormat("###,###.00", DecimalFormatSymbols.getInstance(Locale.US)));
 	private static final ThreadLocal<DateTimeFormatter> dateFormat = ThreadLocal
-			.withInitial(() -> DateTimeFormatter.ofPattern("MMM dd, YYYY"));
+			.withInitial(() -> DateTimeFormatter.ofPattern("dd MMM, YYYY"));
 
 	/* ==== BUTTONS ==== */
 
@@ -409,9 +409,16 @@ public class UIUtils {
 	public static void showNotificationType(String text, String type){
 		Notification notification = Notification.show(text, 4000, Notification.Position.TOP_CENTER);
 		switch (type){
-			case "success": notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-			case "alert": notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-			case "info": notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
+			case "success":
+				notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				break;
+			case "alert":
+				notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				break;
+			case "info":
+				notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
+				break;
+			default: notification.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
 		}
 	}
 
