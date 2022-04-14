@@ -1,6 +1,7 @@
 package com.mindware.backend.rest.basicServiceProvider;
 
 import com.mindware.backend.entity.config.BasicServiceProvider;
+import com.mindware.backend.util.HeaderJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,15 +27,14 @@ public class BasicServiceProviderRestTemplate {
 
     public BasicServiceProvider add(BasicServiceProvider basicServiceProvider){
         final String uri = url + "/v1/basic-service-provider/add";
-        HttpEntity<BasicServiceProvider> entity = new HttpEntity<>(basicServiceProvider);
+        HttpEntity<BasicServiceProvider> entity = new HttpEntity<>(basicServiceProvider, HeaderJwt.getHeader());
         ResponseEntity<BasicServiceProvider> response = restTemplate.postForEntity(uri,entity,BasicServiceProvider.class);
         return response.getBody();
     }
 
     public List<BasicServiceProvider> getAll(){
         final String uri = url + "/v1/basic-service-provider/getAll";
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<BasicServiceProvider[]> entity = new HttpEntity<>(headers);
+        HttpEntity<BasicServiceProvider[]> entity = new HttpEntity<>( HeaderJwt.getHeader());
         ResponseEntity<BasicServiceProvider[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,BasicServiceProvider[].class);
         return Arrays.asList(response.getBody());
     }
@@ -43,8 +43,7 @@ public class BasicServiceProviderRestTemplate {
         final String uri = url + "/v1/basic-service-provider/getById/{id}";
         Map<String,String> params = new HashMap<>();
         params.put("id", id);
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<BasicServiceProvider[]> entity = new HttpEntity<>(headers);
+        HttpEntity<BasicServiceProvider[]> entity = new HttpEntity<>( HeaderJwt.getHeader());
         ResponseEntity<BasicServiceProvider> response = restTemplate.exchange(uri,HttpMethod.GET,entity,BasicServiceProvider.class,params);
         return response.getBody();
     }

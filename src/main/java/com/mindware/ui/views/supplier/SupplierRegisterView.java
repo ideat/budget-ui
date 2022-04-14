@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Route(value = "supplier-register", layout = MainLayout.class)
+@ParentLayout(MainLayout.class)
 @PageTitle("Registro Proveedor")
 public class SupplierRegisterView extends SplitViewFrame implements HasUrlParameter<String>, RouterLayout {
 
@@ -95,7 +96,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
     @Override
     protected void onAttach(AttachEvent attachEvent){
         super.onAttach(attachEvent);
-        setViewHeader(initBar());
+        initBar();
         setViewContent(createSupplierForm(supplier));
         setViewDetails(createDetailsDrawer());
     }
@@ -104,7 +105,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         AppBar appBar = MainLayout.get().getAppBar();
         appBar.setNaviMode(AppBar.NaviMode.CONTEXTUAL);
         appBar.setTitle(title);
-        appBar.getContextIcon().addClickListener(e -> UI.getCurrent().navigate(SupplierView.class));
+        appBar.getContextIcon().addClickListener(e -> UI.getCurrent().navigate("supplier"));
 
         return appBar;
     }

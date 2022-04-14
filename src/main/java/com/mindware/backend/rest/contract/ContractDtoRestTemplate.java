@@ -1,6 +1,7 @@
 package com.mindware.backend.rest.contract;
 
 import com.mindware.backend.entity.contract.ContractDto;
+import com.mindware.backend.util.HeaderJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,8 +27,7 @@ public class ContractDtoRestTemplate {
 
     public List<ContractDto> getAll(){
         final String uri = url + "/v1/contractDto/getAll";
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<ContractDto[]> entity = new HttpEntity<>(headers);
+        HttpEntity<ContractDto[]> entity = new HttpEntity<>( HeaderJwt.getHeader());
         ResponseEntity<ContractDto[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,ContractDto[].class);
         return Arrays.asList(response.getBody());
     }
@@ -37,8 +37,7 @@ public class ContractDtoRestTemplate {
         Map<String,String> params = new HashMap<>();
         params.put("idcontract", idContract);
 
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<ContractDto> entity = new HttpEntity<>(headers);
+        HttpEntity<ContractDto> entity = new HttpEntity<>( HeaderJwt.getHeader());
         ResponseEntity<ContractDto> response = restTemplate.exchange(uri, HttpMethod.GET,entity,ContractDto.class,params);
         return response.getBody();
     }

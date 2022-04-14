@@ -1,6 +1,7 @@
 package com.mindware.backend.rest.parameter;
 
 import com.mindware.backend.entity.config.Parameter;
+import com.mindware.backend.util.HeaderJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,15 +27,15 @@ public class ParameterRestTemplate {
 
     public Parameter add(Parameter parameter){
         final String uri = url + "/v1/parameter/add";
-        HttpEntity<Parameter> entity = new HttpEntity<>(parameter);
+        HttpEntity<Parameter> entity = new HttpEntity<>(parameter, HeaderJwt.getHeader());
         ResponseEntity<Parameter> response = restTemplate.postForEntity(uri,entity,Parameter.class);
         return response.getBody();
     }
 
     public List<Parameter> getAll(){
         final String uri = url +"/v1/parameter/getAll";
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<Parameter[]> entity = new HttpEntity<>(headers);
+
+        HttpEntity<Parameter[]> entity = new HttpEntity<>( HeaderJwt.getHeader());
         ResponseEntity<Parameter[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,Parameter[].class);
 
         return Arrays.asList(response.getBody());
@@ -44,8 +45,8 @@ public class ParameterRestTemplate {
         final String uri = url + "/v1/parameter/getByCategory/{category}";
         Map<String,String> params = new HashMap<>();
         params.put("category",category);
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<Parameter[]> entity = new HttpEntity<>(headers);
+
+        HttpEntity<Parameter[]> entity = new HttpEntity<>( HeaderJwt.getHeader());
         ResponseEntity<Parameter[]> response = restTemplate.exchange(uri, HttpMethod.GET, entity,Parameter[].class,params);
         // Arrays.asList(restTemplate.getForObject(uri,Parameter[].class,params));
         return Arrays.asList(response.getBody());

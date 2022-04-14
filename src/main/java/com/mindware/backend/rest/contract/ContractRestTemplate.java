@@ -1,6 +1,7 @@
 package com.mindware.backend.rest.contract;
 
 import com.mindware.backend.entity.contract.Contract;
+import com.mindware.backend.util.HeaderJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,15 +27,14 @@ public class ContractRestTemplate {
 
     public Contract add(Contract contract){
         final String uri = url + "/v1/contract/add";
-        HttpEntity<Contract> entity = new HttpEntity<>(contract);
+        HttpEntity<Contract> entity = new HttpEntity<>(contract, HeaderJwt.getHeader());
         ResponseEntity<Contract> response = restTemplate.postForEntity(uri,entity,Contract.class);
         return  response.getBody();
     }
 
     public List<Contract> getAll(){
         final String uri = url + "/v1/contract/getAll";
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<Contract[]> entity = new HttpEntity<>(headers);
+        HttpEntity<Contract[]> entity = new HttpEntity<>( HeaderJwt.getHeader());
         ResponseEntity<Contract[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,Contract[].class);
         return Arrays.asList(response.getBody());
     }
@@ -44,8 +44,7 @@ public class ContractRestTemplate {
         Map<String,String> params = new HashMap<>();
         params.put("id", id);
 
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<Contract> entity = new HttpEntity<>(headers);
+        HttpEntity<Contract> entity = new HttpEntity<>( HeaderJwt.getHeader());
         ResponseEntity<Contract> response = restTemplate.exchange(uri,HttpMethod.GET,entity,Contract.class,params);
         return response.getBody();
     }

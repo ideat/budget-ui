@@ -1,6 +1,7 @@
 package com.mindware.backend.rest.account;
 
 import com.mindware.backend.entity.config.Account;
+import com.mindware.backend.util.HeaderJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,14 +27,14 @@ public class AccountRestTemplate {
 
     public Account add(Account account){
         final String uri = url + "/v1/account/add";
-        HttpEntity<Account> entity = new HttpEntity<>(account);
+        HttpEntity<Account> entity = new HttpEntity<>(account, HeaderJwt.getHeader());
         ResponseEntity<Account> response = restTemplate.postForEntity(uri,entity,Account.class);
         return response.getBody();
     }
 
     public List<Account> getAll(){
         final String uri = url + "/v1/account/getAll";
-        HttpHeaders headers = new HttpHeaders();
+        HttpHeaders headers =  HeaderJwt.getHeader();
         HttpEntity<Account[]> entity = new HttpEntity<>(headers);
         ResponseEntity<Account[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,Account[].class);
         return Arrays.asList(response.getBody());
@@ -44,7 +45,7 @@ public class AccountRestTemplate {
         Map<String,Integer> params = new HashMap<>();
         params.put("period", period);
 
-        HttpHeaders headers = new HttpHeaders();
+        HttpHeaders headers = HeaderJwt.getHeader();
         HttpEntity<Account[]> entity = new HttpEntity<>(headers);
         ResponseEntity<Account[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,Account[].class,params);
         return Arrays.asList(response.getBody());
@@ -55,7 +56,7 @@ public class AccountRestTemplate {
         Map<String,String> params = new HashMap<>();
         params.put("id", id);
 
-        HttpHeaders headers = new HttpHeaders();
+        HttpHeaders headers =  HeaderJwt.getHeader();
         HttpEntity<Account> entity = new HttpEntity<>(headers);
         ResponseEntity<Account> response = restTemplate.exchange(uri,HttpMethod.GET,entity,Account.class,params);
         return response.getBody();
@@ -67,7 +68,7 @@ public class AccountRestTemplate {
         params.put("origin",origin);
         params.put("destination",posting);
 
-        HttpHeaders headers = new HttpHeaders();
+        HttpHeaders headers =  HeaderJwt.getHeader();
         HttpEntity<Account[]> entity = new HttpEntity<>(headers);
         ResponseEntity<Account[]> response = restTemplate.exchange(uri,HttpMethod.POST,entity,Account[].class,params);
         return Arrays.asList(response.getBody());

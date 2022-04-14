@@ -27,20 +27,24 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.ParentLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLayout;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.format.DateTimeFormatter;
@@ -86,6 +90,11 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
     private Contract current;
     private  Grid<ContractDto> grid;
+
+    private TextField supplierFilter;
+    private DatePicker dateSubscriptionInitFilter;
+    private DatePicker dateSubscriptionEndFilter;
+    private TextField objectContractFilter;
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
@@ -158,6 +167,38 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
                 .setSortable(true);
         grid.addColumn(new ComponentRenderer<>(this::buttonEdit))
                 .setAutoWidth(true);
+
+        HeaderRow hr = grid.appendHeaderRow();
+
+        supplierFilter = new TextField();
+        supplierFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        supplierFilter.setWidthFull();
+        supplierFilter.addValueChangeListener(e -> applyFilter(dataProviderContractDto));
+        hr.getCell(grid.getColumnByKey("name")).setComponent(supplierFilter);
+
+        dateSubscriptionInitFilter = new DatePicker();
+        dateSubscriptionInitFilter.setWidth("30%");
+        dateSubscriptionInitFilter.setLocale(new Locale("es","BO"));
+        dateSubscriptionInitFilter.setClearButtonVisible(true);
+        dateSubscriptionInitFilter.addValueChangeListener(e -> {
+           applyFilter(dataProviderContractDto);
+        });
+        dateSubscriptionEndFilter = new DatePicker();
+        dateSubscriptionEndFilter.setWidth("30%");
+        dateSubscriptionEndFilter.setLocale(new Locale("es","BO"));
+        dateSubscriptionEndFilter.setClearButtonVisible(true);
+        dateSubscriptionEndFilter.addValueChangeListener(e -> {
+            applyFilter(dataProviderContractDto);
+        });
+        HorizontalLayout layoutFilterDate = new HorizontalLayout();
+        layoutFilterDate.add(dateSubscriptionInitFilter,dateSubscriptionEndFilter);
+        hr.getCell(grid.getColumnByKey("dateSubscription")).setComponent(layoutFilterDate);
+
+        objectContractFilter = new TextField();
+        objectContractFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        objectContractFilter.setWidthFull();
+        objectContractFilter.addValueChangeListener(e -> applyFilter(dataProviderContractDto));
+        hr.getCell(grid.getColumnByKey("objectContract")).setComponent(objectContractFilter);
 
         return grid;
     }
@@ -337,5 +378,19 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         dataProviderContractDto = new ListDataProvider<>(contractDtoList);
     }
 
-
+    private void applyFilter(ListDataProvider<ContractDto> dataProvider){
+        dataProvider.clearFilters();
+        if(!supplierFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(contractDto -> StringUtils.containsIgnoreCase(contractDto.getSupplierName(),supplierFilter.getValue()));
+        }
+        if(dateSubscriptionInitFilter.getValue()!=null){
+            dataProvider.addFilter(contractDto -> contractDto.getDateSubscription().isAfter(dateSubscriptionInitFilter.getValue()));
+        }
+        if(dateSubscriptionEndFilter.getValue()!=null){
+            dataProvider.addFilter(contractDto -> contractDto.getDateSubscription().isBefore(dateSubscriptionEndFilter.getValue()));
+        }
+        if(!objectContractFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(contractDto -> StringUtils.containsIgnoreCase(contractDto.getObjectContract(),objectContractFilter.getValue()));
+        }
+    }
 }

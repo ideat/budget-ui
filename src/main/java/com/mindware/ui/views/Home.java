@@ -16,7 +16,7 @@ import com.mindware.ui.layout.size.Uniform;
 import com.mindware.ui.util.UIUtils;
 
 @PageTitle("Welcome")
-@Route(value = "", layout = MainLayout.class)
+@Route(value = "home", layout = MainLayout.class)
 public class Home extends ViewFrame {
 
 	public Home() {

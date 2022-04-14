@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
 @JsModule("@vaadin/vaadin-lumo-styles/badge")
 @PWA(name = "Budget", shortName = "Budget", iconPath = UIUtils.IMG_PATH + "logos/18.png", backgroundColor = "#233348", themeColor = "#233348")
 @Viewport("width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes")
-
+@Route("main")
 public class MainLayout extends FlexBoxLayout
 		implements RouterLayout, PageConfigurator, AfterNavigationObserver {
 

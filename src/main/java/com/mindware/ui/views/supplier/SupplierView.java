@@ -4,8 +4,6 @@ import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
-import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
-import com.mindware.ui.components.detailsdrawer.DetailsDrawerHeader;
 import com.mindware.ui.layout.size.Horizontal;
 import com.mindware.ui.layout.size.Top;
 import com.mindware.ui.util.css.BoxSizing;
