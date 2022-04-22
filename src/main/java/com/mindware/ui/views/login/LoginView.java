@@ -52,7 +52,7 @@ public class LoginView extends VerticalLayout {
         });
 
         setSizeFull();
-//        getStyle().set("background","url(images/background-login.jpg");
+        getStyle().set("background","url(images/background-login.jpg");
         getStyle().set("align-center","stretch");
         setHorizontalComponentAlignment(Alignment.CENTER,component);
         add(component);
@@ -61,9 +61,9 @@ public class LoginView extends VerticalLayout {
     private LoginI18n createSpanishI18n() {
 
         i18n.setHeader(new LoginI18n.Header());
-        i18n.getHeader().setDescription("Workflow - Creditos");
+        i18n.getHeader().setDescription("Sistema Presupuestario");
         i18n.getForm().setUsername("Usuario");
-        i18n.getForm().setTitle("SEC");
+        i18n.getForm().setTitle("BUDGET");
         i18n.getForm().setSubmit("Entrar");
         i18n.getForm().setPassword("Clave");
         i18n.getForm().setForgotPassword("");

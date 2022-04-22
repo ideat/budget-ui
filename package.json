@@ -65,7 +65,9 @@
     "@webcomponents/webcomponentsjs": "^2.2.10",
     "construct-style-sheets-polyfill": "3.0.4",
     "lit-element": "2.5.1",
-    "lit-html": "1.4.1"
+    "lit-html": "1.4.1",
+    "retry": "0.12.0",
+    "tippy.js": "6.3.1"
   },
   "devDependencies": {
     "babel-loader": "8.2.2",
@@ -156,7 +158,9 @@
       "@webcomponents/webcomponentsjs": "^2.2.10",
       "construct-style-sheets-polyfill": "3.0.4",
       "lit-element": "2.5.1",
-      "lit-html": "1.4.1"
+      "lit-html": "1.4.1",
+      "retry": "0.12.0",
+      "tippy.js": "6.3.1"
     },
     "devDependencies": {
       "babel-loader": "8.2.2",
@@ -178,6 +182,6 @@
       "webpack-dev-server": "3.11.0",
       "webpack-merge": "4.2.2"
     },
-    "hash": "e2341dde20ff0ad515e5022d9d241cc71c21d68828bc94ce0c0fbe42f29dc0ee"
+    "hash": "947b162b1228bde998256b6a87fd84d0ee0e197f61c6d4e579840a92a4a8fcd1"
   }
 }

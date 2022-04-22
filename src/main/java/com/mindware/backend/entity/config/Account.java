@@ -19,6 +19,8 @@ public class Account {
 
     private String currency;
 
+    private Double budget;
+
     private Integer period;
 
     private String state;

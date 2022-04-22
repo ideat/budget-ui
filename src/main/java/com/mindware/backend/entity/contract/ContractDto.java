@@ -35,4 +35,6 @@ public class ContractDto {
     private Boolean undefinedTime;
 
     private Boolean tacitReductionClause;
+
+    private String paymentFrecuency;
 }

@@ -19,7 +19,10 @@ import com.mindware.ui.util.LumoStyles;
 import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.util.css.BoxSizing;
 import com.mindware.ui.views.SplitViewFrame;
-import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -49,7 +52,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -72,7 +74,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
     UtilValues utilValues;
 
     private List<ContractDto> contractDtoList;
-    private List<Contract> contractList;
+//    private List<Contract> contractList;
 
     private Button btnNew;
 
@@ -84,7 +86,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
     private DetailsDrawerHeader detailsDrawerHeader;
     private DetailsDrawerFooter footer;
     private Binder<Contract> binder;
-    private ListDataProvider<Contract> contractDataProvider;
+//    private ListDataProvider<Contract> contractDataProvider;
 
     private ComboBox<Supplier> supplier;
 
@@ -95,6 +97,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
     private DatePicker dateSubscriptionInitFilter;
     private DatePicker dateSubscriptionEndFilter;
     private TextField objectContractFilter;
+
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
@@ -179,6 +182,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         dateSubscriptionInitFilter = new DatePicker();
         dateSubscriptionInitFilter.setWidth("30%");
         dateSubscriptionInitFilter.setLocale(new Locale("es","BO"));
+
         dateSubscriptionInitFilter.setClearButtonVisible(true);
         dateSubscriptionInitFilter.addValueChangeListener(e -> {
            applyFilter(dataProviderContractDto);
@@ -228,7 +232,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
 
         DatePicker dateSubscription = new DatePicker();
-        dateSubscription.setLocale(new Locale("bo","BO"));
+        dateSubscription.setLocale(new Locale("es","BO"));
         dateSubscription.setRequired(true);
         dateSubscription.setWidth("90%");
 
@@ -250,12 +254,12 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         observation.setWidthFull();
 
         DatePicker startDate = new DatePicker();
-        startDate.setLocale(new Locale("bo","BO"));
+        startDate.setLocale(new Locale("es","BO"));
         startDate.setRequired(true);
         startDate.setWidthFull();
 
         DatePicker finishDate = new DatePicker();
-        finishDate.setLocale(new Locale("bo","BO"));
+        finishDate.setLocale(new Locale("es","BO"));
         finishDate.setWidthFull();
 
         Checkbox tacitReductionClause = new Checkbox("Clausula Tacita Reduccion");
@@ -273,6 +277,12 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         Checkbox undefinedTime = new Checkbox("Indefinido");
         undefinedTime.setWidthFull();
         undefinedTime.setValue(false);
+
+        ComboBox<String> paymentFrecuency = new ComboBox<>();
+        paymentFrecuency.setWidthFull();
+        paymentFrecuency.setRequired(true);
+        paymentFrecuency.setItems(utilValues.getValueParameterByCategory("FRECUENCIA PAGO"));
+
 
         binder = new BeanValidationBinder<>(Contract.class);
 
@@ -294,6 +304,8 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.forField(original).bind(Contract::getOriginal,Contract::setOriginal);
         binder.forField(undefinedTime).bind(Contract::getUndefinedTime,Contract::setUndefinedTime);
         binder.forField(tacitReductionClause).bind(Contract::getTacitReductionClause,Contract::setTacitReductionClause);
+        binder.forField(paymentFrecuency).asRequired("Frecuencia de pago es requerida")
+                .bind(Contract::getPaymentFrecuency,Contract::setPaymentFrecuency);
 
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
@@ -322,6 +334,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         layoutChecks.setSpacing(false);
         FormLayout.FormItem layoutChecksItem = form.addFormItem(layoutChecks,"");
         UIUtils.setColSpan(2,layoutChecksItem);
+        form.addFormItem(paymentFrecuency,"Frecuencia Pago");
 
         return form;
     }

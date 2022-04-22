@@ -28,6 +28,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
@@ -60,7 +61,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
     private TextField nameAccountFilter;
     private ComboBox<String> currencyFilter;
     private ComboBox<Integer> periodFilter;
-    private ComboBox<String> cmbPeriod;
+    private ComboBox<Integer> cmbPeriod;
 
     private ListDataProvider<Account> dataProvider;
     private Binder<Account> binder;
@@ -99,7 +100,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         cmbPeriod = new ComboBox<>();
         cmbPeriod.setPlaceholder("Seleccione Periodo");
         cmbPeriod.setWidth("400px");
-        cmbPeriod.setItems(utilValues.getValueParameterByCategory("PERIODO"));
+        cmbPeriod.setItems(utilValues.getPeriods());
         cmbPeriod.setAutoOpen(true);
 
         Button btnClone = new Button("Copiar Cuentas");
@@ -147,7 +148,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         footer.addSaveListener(e ->{
             if (current !=null && binder.writeBeanIfValid(current)){
                 if(current.getPeriod()==null) {
-                    current.setPeriod(Integer.parseInt(cmbPeriod.getValue()));
+                    current.setPeriod(cmbPeriod.getValue());
                 }
                 Account result = restTemplate.add(current);
                 if (current.getId()==null){
@@ -282,6 +283,11 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         currency.setRequired(true);
         currency.setItems(utilValues.getValueParameterByCategory("MONEDA"));
 
+        NumberField budget = new NumberField();
+        budget.setWidthFull();
+        budget.setMin(0.0);
+        budget.setRequiredIndicatorVisible(true);
+
         binder = new BeanValidationBinder<>(Account.class);
         binder.forField(numberAccount)
                 .asRequired("Número de cuenta es requerido")
@@ -292,6 +298,10 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         binder.forField(currency)
                 .asRequired("Moneda es requerida")
                 .bind(Account::getCurrency,Account::setCurrency);
+        binder.forField(budget)
+                .asRequired("Presupuesto cuenta es requerido")
+                .withValidator(amount -> amount >0 , "Presupuesto tiene que ser mayor a 0")
+                .bind(Account::getBudget,Account::setBudget);
 
         binder.addStatusChangeListener(event -> {
            boolean isValid = !event.hasValidationErrors();
@@ -312,8 +322,8 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         UIUtils.setColSpan(2,numberAccountItem);
         FormLayout.FormItem nameAccountItem = form.addFormItem(nameAccount,"Nombre de cuenta");
         UIUtils.setColSpan(2,nameAccountItem);
-        FormLayout.FormItem currencyItem = form.addFormItem(currency,"Moneda");
-        UIUtils.setColSpan(2,currencyItem);
+        form.addFormItem(currency,"Moneda");
+        form.addFormItem(budget,"Presupuesto");
 
         return form;
     }

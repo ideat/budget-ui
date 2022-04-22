@@ -48,4 +48,14 @@ public class ContractRestTemplate {
         ResponseEntity<Contract> response = restTemplate.exchange(uri,HttpMethod.GET,entity,Contract.class,params);
         return response.getBody();
     }
+
+    public List<Contract> getByIdSupplier(String idsupplier){
+        final String uri = url + "/v1/contract/getByIdSupplier/{idsupplier}";
+        Map<String,String> params = new HashMap<>();
+        params.put("idsupplier", idsupplier);
+
+        HttpEntity<Contract[]> entity = new HttpEntity<>( HeaderJwt.getHeader());
+        ResponseEntity<Contract[]> response = restTemplate.exchange(uri,HttpMethod.GET,entity,Contract[].class,params);
+        return Arrays.asList(response.getBody());
+    }
 }

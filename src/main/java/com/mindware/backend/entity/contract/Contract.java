@@ -39,4 +39,6 @@ public class Contract {
     private Boolean undefinedTime;
 
     private Boolean tacitReductionClause;
+
+    private String paymentFrecuency;
 }
