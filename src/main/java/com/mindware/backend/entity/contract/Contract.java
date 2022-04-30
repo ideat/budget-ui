@@ -41,4 +41,6 @@ public class Contract {
     private Boolean tacitReductionClause;
 
     private String paymentFrecuency;
+
+    private String typeChangeCurrency;
 }

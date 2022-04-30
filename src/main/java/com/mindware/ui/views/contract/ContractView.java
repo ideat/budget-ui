@@ -6,6 +6,7 @@ import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.rest.contract.ContractDtoRestTemplate;
 import com.mindware.backend.rest.contract.ContractRestTemplate;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
+import com.mindware.backend.rest.typeChangeCurrency.TypeChangeCurrencyRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -47,6 +48,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.ParentLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLayout;
+import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -69,6 +71,9 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
     @Autowired
     SupplierRestTemplate supplierRestTemplate;
+
+    @Autowired
+    TypeChangeCurrencyRestTemplate typeChangeCurrencyRestTemplate;
 
     @Autowired
     UtilValues utilValues;
@@ -182,11 +187,11 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         dateSubscriptionInitFilter = new DatePicker();
         dateSubscriptionInitFilter.setWidth("30%");
         dateSubscriptionInitFilter.setLocale(new Locale("es","BO"));
-
         dateSubscriptionInitFilter.setClearButtonVisible(true);
         dateSubscriptionInitFilter.addValueChangeListener(e -> {
            applyFilter(dataProviderContractDto);
         });
+
         dateSubscriptionEndFilter = new DatePicker();
         dateSubscriptionEndFilter.setWidth("30%");
         dateSubscriptionEndFilter.setLocale(new Locale("es","BO"));
@@ -208,14 +213,16 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
     }
 
     private Button buttonEdit(ContractDto contractDto){
-        Button btnEdit = new Button("Editar");
-        btnEdit.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
-        btnEdit.addClickListener(buttonClickEvent -> {
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addClickListener(buttonClickEvent -> {
             Contract contract = restTemplate.getById(contractDto.getIdContract().toString());
             showDetails(contract);
         });
 
-       return btnEdit;
+       return btn;
     }
 
     private FormLayout createDetails(Contract contract){
@@ -283,6 +290,10 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         paymentFrecuency.setRequired(true);
         paymentFrecuency.setItems(utilValues.getValueParameterByCategory("FRECUENCIA PAGO"));
 
+        ComboBox<String> typeChangeCurrency = new ComboBox<>();
+        typeChangeCurrency.setWidthFull();
+        typeChangeCurrency.setItems(utilValues.getValueParameterByCategory("CATEGORIA TIPO CAMBIO"));
+        typeChangeCurrency.setAllowCustomValue(false);
 
         binder = new BeanValidationBinder<>(Contract.class);
 
@@ -306,6 +317,9 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.forField(tacitReductionClause).bind(Contract::getTacitReductionClause,Contract::setTacitReductionClause);
         binder.forField(paymentFrecuency).asRequired("Frecuencia de pago es requerida")
                 .bind(Contract::getPaymentFrecuency,Contract::setPaymentFrecuency);
+        binder.forField(typeChangeCurrency)
+                .asRequired("Categoria Tipo Cambio es requerida")
+                .bind(Contract::getTypeChangeCurrency,Contract::setTypeChangeCurrency);
 
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
@@ -335,6 +349,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         FormLayout.FormItem layoutChecksItem = form.addFormItem(layoutChecks,"");
         UIUtils.setColSpan(2,layoutChecksItem);
         form.addFormItem(paymentFrecuency,"Frecuencia Pago");
+        form.addFormItem(typeChangeCurrency,"Categoria Tipo Cambio");
 
         return form;
     }
@@ -383,7 +398,6 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         detailsDrawer.setFooter(footer);
         return detailsDrawer;
     }
-
 
     private void getContracts(){
         contractDtoList = new ArrayList<>(contractDtoRestTemplate.getAll()) ;

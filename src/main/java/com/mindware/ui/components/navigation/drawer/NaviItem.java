@@ -76,7 +76,7 @@ public class NaviItem extends Div {
 	}
 
 	private void updateAriaLabel() {
-		String action = (subItemsVisible ? "Collapse " : "Expand ") + text;
+		String action = (subItemsVisible ? "Colapsar " : "Expandir ") + text;
 		UIUtils.setAriaLabel(action, expandCollapse);
 	}
 

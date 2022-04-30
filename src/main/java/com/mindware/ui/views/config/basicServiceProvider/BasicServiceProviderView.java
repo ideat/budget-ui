@@ -2,6 +2,7 @@ package com.mindware.ui.views.config.basicServiceProvider;
 
 import com.mindware.backend.entity.config.BasicServiceProvider;
 import com.mindware.backend.entity.config.Parameter;
+import com.mindware.backend.entity.contract.Contract;
 import com.mindware.backend.rest.basicServiceProvider.BasicServiceProviderRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
@@ -34,11 +35,13 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.ParentLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLayout;
+import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -119,8 +122,8 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);
 
-        grid.addSelectionListener(event -> event.getFirstSelectedItem()
-                .ifPresent(this::showDetails));
+//        grid.addSelectionListener(event -> event.getFirstSelectedItem()
+//                .ifPresent(this::showDetails));
 
         grid.addColumn(BasicServiceProvider::getTypeService)
                 .setFlexGrow(1)
@@ -150,6 +153,9 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
+                .setFlexGrow(0)
+                .setAutoWidth(true);
 
         HeaderRow hr = grid.appendHeaderRow();
 
@@ -186,6 +192,18 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         hr.getCell(grid.getColumnByKey("nit")).setComponent(nitFilter);
 
         return grid;
+    }
+
+    private Component createButtonEdit(BasicServiceProvider basicServiceProvider){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addClickListener(buttonClickEvent -> {
+           showDetails(basicServiceProvider);
+        });
+
+        return btn;
     }
 
     private void showDetails(BasicServiceProvider basicServiceProvider){

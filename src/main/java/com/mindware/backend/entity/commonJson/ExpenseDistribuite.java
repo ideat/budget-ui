@@ -1,4 +1,4 @@
-package com.mindware.backend.entity.recurrentService;
+package com.mindware.backend.entity.commonJson;
 
 import lombok.Getter;
 import lombok.Setter;

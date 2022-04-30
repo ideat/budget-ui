@@ -1,6 +1,5 @@
 package com.mindware.backend.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindware.backend.entity.config.Account;
@@ -29,6 +28,9 @@ public class UtilValues {
 
     @Autowired
     AccountRestTemplate accountRestTemplate;
+
+    private String[] months = {"ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO"
+            ,"JULIO","AGOSTO","SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE","DICIEMBRE"};
 
     public List<String> getValueParameterByCategory(String category){
         List<Parameter> parameterList = parameterRestTemplate.getByCategory(category);
@@ -85,5 +87,17 @@ public class UtilValues {
                 .map(SubAccount::getNumberSubAccount)
                 .collect(Collectors.toList());
         return subAccountNumberList;
+    }
+
+    public List<String> generatePeriods(){
+        String year = String.valueOf(getActivePeriod());
+        List<String> periods = new ArrayList<>();
+
+        for(String s: months){
+            String period = s.concat("/").concat(year);
+            periods.add(period);
+        }
+
+        return periods;
     }
 }

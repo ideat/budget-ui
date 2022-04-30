@@ -1,9 +1,12 @@
 package com.mindware.ui;
 
+import com.mindware.ui.views.acquisition.AcquisitionView;
+import com.mindware.ui.views.basicServices.BasicServicesView;
 import com.mindware.ui.views.config.account.AccountView;
 import com.mindware.ui.views.config.basicServiceProvider.BasicServiceProviderView;
 import com.mindware.ui.views.config.parameter.ParameterView;
 import com.mindware.ui.views.config.period.PeriodView;
+import com.mindware.ui.views.config.typeChangeCurrency.TypeChangeCurrencyView;
 import com.mindware.ui.views.contract.ContractView;
 import com.mindware.ui.views.recurrentService.RecurrentServiceView;
 import com.mindware.ui.views.supplier.SupplierView;
@@ -142,11 +145,14 @@ public class MainLayout extends FlexBoxLayout
 		menu.addNaviItem(VaadinIcon.GROUP,"Proveedores", SupplierView.class);
 		menu.addNaviItem(VaadinIcon.FILE_TEXT, "Contratos", ContractView.class);
 		menu.addNaviItem(VaadinIcon.GLOBE_WIRE, "Servicios Recurrentes", RecurrentServiceView.class);
+		menu.addNaviItem(VaadinIcon.BUILDING, "Servicios Básicos", BasicServicesView.class);
+		menu.addNaviItem(VaadinIcon.BACKWARDS,"Adquiciones", AcquisitionView.class);
 		NaviItem configuration = menu.addNaviItem(VaadinIcon.COGS, "Configuracion",null);
 		menu.addNaviItem(configuration,"Parametros", ParameterView.class);
 		menu.addNaviItem(configuration, "Cuentas", AccountView.class);
 		menu.addNaviItem(configuration, "Servicios Basicos", BasicServiceProviderView.class);
 		menu.addNaviItem(configuration, "Periodos", PeriodView.class);
+		menu.addNaviItem(configuration,"Tipo Cambio", TypeChangeCurrencyView.class);
 	}
 
 	/**

@@ -1,8 +1,9 @@
-package com.mindware.ui.views.config.period;
+package com.mindware.ui.views.config.typeChangeCurrency;
 
 import com.mindware.backend.entity.config.Parameter;
-import com.mindware.backend.entity.config.Period;
-import com.mindware.backend.rest.period.PeriodRestTemplate;
+import com.mindware.backend.entity.config.TypeChangeCurrency;
+import com.mindware.backend.rest.typeChangeCurrency.TypeChangeCurrencyRestTemplate;
+import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -20,18 +21,20 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.KeyModifier;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.ParentLayout;
 import com.vaadin.flow.router.Route;
@@ -39,52 +42,51 @@ import com.vaadin.flow.router.RouterLayout;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.imageio.plugins.tiff.BaselineTIFFTagSet;
-import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Locale;
 
-@Route(value = "period", layout = MainLayout.class)
+@Route(value = "typechangecurrency", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
-@PageTitle("Periodos")
-public class PeriodView extends SplitViewFrame implements RouterLayout {
+@PageTitle("Tipo Cambio")
+public class TypeChangeCurrencyView extends SplitViewFrame implements RouterLayout {
 
     @Autowired
-    PeriodRestTemplate restTemplate;
+    private TypeChangeCurrencyRestTemplate restTemplate;
 
-    private List<Period> periodList = new ArrayList<>();
+    @Autowired
+    private UtilValues utilValues;
+
+    private List<TypeChangeCurrency> typeChangeCurrencyList= new ArrayList<>();
+    private ListDataProvider<TypeChangeCurrency> dataProvider;
+    private Binder<TypeChangeCurrency> binder;
 
     private DetailsDrawer detailsDrawer;
     private DetailsDrawerHeader detailsDrawerHeader;
     private DetailsDrawerFooter footer;
 
     private Button btnNew;
-    private Grid<Period> grid;
-
-    private Binder<Period> binder;
-    private ListDataProvider<Period> dataProvider;
-
-    private Period current;
-
+    private Grid<TypeChangeCurrency> grid;
+    private TypeChangeCurrency current;
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
         super.onAttach(attachEvent);
-        getPeriods();
+        getListTypeChangeCurrency();
         setViewHeader(createTopBar());
         setViewContent(createContent());
         setViewDetails(createDetailsDrawer());
     }
 
     private HorizontalLayout createTopBar(){
-        btnNew = new Button("Nuevo Periodo");
+        btnNew = new Button("Nuevo");
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
 //        btnNew.setEnabled(GrantOptions.grantedOption("Parametros"));
         btnNew.addClickListener(e -> {
-            showDetails(new Period());
+            showDetails(new TypeChangeCurrency());
         });
 
         HorizontalLayout topLayout = new HorizontalLayout();
@@ -98,7 +100,7 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
     }
 
     private Component createContent(){
-        FlexBoxLayout content = new FlexBoxLayout(createGridPeriod());
+        FlexBoxLayout content = new FlexBoxLayout(createGridTypeChangeCurrency());
         content.addClassName("grid-view");
         content.setHeightFull();
         content.setBoxSizing(BoxSizing.BORDER_BOX);
@@ -107,12 +109,12 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
         return content;
     }
 
-    private void showDetails(Period period){
-        current = period;
-        detailsDrawerHeader.setTitle("Periodo: ".concat(period.getYear()==null?"Nuevo":period.getYear().toString()));
-        detailsDrawer.setContent(createDetails(period));
+    private void showDetails(TypeChangeCurrency typeChangeCurrency){
+        current = typeChangeCurrency;
+        detailsDrawerHeader.setTitle("Tipo Cambio: ".concat(current.getName()==null?"Nuevo":current.getName()));
+        detailsDrawer.setContent(createDetails(typeChangeCurrency));
         detailsDrawer.show();
-        binder.readBean(period);
+        binder.readBean(current);
     }
 
     private DetailsDrawer createDetailsDrawer(){
@@ -126,16 +128,9 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
             if (current !=null && binder.writeBeanIfValid(current)){
-                Period result=null;
-                try {
-                    result = restTemplate.add(current);
-                }
-                catch(Exception ex){
-                    UIUtils.showNotificationType(ex.getMessage(),"alert");
-                    return;
-                }
+                TypeChangeCurrency result = restTemplate.add(current);
                 if (current.getId()==null){
-                    periodList.add(result);
+                    typeChangeCurrencyList.add(result);
                     grid.getDataProvider().refreshAll();
                 }else{
                     grid.getDataProvider().refreshItem(current);
@@ -155,56 +150,95 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
         return detailsDrawer;
     }
 
-    private Grid createGridPeriod(){
+    private Grid createGridTypeChangeCurrency(){
+
         grid = new Grid<>();
         grid.setMultiSort(true);
-        grid.setHeightFull();
-        grid.setWidthFull();
+        grid.setSizeFull();
 
         grid.setDataProvider(dataProvider);
 
-        grid.addColumn(Period::getYear)
+        grid.addColumn(TypeChangeCurrency::getName)
                 .setFlexGrow(1)
-                .setAutoWidth(true)
                 .setResizable(true)
-                .setSortable(true)
-                .setHeader("Gestión");
-        grid.addColumn(new ComponentRenderer<>(this::createActive))
+                .setAutoWidth(true)
+                .setHeader("Nombre");
+        grid.addColumn(TypeChangeCurrency::getCurrency)
                 .setFlexGrow(1)
-                .setAutoWidth(true)
                 .setResizable(true)
-                .setSortable(true)
-                .setHeader("Activo");
-        grid.addColumn(new ComponentRenderer<>(this::createButtonActivate))
-                .setFlexGrow(0)
                 .setAutoWidth(true)
-                .setResizable(true);
+                .setHeader("Moneda");
+        grid.addColumn(TypeChangeCurrency::getAmountChange)
+                .setFlexGrow(1)
+                .setResizable(true)
+                .setAutoWidth(true)
+                .setHeader("Tipo Cambio");
+        grid.addColumn(new LocalDateRenderer<>(TypeChangeCurrency::getValidityStart, DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                .setFlexGrow(1)
+                .setResizable(true)
+                .setAutoWidth(true)
+                .setHeader("Fecha vigencia");
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
-                .setFlexGrow(0)
                 .setAutoWidth(true)
-                .setResizable(true);
+                .setFlexGrow(0);
 
         return grid;
-
     }
 
-    private FormLayout createDetails(Period period){
+    private Component createButtonEdit(TypeChangeCurrency typeChangeCurrency){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addClickListener(event -> {
+            showDetails(typeChangeCurrency);
+        });
+        return btn;
+    }
 
-        IntegerField year = new IntegerField();
-        year.setWidthFull();
-        year.setHasControls(true);
-        year.setClearButtonVisible(true);
-        year.setRequiredIndicatorVisible(true);
+    private FormLayout createDetails(TypeChangeCurrency typeChangeCurrency){
 
+        ComboBox<String> name = new ComboBox<>();
+        name.setRequired(true);
+        name.setWidthFull();
+        name.setItems(utilValues.getValueParameterByCategory("CATEGORIA TIPO CAMBIO"));
+        name.setAllowCustomValue(false);
+        name.setAutoOpen(true);
 
-        binder = new BeanValidationBinder<>(Period.class);
+        ComboBox<String> currency = new ComboBox<>();
+        currency.setWidthFull();
+        currency.setAllowCustomValue(false);
+        currency.setAutoOpen(true);
+        currency.setItems(utilValues.getValueParameterByCategory("MONEDA"));
 
-        binder.forField(year).asRequired("Gestion es requerida")
-                .withValidator(value -> value.intValue()>= LocalDate.now().getYear(),"La gestion no pude ser menor a la gestion actual ")
-                .bind(Period::getYear,Period::setYear);
+        NumberField amountChange = new NumberField();
+        amountChange.setWidthFull();
+        amountChange.setMin(0.0);
+        amountChange.setClearButtonVisible(true);
+
+        DatePicker validityStart = new DatePicker();
+        validityStart.setRequired(true);
+        validityStart.setLocale(new Locale("es","BO"));
+
+        binder = new BeanValidationBinder<>(TypeChangeCurrency.class);
+        binder.forField(name)
+                .asRequired("Nombre tipo cambio es requerido")
+                .bind(TypeChangeCurrency::getName,TypeChangeCurrency::setName);
+        binder.forField(currency)
+                .asRequired("Moneda es requerida")
+                .bind(TypeChangeCurrency::getCurrency,TypeChangeCurrency::setCurrency);
+        binder.forField(amountChange)
+                .asRequired("Valor tipo de cambio es requerido")
+                .withValidator(a -> a.doubleValue()>0.0,"Valor tipo cambio debe ser mayor a 0")
+                .bind(TypeChangeCurrency::getAmountChange,TypeChangeCurrency::setAmountChange);
+        binder.forField(validityStart)
+                .asRequired("Fecha de vigencia es requerida")
+                .bind(TypeChangeCurrency::getValidityStart,TypeChangeCurrency::setValidityStart);
+
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
+//            footer.saveState(hasChanges && isValid && GrantOptions.grantedOption("Parametros"));
             footer.saveState(hasChanges && isValid);
         });
 
@@ -217,67 +251,17 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
                 new FormLayout.ResponsiveStep("21em", 2,
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
 
-        FormLayout.FormItem yearItem = form.addFormItem(year,"Gestión");
-        UIUtils.setColSpan(2,yearItem);
+        FormLayout.FormItem nameItem = form.addFormItem(name,"Nomber tipo Cambio");
+        UIUtils.setColSpan(2,nameItem);
+        form.addFormItem(currency,"Moneda");
+        form.addFormItem(amountChange,"Tipo cambio");
+        form.addFormItem(validityStart,"Fecha vigencia");
 
         return form;
-
     }
 
-
-    private Component createButtonEdit(Period period){
-        Button btn = new Button();
-        Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
-        btn.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY);
-        btn.setIcon(VaadinIcon.EDIT.create());
-        btn.addClickListener(event -> {
-            showDetails(period);
-        });
-
-        return btn;
+    private void getListTypeChangeCurrency(){
+        typeChangeCurrencyList = new ArrayList<>(restTemplate.getAll());
+        dataProvider = new ListDataProvider(typeChangeCurrencyList);
     }
-
-    private Component createButtonActivate(Period period){
-        Button btn = new Button();
-        Tooltips.getCurrent().setTooltip(btn,"Activar");
-        btn.setIcon(VaadinIcon.CHECK.create());
-        btn.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
-        btn.addClickListener(event -> {
-            period.setIsOpen(true);
-            restTemplate.add(period);
-
-            if(periodList.size()>1) {
-                Period aux = periodList.stream()
-                        .filter(p -> p.getIsOpen().equals(true) && !p.getYear().equals(period.getYear()))
-                        .collect(Collectors.toList()).get(0);
-                if(aux != null) {
-                    aux.setIsOpen(false);
-                    restTemplate.add(aux);
-                }
-
-            }
-            periodList.clear();
-            periodList.addAll(restTemplate.getAll());
-            grid.getDataProvider().refreshAll();
-        });
-
-        return btn;
-    }
-
-    private Component createActive(Period period){
-        Icon icon;
-        if(period.getIsOpen().equals(true)){
-            icon = UIUtils.createPrimaryIcon(VaadinIcon.CHECK);
-        }else{
-            icon = UIUtils.createDisabledIcon(VaadinIcon.CLOSE);
-        }
-        return icon;
-    }
-
-    private void getPeriods(){
-        periodList = new ArrayList<>(restTemplate.getAll());
-        dataProvider = new ListDataProvider<>(periodList);
-    }
-
-
 }

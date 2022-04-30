@@ -1,19 +1,17 @@
-package com.mindware.ui.views.recurrentService;
+package com.mindware.ui.views.basicServices;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mindware.backend.entity.contract.Contract;
-import com.mindware.backend.entity.corebank.Concept;
+import com.mindware.backend.entity.basicServices.BasicServices;
+import com.mindware.backend.entity.basicServices.BasicServicesDto;
 import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
-import com.mindware.backend.entity.recurrentService.RecurrentService;
-import com.mindware.backend.entity.recurrentService.RecurrentServiceDto;
-import com.mindware.backend.entity.supplier.Supplier;
-import com.mindware.backend.rest.contract.ContractRestTemplate;
+import com.mindware.backend.entity.config.BasicServiceProvider;
+import com.mindware.backend.entity.corebank.Concept;
+import com.mindware.backend.rest.basicServiceProvider.BasicServiceProviderRestTemplate;
+import com.mindware.backend.rest.basicServices.BasicServicesDtoRestTemplate;
+import com.mindware.backend.rest.basicServices.BasicServicesRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
-import com.mindware.backend.rest.recurrentService.RecurrentServiceDtoRestTemplate;
-import com.mindware.backend.rest.recurrentService.RecurrentServiceRestTemplate;
-import com.mindware.backend.rest.supplier.SupplierRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -26,17 +24,18 @@ import com.mindware.ui.layout.size.Top;
 import com.mindware.ui.util.LumoStyles;
 import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.views.SplitViewFrame;
+import com.mindware.ui.views.recurrentService.RecurrentServiceView;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -48,7 +47,6 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
-import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
@@ -56,40 +54,40 @@ import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@Route(value = "recurrent-service-register", layout = MainLayout.class)
+@Route(value = "basicservices-register", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
-@PageTitle("Registro Pago Servicios Recurrentes")
-public class RecurrentServiceRegisterView extends SplitViewFrame implements HasUrlParameter<String>, RouterLayout {
+@PageTitle("Registro Pago Servicios Basicos")
+public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlParameter<String>, RouterLayout {
 
     @Autowired
-    private RecurrentServiceRestTemplate recurrentServiceRestTemplate;
+    private BasicServicesRestTemplate basicServicesRestTemplate;
 
     @Autowired
-    private RecurrentServiceDtoRestTemplate recurrentServiceDtoRestTemplate;
+    private BasicServicesDtoRestTemplate basicServicesDtoRestTemplate;
 
     @Autowired
-    private SupplierRestTemplate supplierRestTemplate;
+    private BasicServiceProviderRestTemplate basicServiceProviderRestTemplate;
 
     @Autowired
     private UtilValues utilValues;
 
     @Autowired
-    private ContractRestTemplate contractRestTemplate;
-
-    @Autowired
     private ConceptRestTemplate conceptRestTemplate;
 
-    private Supplier supplierSelected;
+    private BasicServicesDto basicServicesDto;
+    private BasicServiceProvider basicServiceProviderSelected;
+    private List<ExpenseDistribuite> expenseDistribuiteList;
 
     private ListDataProvider<ExpenseDistribuite> expenseDistribuiteDataProvider;
-    private Binder<RecurrentServiceDto> binder;
+    private Binder<BasicServicesDto> binder;
     private Binder<ExpenseDistribuite> expenseDistribuiteBinder;
     private ExpenseDistribuite currentExpenseDistribuite;
 
     private ObjectMapper mapper;
+    private Map<String, List<String>> param;
+    private String title;
 
     private DetailsDrawerFooter footer;
     private DetailsDrawerFooter footerExpenseDistribuite;
@@ -97,36 +95,19 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private DetailsDrawerHeader detailsDrawerHeader;
     private DetailsDrawer detailsDrawerExpenseDistribuite;
     private DetailsDrawerHeader detailsDrawerHeaderExpenseDistribuite;
-    private String title;
 
-    private List<ExpenseDistribuite> expenseDistribuiteList;
-
-    private RecurrentServiceDto recurrentServiceDto;
-
-    private TextField supplierName;
+    private TextField nameBasicServiceProvider;
+    private TextField description;
     private ComboBox<String> account;
     private ComboBox<String> subAccount;
-    private TextField nitSupplier;
-    private IntegerField contract;
-    private  TextField paymentFrecuency;
 
     private Grid<ExpenseDistribuite> expenseDistribuiteGrid;
 
-    private TextField supplierNameFilter;
-    private TextField nitSupplierFilter;
-    private TextField locationSupplierFilter;
-    private TextField primaryActivitySupplierFilter;
-
-    private TextField numberContractFilter;
-    private TextField objectContractFilter;
-
-    private DatePicker finishDate;
-    private  Checkbox tacitReductionClause;
-
+    private TextField basicServiceProviderFilter;
+    private TextField typeServiceProviderFilter;
+    private TextField descriptionServiceProviderFilter;
 
     private List<Concept> conceptList;
-
-    private Map<String, List<String>> param;
 
     @Override
     public void setParameter(BeforeEvent beforeEvent, @OptionalParameter String s) {
@@ -136,19 +117,17 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         param = queryParameters.getParameters();
 
         if(!param.get("id").get(0).equals("NUEVO")){
-            recurrentServiceDto = recurrentServiceDtoRestTemplate.getById(param.get("id").get(0));
-            title = "Proveedor: ".concat(recurrentServiceDto.getSupplierName());
-            supplierSelected = supplierRestTemplate.getById(recurrentServiceDto.getIdSupplier().toString());
-
-
+            basicServicesDto = basicServicesDtoRestTemplate.getByIdBasicServices(param.get("id").get(0));
+            title= "Proveedor: ".concat(basicServicesDto.getNameBasicServiceProvider());
+            basicServiceProviderSelected = basicServiceProviderRestTemplate.getById(basicServicesDto.getIdBasicServicesProvider().toString());
         }else{
-            recurrentServiceDto = new RecurrentServiceDto();
-            recurrentServiceDto.setExpenseDistribuite("[]");
-            title = "Registro Nuevo ";
+            basicServicesDto = new BasicServicesDto();
+            basicServicesDto.setExpenseDistribuite("[]");
+            title = "Registro Nuevo";
         }
 
         try {
-            expenseDistribuiteList = mapper.readValue(recurrentServiceDto.getExpenseDistribuite(), new TypeReference<List<ExpenseDistribuite>>() {});
+            expenseDistribuiteList = mapper.readValue(basicServicesDto.getExpenseDistribuite(), new TypeReference<List<ExpenseDistribuite>>() {});
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -161,49 +140,39 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         setViewDetails(createDetailDrawer());
         setViewDetailsPosition(Position.BOTTOM);
+
     }
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
         super.onAttach(attachEvent);
         initBar();
-        setViewContent(createRecurrentServiceDtoForm(recurrentServiceDto));
-        binder.readBean(recurrentServiceDto);
+        setViewContent(createBasicServicesDtoForm(basicServicesDto));
+        binder.readBean(basicServicesDto);
+
     }
 
     private AppBar initBar(){
         AppBar appBar = MainLayout.get().getAppBar();
         appBar.setNaviMode(AppBar.NaviMode.CONTEXTUAL);
         appBar.setTitle(title);
-        appBar.getContextIcon().addClickListener(e -> UI.getCurrent().navigate("recurrent-service"));
+        appBar.getContextIcon().addClickListener(e -> UI.getCurrent().navigate("basicservices"));
 
         return appBar;
     }
 
-    private DetailsDrawer createRecurrentServiceDtoForm(RecurrentServiceDto recurrentServiceDto){
+    private DetailsDrawer createBasicServicesDtoForm(BasicServicesDto baseServicesDto){
 
         ComboBox<String> typeService = new ComboBox<>();
         typeService.setWidthFull();
-        typeService.setItems(utilValues.getValueParameterByCategory("SERVICIOS RECURRENTES"));
+        typeService.setItems(utilValues.getValueParameterByCategory("TIPO SERVICIO BASICO"));
 
-        supplierName = new TextField();
-        supplierName.setWidthFull();
-        supplierName.setRequired(true);
-        supplierName.setReadOnly(true);
-        supplierName.addValueChangeListener(event -> {
-            if(!event.getOldValue().equals(event.getValue())) {
-                contract.clear();
-                finishDate.clear();
-                tacitReductionClause.clear();
-                paymentFrecuency.clear();
-            }
-        });
+        nameBasicServiceProvider = new TextField();
+        nameBasicServiceProvider.setWidthFull();
+        nameBasicServiceProvider.setReadOnly(true);
+        nameBasicServiceProvider.setRequired(true);
 
-        nitSupplier = new TextField();
-        nitSupplier.setWidthFull();
-        nitSupplier.setReadOnly(true);
-
-        TextField description = new TextField();
+        description = new TextField();
         description.setWidthFull();
         description.setRequired(true);
 
@@ -217,7 +186,6 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         paymentDate.setWidthFull();
         paymentDate.setRequired(true);
         paymentDate.setLocale(new Locale("es","BO"));
-
 
         NumberField amount = new NumberField();
         amount.setWidthFull();
@@ -239,6 +207,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         subAccount.setRequired(true);
         subAccount.setRequiredIndicatorVisible(true);
 
+
         ComboBox<String> typeDocumentReceived = new ComboBox<>();
         typeDocumentReceived.setWidthFull();
         typeDocumentReceived.setItems("FACTURA","RECIBO");
@@ -249,75 +218,45 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         numberDocumentReceived.setRequiredIndicatorVisible(true);
         numberDocumentReceived.setMin(0);
 
-        contract = new IntegerField();
-        contract.setWidthFull();
-        contract.setReadOnly(true);
-        contract.setRequiredIndicatorVisible(true);
-
-        finishDate = new DatePicker();
-        finishDate.setWidthFull();
-        finishDate.setReadOnly(true);
-        finishDate.setLocale(new Locale("es","BO"));
-
-        tacitReductionClause = new Checkbox("Clausula tácita reconducción");
-        tacitReductionClause.setReadOnly(true);
-
-        paymentFrecuency = new TextField();
-        paymentFrecuency.setWidthFull();
-        paymentFrecuency.setReadOnly(true);
-
-        binder = new BeanValidationBinder<>(RecurrentServiceDto.class);
+        binder = new BeanValidationBinder<>(BasicServicesDto.class);
         binder.forField(typeService)
                 .asRequired("Tipo de servicio es requerido")
-                .bind(RecurrentServiceDto::getTypeService, RecurrentServiceDto::setTypeService);
-        binder.forField(supplierName)
-                .asRequired("Proveedor es requerido")
-                .bind(RecurrentServiceDto::getSupplierName, RecurrentServiceDto::setSupplierName);
-        binder.forField(nitSupplier)
-                .asRequired("Numero NIT es requerido")
-                .bind(RecurrentServiceDto::getSupplierNit, RecurrentServiceDto::setSupplierNit);
+                .bind(BasicServicesDto::getTypeBasicService,BasicServicesDto::setTypeBasicService);
+        binder.forField(nameBasicServiceProvider)
+                .asRequired("Nombre Proveedor es requerido")
+                .bind(BasicServicesDto::getNameBasicServiceProvider,BasicServicesDto::setNameBasicServiceProvider);
         binder.forField(description)
                 .asRequired("Descripcion es requerida")
-                .bind(RecurrentServiceDto::getDescription,RecurrentServiceDto::setDescription);
+                .bind(BasicServicesDto::getDescription,BasicServicesDto::setDescription);
         binder.forField(period)
                 .asRequired("Periodo es requerido")
-                .bind(RecurrentServiceDto::getPeriod,RecurrentServiceDto::setPeriod);
+                .bind(BasicServicesDto::getPeriod,BasicServicesDto::setPeriod);
         binder.forField(paymentDate)
                 .asRequired("Fecha de pago es requerida")
-                .bind(RecurrentServiceDto::getPaymentDate,RecurrentServiceDto::setPaymentDate);
+                .bind(BasicServicesDto::getPaymentDate,BasicServicesDto::setPaymentDate);
         binder.forField(amount)
                 .asRequired("Monto es requerido")
                 .withValidator(m -> m.doubleValue()>0.0,"Monto debe ser mayor a 0")
-                .bind(RecurrentServiceDto::getAmount,RecurrentServiceDto::setAmount);
+                .bind(BasicServicesDto::getAmount,BasicServicesDto::setAmount);
         binder.forField(account)
                 .asRequired("Cuenta es requerida")
-                .bind(RecurrentServiceDto::getAccount,RecurrentServiceDto::setAccount);
+                .bind(BasicServicesDto::getAccount,BasicServicesDto::setAccount);
         binder.forField(subAccount)
                 .asRequired("Subcuenta es requerida")
-                .bind(RecurrentServiceDto::getSubAccount,RecurrentServiceDto::setSubAccount);
+                .bind(BasicServicesDto::getSubAccount,BasicServicesDto::setSubAccount);
         binder.forField(typeDocumentReceived)
-                .asRequired("Tipo de documento es requerido")
-                .bind(RecurrentServiceDto::getTypeDocumentReceived,RecurrentServiceDto::setTypeDocumentReceived);
+                .asRequired("Tipo documento es requerido")
+                .bind(BasicServicesDto::getTypeDocumentReceived, BasicServicesDto::setTypeDocumentReceived);
         binder.forField(numberDocumentReceived)
-                .asRequired("Numero Factura/Recibo es requerido")
-                .bind(RecurrentServiceDto::getNumberDocumentReceived,RecurrentServiceDto::setNumberDocumentReceived);
-        binder.forField(contract)
-                .asRequired("Numero contrato es requerido")
-                .bind(RecurrentServiceDto::getNumberContract,RecurrentServiceDto::setNumberContract);
-        binder.forField(finishDate)
-                .asRequired("Fecha vigencia contrato es requerido")
-                .bind(RecurrentServiceDto::getFinishDate,RecurrentServiceDto::setFinishDate);
-        binder.forField(tacitReductionClause)
-                .bind(RecurrentServiceDto::getTacitReductionClause,RecurrentServiceDto::setTacitReductionClause);
-        binder.forField(paymentFrecuency)
-                .bind(RecurrentServiceDto::getPaymentFrecuency,RecurrentServiceDto::setPaymentFrecuency);
+                .asRequired("Numero de Factura/Recibo es requerido")
+                .bind(BasicServicesDto::getNumberDocumentReceived, BasicServicesDto::setNumberDocumentReceived);
+
 
         binder.addStatusChangeListener(event -> {
-           boolean isValid = !event.hasValidationErrors();
-           boolean hasChanges = binder.hasChanges();
-           footer.saveState(isValid && hasChanges);
+            boolean isValid = !event.hasValidationErrors();
+            boolean hasChanges = binder.hasChanges();
+            footer.saveState(isValid && hasChanges);
         });
-
 
         FormLayout form = new FormLayout();
         form.setSizeUndefined();
@@ -333,63 +272,52 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         );
 
         form.addFormItem(typeService,"Tipo Servicio");
-        HorizontalLayout layoutSupplier = new HorizontalLayout();
-        Button btnSearchSupplier = new Button();
-        btnSearchSupplier.setWidth("10%");
-        btnSearchSupplier.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY);
-        btnSearchSupplier.setIcon(VaadinIcon.SEARCH_PLUS.create());
-        btnSearchSupplier.addClickListener(event -> {
+        HorizontalLayout layoutProvider = new HorizontalLayout();
+        Button btnSearchProvider = new Button();
+        btnSearchProvider.setWidth("10%");
+        btnSearchProvider.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY);
+        btnSearchProvider.setIcon(VaadinIcon.SEARCH_PLUS.create());
+        btnSearchProvider.addClickListener(event -> {
             setViewDetails(createDetailDrawer());
             setViewDetailsPosition(Position.BOTTOM);
-            showSearchSupplier();
+            showSearchProvider();
         });
-        FormLayout.FormItem supplierItem = form.addFormItem(layoutSupplier,"Proveedor/NIT");
+        FormLayout.FormItem supplierItem = form.addFormItem(layoutProvider,"Proveedor");
         UIUtils.setColSpan(2,supplierItem);
+        layoutProvider.add(nameBasicServiceProvider,btnSearchProvider);
 
-        layoutSupplier.add(supplierName,nitSupplier,btnSearchSupplier);
-
-        form.addFormItem(description,"Descripción");
+        form.addFormItem(description,"Descripcion");
         form.addFormItem(period,"Periodo");
         form.addFormItem(paymentDate,"Fecha de pago");
-        form.addFormItem(amount,"Monto Bs.");
+        form.addFormItem(amount,"Monto (Bs)");
         form.addFormItem(account,"Cuenta");
         form.addFormItem(subAccount,"Subcuenta");
-        form.addFormItem(typeDocumentReceived,"Tipo documento");
-        form.addFormItem(numberDocumentReceived,"Número Factura/Recibo");
-
-        HorizontalLayout layoutContract = new HorizontalLayout();
-        Button btnSearchContract = new Button();
-        btnSearchContract.setWidth("10%");
-        btnSearchContract.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY);
-        btnSearchContract.setIcon(VaadinIcon.FILE_SEARCH.create());
-        btnSearchContract.addClickListener(event -> {
-            if(supplierSelected==null){
-                UIUtils.showNotificationType("Seleccione un proveedor para mostrar contratos disponibles","alert");
-            }else {
-                showSearchContract();
-            }
-        });
-        FormLayout.FormItem contractItem = form.addFormItem(layoutContract,"Número contrato");
-        UIUtils.setColSpan(1,contractItem);
-        layoutContract.add(contract,btnSearchContract);
-
-        form.addFormItem(finishDate,"Vigencia del contrato");
-        form.addFormItem(tacitReductionClause,"");
-        form.addFormItem(paymentFrecuency,"Frecuencia pago");
+        form.addFormItem(typeDocumentReceived,"Tipo Documento");
+        form.addFormItem(numberDocumentReceived,"Nro Factura/Recibo");
 
         footer = new DetailsDrawerFooter();
-        footer.addSaveListener(event ->{
-            if(binder.writeBeanIfValid(recurrentServiceDto)){
-                recurrentServiceDto.setIdSupplier(supplierSelected.getId());
-                try {
-                    recurrentServiceRestTemplate.add(fillRecurrentService());
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
+        footer.addSaveListener(event -> {
+            try {
+                if (binder.writeBeanIfValid(basicServicesDto)) {
+                    basicServicesDto.setIdBasicServicesProvider(basicServiceProviderSelected.getId());
+
+                    try {
+                        basicServicesRestTemplate.add(fillBasicServices());
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+
+                    UI.getCurrent().navigate(BasicServicesView.class);
+                    UIUtils.showNotificationType("Datos registratos", "success");
+
+                } else {
+
                 }
-                UI.getCurrent().navigate(RecurrentServiceView.class);
-                UIUtils.showNotificationType("Datos registratos","success");
+            }catch (Exception e){
+                UIUtils.showNotificationType(e.getMessage(), "error");
             }
         });
+
         footer.addCancelListener(event -> UI.getCurrent().navigate(RecurrentServiceView.class));
 
         DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
@@ -414,201 +342,108 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         return detailsDrawer;
     }
 
-    private void showSearchSupplier(){
+    private void showSearchProvider(){
         detailsDrawer.setPosition(DetailsDrawer.Position.BOTTOM);
         detailsDrawerHeader.setTitle("Seleccionar Proveedor");
-        detailsDrawer.setContent(searchSupplier());
+        detailsDrawer.setContent(searchProvider());
         detailsDrawer.show();
     }
 
-
-    private Grid searchSupplier(){
-        List<Supplier> supplierList = supplierRestTemplate.getAll();
-        ListDataProvider<Supplier> dataProvider = new ListDataProvider<>(supplierList);
-        Grid<Supplier> grid = new Grid<>();
+    private Grid searchProvider(){
+        List<BasicServiceProvider> basicServiceProviderList = basicServiceProviderRestTemplate.getAll();
+        ListDataProvider<BasicServiceProvider> dataProvider = new ListDataProvider<>(basicServiceProviderList);
+        Grid<BasicServiceProvider> grid = new Grid<>();
         grid.setWidthFull();
         grid.setDataProvider(dataProvider);
 
-        grid.addColumn(Supplier::getName)
+        grid.addColumn(BasicServiceProvider::getProvider)
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setFlexGrow(1)
-                .setKey("name")
+                .setKey("provider")
                 .setHeader("Proveedor");
-        grid.addColumn(Supplier::getNit)
+        grid.addColumn(BasicServiceProvider::getTypeService)
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setFlexGrow(1)
-                .setKey("nit")
-                .setHeader("NIT");
-        grid.addColumn(Supplier::getLocation)
+                .setKey("typeService")
+                .setHeader("Tipo Servicio");
+        grid.addColumn(BasicServiceProvider::getDescription)
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setFlexGrow(1)
-                .setKey("location")
-                .setHeader("Ubicacion");
-        grid.addColumn(Supplier::getPrimaryActivity)
+                .setKey("description")
+                .setHeader("Descripcion Servicio");
+        grid.addColumn(new ComponentRenderer<>(this::createActive))
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setFlexGrow(1)
-                .setKey("primaryActivity")
-                .setHeader("Actividad Principal");
-        grid.addColumn(new ComponentRenderer<>(this::createButtonSelectSupplier))
-                .setFlexGrow(0)
-                .setAutoWidth(true);
-
+                .setHeader("Activo");
+        grid.addColumn(new ComponentRenderer<>(this::createButtonSelectProvider))
+                .setAutoWidth(true)
+                .setFlexGrow(0);
 
         HeaderRow hr = grid.appendHeaderRow();
 
-        supplierNameFilter = new TextField();
-        supplierNameFilter.setWidthFull();
-        supplierNameFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        supplierNameFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
-        hr.getCell(grid.getColumnByKey("name")).setComponent(supplierNameFilter);
+        basicServiceProviderFilter = new TextField();
+        basicServiceProviderFilter.setWidthFull();
+        basicServiceProviderFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        basicServiceProviderFilter.addValueChangeListener(e -> applyFilterBasicServiceProvider(dataProvider));
+        hr.getCell(grid.getColumnByKey("provider")).setComponent(basicServiceProviderFilter);
 
-        nitSupplierFilter = new TextField();
-        nitSupplierFilter.setWidthFull();
-        nitSupplierFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        nitSupplierFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
-        hr.getCell(grid.getColumnByKey("nit")).setComponent(nitSupplierFilter);
+        typeServiceProviderFilter = new TextField();
+        typeServiceProviderFilter.setWidthFull();
+        typeServiceProviderFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        typeServiceProviderFilter.addValueChangeListener(e -> applyFilterBasicServiceProvider(dataProvider));
+        hr.getCell(grid.getColumnByKey("typeService")).setComponent(typeServiceProviderFilter);
 
-        locationSupplierFilter = new TextField();
-        locationSupplierFilter.setWidthFull();
-        locationSupplierFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        locationSupplierFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
-        hr.getCell(grid.getColumnByKey("location")).setComponent(locationSupplierFilter);
+        descriptionServiceProviderFilter = new TextField();
+        descriptionServiceProviderFilter.setWidthFull();
+        descriptionServiceProviderFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        descriptionServiceProviderFilter.addValueChangeListener(e -> applyFilterBasicServiceProvider(dataProvider));
+        hr.getCell(grid.getColumnByKey("description")).setComponent(descriptionServiceProviderFilter);
 
-        primaryActivitySupplierFilter = new TextField();
-        primaryActivitySupplierFilter.setWidthFull();
-        primaryActivitySupplierFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        primaryActivitySupplierFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
-        hr.getCell(grid.getColumnByKey("primaryActivity")).setComponent(primaryActivitySupplierFilter);
-
-        return grid;
+         return grid;
     }
 
-    private Component createButtonSelectSupplier(Supplier supplier){
+    private Component createActive(BasicServiceProvider basicServiceProvider){
+        Icon icon;
+        if(basicServiceProvider.getState().equals("ACTIVO")){
+            icon = UIUtils.createPrimaryIcon(VaadinIcon.CHECK);
+        }else{
+            icon = UIUtils.createDisabledIcon(VaadinIcon.CLOSE);
+        }
+        return icon;
+    }
+
+    private Component createButtonSelectProvider(BasicServiceProvider basicServiceProvider){
         Button btn = new Button();
         btn.setIcon(VaadinIcon.CHEVRON_CIRCLE_UP.create());
         btn.addClickListener(event -> {
-            supplierName.setValue(supplier.getName());
-            nitSupplier.setValue(supplier.getNit());
-            supplierSelected = supplier;
-
+            nameBasicServiceProvider.setValue(basicServiceProvider.getProvider());
+            basicServiceProviderSelected = basicServiceProvider;
             detailsDrawer.hide();
         });
-
         return btn;
     }
 
-    private void showSearchContract(){
-        setViewDetails(createDetailDrawer());
-        setViewDetailsPosition(Position.BOTTOM);
-        detailsDrawerHeader.setTitle("Seleccionar Contrato");
-        detailsDrawer.setContent(searchContract());
-        detailsDrawer.show();
-    }
-
-    private Grid searchContract(){
-        List<Contract> contractList =contractRestTemplate.getByIdSupplier(supplierSelected.getId().toString());
-
-        ListDataProvider<Contract> dataprovider = new ListDataProvider<>(contractList);
-
-        Grid<Contract> grid = new Grid<>();
-        grid.setWidthFull();
-        grid.setDataProvider(dataprovider);
-        grid.addColumn(Contract::getNumberContract)
-                .setSortable(true)
-                .setAutoWidth(true)
-                .setFlexGrow(1)
-                .setKey("numberContract")
-                .setHeader("Nro. Contrato");
-        grid.addColumn(new LocalDateRenderer<>(Contract::getFinishDate,
-                DateTimeFormatter.ofPattern("dd/MM/yyyy")))
-                .setKey("finishDate")
-                .setFlexGrow(1)
-                .setSortable(true)
-                .setHeader("Fecha finalización");
-        grid.addColumn(Contract::getObjectContract)
-                .setSortable(true)
-                .setAutoWidth(true)
-                .setFlexGrow(1)
-                .setKey("objectContract")
-                .setHeader("Objeto contrato");
-        grid.addColumn(Contract::getCurrency)
-                .setSortable(true)
-                .setAutoWidth(true)
-                .setFlexGrow(1)
-                .setHeader("Moneda");
-        grid.addColumn(new NumberRenderer<>(Contract::getAmount, " %(,.2f",
-                        Locale.US, "0.00"))
-                .setSortable(true)
-                .setAutoWidth(true)
-                .setFlexGrow(1)
-                .setHeader("Monto");
-        grid.addColumn(new ComponentRenderer<>(this::createButtonSelectContract))
-                .setFlexGrow(0)
-                .setAutoWidth(true);
-
-        HeaderRow hr = grid.appendHeaderRow();
-
-        numberContractFilter = new TextField();
-        numberContractFilter.setWidthFull();
-        numberContractFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        numberContractFilter.addValueChangeListener(e -> applyFilterContract(dataprovider));
-        hr.getCell(grid.getColumnByKey("numberContract")).setComponent(numberContractFilter);
-
-        objectContractFilter = new TextField();
-        objectContractFilter.setWidthFull();
-        objectContractFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        objectContractFilter.addValueChangeListener(e -> applyFilterContract(dataprovider));
-        hr.getCell(grid.getColumnByKey("objectContract")).setComponent(objectContractFilter);
-
-        return grid;
-    }
-
-    private Component createButtonSelectContract(Contract con){
-        Button btn = new Button();
-        btn.setIcon(VaadinIcon.CHEVRON_CIRCLE_UP.create());
-        btn.addClickListener(event -> {
-            contract.setValue(con.getNumberContract());
-            finishDate.setValue(con.getFinishDate());
-            tacitReductionClause.setValue(con.getTacitReductionClause());
-            paymentFrecuency.setValue(con.getPaymentFrecuency());
-            detailsDrawer.hide();
-        });
-
-        return btn;
-    }
-
-
-    private void applyFilterSupplier(ListDataProvider<Supplier> dataProvider){
+    private void applyFilterBasicServiceProvider(ListDataProvider<BasicServiceProvider> dataProvider){
         dataProvider.clearFilters();
-        if(!supplierNameFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getName(),supplierNameFilter.getValue()));
+        if(!basicServiceProviderFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(basicServiceProvider -> StringUtils.containsIgnoreCase(basicServiceProvider.getProvider()
+                    ,basicServiceProviderFilter.getValue()));
         }
-        if(!nitSupplierFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getNit(),nitSupplierFilter.getValue()));
+        if(!typeServiceProviderFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(basicServiceProvider -> StringUtils.containsIgnoreCase(basicServiceProvider.getTypeService()
+                    ,typeServiceProviderFilter.getValue()));
         }
-        if(!locationSupplierFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getLocation(),locationSupplierFilter.getValue()));
-        }
-        if(!primaryActivitySupplierFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getPrimaryActivity(),primaryActivitySupplierFilter.getValue()));
-        }
-    }
-
-    private void applyFilterContract(ListDataProvider<Contract> dataProvider){
-        if(!numberContractFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(contract -> StringUtils.containsIgnoreCase(contract.getNumberContract().toString(),numberContractFilter.getValue()));
-        }
-        if(!objectContractFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(contract -> StringUtils.containsIgnoreCase(contract.getObjectContract(),objectContractFilter.getValue()));
+        if(!descriptionServiceProviderFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(basicServiceProvider -> StringUtils.containsIgnoreCase(basicServiceProvider.getDescription()
+                    ,descriptionServiceProviderFilter.getValue()));
         }
     }
 
-
-    //**********************************EXPENSE DITRIBUITE**************/
+//**********************************EXPENSE DITRIBUITE**************/
 
     private FormLayout layoutExpenseDistribuite(ExpenseDistribuite expenseDistribuite){
 
@@ -773,28 +608,23 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         });
 
         return btn;
-
     }
 
-
-
-    private RecurrentService fillRecurrentService() throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        RecurrentService recurrentService = new RecurrentService();
-        recurrentService.setId(recurrentServiceDto.getId());
-        recurrentService.setTypeService(recurrentServiceDto.getTypeService());
-        recurrentService.setIdSupplier(recurrentServiceDto.getIdSupplier());
-        recurrentService.setDescription(recurrentServiceDto.getDescription());
-        recurrentService.setPeriod(recurrentServiceDto.getPeriod());
-        recurrentService.setPaymentDate(recurrentServiceDto.getPaymentDate());
-        recurrentService.setAmount(recurrentServiceDto.getAmount());
-        recurrentService.setAccount(recurrentServiceDto.getAccount());
-        recurrentService.setSubAccount(recurrentServiceDto.getSubAccount());
+    private BasicServices fillBasicServices() throws JsonProcessingException {
+        BasicServices basicServices = new BasicServices();
+        basicServices.setId(basicServicesDto.getId());
+        basicServices.setTypeBasicService(basicServicesDto.getTypeBasicService());
+        basicServices.setIdBasicServicesProvider(basicServicesDto.getIdBasicServicesProvider());
+        basicServices.setDescription(basicServicesDto.getDescription());
+        basicServices.setPaymentDate(basicServicesDto.getPaymentDate());
+        basicServices.setPeriod(basicServicesDto.getPeriod());
+        basicServices.setAmount(basicServicesDto.getAmount());
+        basicServices.setAccount(basicServicesDto.getAccount());
+        basicServices.setSubAccount(basicServicesDto.getSubAccount());
+        basicServices.setTypeDocumentReceived(basicServicesDto.getTypeDocumentReceived());
+        basicServices.setNumberDocumentReceived(basicServicesDto.getNumberDocumentReceived());
         String json = mapper.writeValueAsString(expenseDistribuiteList);
-        recurrentService.setExpenseDistribuite(json);
-        recurrentService.setTypeDocumentReceived(recurrentServiceDto.getTypeDocumentReceived());
-        recurrentService.setNumberDocumentReceived(recurrentServiceDto.getNumberDocumentReceived());
-        recurrentService.setNumberContract(recurrentServiceDto.getNumberContract());
-        return  recurrentService;
+        basicServices.setExpenseDistribuite(json);
+        return basicServices;
     }
 }

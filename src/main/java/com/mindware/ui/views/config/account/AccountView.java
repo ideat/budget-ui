@@ -36,6 +36,7 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
+import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -179,7 +180,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);
         grid.addSelectionListener(event -> {
-            event.getFirstSelectedItem().ifPresent(this::showDetails);
+//            event.getFirstSelectedItem().ifPresent(this::showDetails);
         });
 
         grid.addColumn(Account::getNumberAccount)
@@ -210,6 +211,9 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButonEdit))
+                .setFlexGrow(1)
+                .setTextAlign(ColumnTextAlign.START);
         grid.addColumn(new ComponentRenderer<>(this::createButtonSubAccount))
                 .setFlexGrow(1)
                 .setTextAlign(ColumnTextAlign.START);
@@ -248,9 +252,22 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         return grid;
     }
 
-    private Component createButtonSubAccount(Account account){
-        Button btn = new Button("Sub-Cuenta");
+    private Component createButonEdit(Account account){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addClickListener(event -> {
+            showDetails(account);
+        });
+        return btn;
+    }
+
+    private Component createButtonSubAccount(Account account){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"SUB-CUENTA");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        btn.setIcon(VaadinIcon.TASKS.create());
         btn.addClickListener(e -> {
             Map<String, List<String>> param = new HashMap<>();
             List<String> id = new ArrayList<>();

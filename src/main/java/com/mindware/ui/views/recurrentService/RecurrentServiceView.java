@@ -21,15 +21,14 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
+import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Route(value = "recurrent-service", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
@@ -129,15 +128,17 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
-        grid.addColumn(RecurrentServiceDto::getCurrency)
+//        grid.addColumn(RecurrentServiceDto::getCurrency)
+//                .setFlexGrow(1)
+//                .setHeader("Moneda")
+//                .setSortable(true)
+//                .setAutoWidth(true)
+//                .setResizable(true);
+        grid.addColumn(new NumberRenderer<>(RecurrentServiceDto::getAmount,
+                        " %(,.2f",
+                        Locale.US, "0.00") )
                 .setFlexGrow(1)
-                .setHeader("Moneda")
-                .setSortable(true)
-                .setAutoWidth(true)
-                .setResizable(true);
-        grid.addColumn(RecurrentServiceDto::getAmount)
-                .setFlexGrow(1)
-                .setHeader("Monto")
+                .setHeader("Monto (Bs)")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
@@ -175,9 +176,11 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
     }
 
     private Component createButtonEdit(RecurrentServiceDto recurrentServiceDto){
-        Button btnEdit = new Button("Editar");
-        btnEdit.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
-        btnEdit.addClickListener(buttonClickEvent -> {
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addClickListener(buttonClickEvent -> {
             Map<String, List<String>> param = new HashMap<>();
             List<String> id = new ArrayList<>();
             id.add(recurrentServiceDto.getId().toString());
@@ -188,22 +191,26 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
             UI.getCurrent().navigate("recurrent-service-register",qp);
         });
 
-        return btnEdit;
+        return btn;
     }
 
     private void applyFilter(ListDataProvider<RecurrentServiceDto> dataProvider){
         dataProvider.clearFilters();
         if(!supplierNameFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(recurrentServiceDto -> StringUtils.containsIgnoreCase(recurrentServiceDto.getSupplierName(),supplierNameFilter.getValue()));
+            dataProvider.addFilter(recurrentServiceDto -> StringUtils.containsIgnoreCase(
+                    recurrentServiceDto.getSupplierName(),supplierNameFilter.getValue()));
         }
         if(!supplierLocationFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(recurrentServiceDto -> StringUtils.containsIgnoreCase(recurrentServiceDto.getSupplierLocation(),supplierLocationFilter.getValue()));
+            dataProvider.addFilter(recurrentServiceDto -> StringUtils.containsIgnoreCase(
+                    recurrentServiceDto.getSupplierLocation(),supplierLocationFilter.getValue()));
         }
         if(!periodFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(recurrentServiceDto -> StringUtils.containsIgnoreCase(recurrentServiceDto.getPeriod(),periodFilter.getValue()));
+            dataProvider.addFilter(recurrentServiceDto -> StringUtils.containsIgnoreCase(
+                    recurrentServiceDto.getPeriod(),periodFilter.getValue()));
         }
         if(!paymentFrecuencyFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(recurrentServiceDto -> StringUtils.containsIgnoreCase(recurrentServiceDto.getPaymentFrecuency(),paymentFrecuencyFilter.getValue()));
+            dataProvider.addFilter(recurrentServiceDto -> StringUtils.containsIgnoreCase(
+                    recurrentServiceDto.getPaymentFrecuency(),paymentFrecuencyFilter.getValue()));
         }
     }
 

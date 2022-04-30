@@ -32,11 +32,13 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.ParentLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLayout;
+import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -50,7 +52,7 @@ import java.util.Objects;
 public class ParameterView extends SplitViewFrame implements RouterLayout {
 
     @Autowired
-    ParameterRestTemplate restTemplate;
+    private ParameterRestTemplate restTemplate;
 
     private List<Parameter> parameterList = new ArrayList<>();
 
@@ -69,8 +71,8 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
 
     private Parameter current;
 
-    private String[] param = {"ACTIVIDAD","CARGOS","MONEDA", "FRECUENCIA PAGO", "OBLIGACIONES Y POLIZAS","OFICINAS","PERIODO",
-            "RUBRO","SERVICIOS RECURRENTES", "TIPO SERVICIO BASICO", "TIPO SOCIEDAD"};
+    private String[] param = {"ACTIVIDAD","CARGOS","CATEGORIA TIPO CAMBIO","MONEDA", "FRECUENCIA PAGO", "OBLIGACIONES Y POLIZAS","OFICINAS","PERIODO",
+            "RUBRO","SERVICIOS RECURRENTES", "TIPO ", "TIPO SERVICIO BASICO", "TIPO SOCIEDAD"};
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
@@ -159,9 +161,9 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
         grid.setMultiSort(true);
         grid.setHeightFull();
         grid.setWidthFull();
-
-        grid.addSelectionListener(event -> event.getFirstSelectedItem()
-                .ifPresent(this::showDetails));
+//
+//        grid.addSelectionListener(event -> event.getFirstSelectedItem()
+//                .ifPresent(this::showDetails));
 
         grid.setDataProvider(dataProvider);
 
@@ -177,6 +179,9 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
                 .setFlexGrow(1).setKey("details")
                 .setHeader("Detalle").setAutoWidth(true).setResizable(true)
                 .setTextAlign(ColumnTextAlign.START);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
+                .setAutoWidth(true)
+                .setFlexGrow(0);
 
         HeaderRow hr = grid.appendHeaderRow();
 
@@ -207,6 +212,17 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
         hr.getCell(grid.getColumnByKey("details")).setComponent(txtDetailsFilter);
 
         return grid;
+    }
+
+    private Component createButtonEdit(Parameter parameter){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addClickListener(event -> {
+            showDetails(parameter);
+        });
+        return btn;
     }
 
     private FormLayout createDetails(Parameter parameter){

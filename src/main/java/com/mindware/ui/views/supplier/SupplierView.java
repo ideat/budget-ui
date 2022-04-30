@@ -18,11 +18,13 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.ParentLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLayout;
+import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -95,7 +97,7 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);
         grid.addSelectionListener(event -> {
-            UI.getCurrent().navigate(SupplierRegisterView.class,event.getFirstSelectedItem().get().getId().toString());
+
         });
 
         grid.addColumn(Supplier::getName)
@@ -133,6 +135,10 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
+                .setAutoWidth(true)
+                .setFlexGrow(0);
+
 
         HeaderRow hr = grid.appendHeaderRow();
 
@@ -171,6 +177,16 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
         return grid;
     }
 
+    private Component createButtonEdit(Supplier supplier){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addClickListener(event -> {
+            UI.getCurrent().navigate(SupplierRegisterView.class,supplier.getId().toString());
+        });
+        return btn;
+    }
 
     private void appplyFilter(ListDataProvider<Supplier> dataProvider){
         dataProvider.clearFilters();
