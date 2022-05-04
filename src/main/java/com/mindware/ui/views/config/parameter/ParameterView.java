@@ -72,7 +72,7 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
     private Parameter current;
 
     private String[] param = {"ACTIVIDAD","CARGOS","CATEGORIA TIPO CAMBIO","MONEDA", "FRECUENCIA PAGO", "OBLIGACIONES Y POLIZAS","OFICINAS","PERIODO",
-            "RUBRO","SERVICIOS RECURRENTES", "TIPO ", "TIPO SERVICIO BASICO", "TIPO SOCIEDAD"};
+            "RUBRO","SERVICIOS RECURRENTES", "TIPO ADQUISICION", "TIPO SERVICIO BASICO", "TIPO SOCIEDAD"};
 
     @Override
     protected void onAttach(AttachEvent attachEvent){

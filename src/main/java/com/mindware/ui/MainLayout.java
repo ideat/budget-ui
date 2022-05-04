@@ -146,7 +146,7 @@ public class MainLayout extends FlexBoxLayout
 		menu.addNaviItem(VaadinIcon.FILE_TEXT, "Contratos", ContractView.class);
 		menu.addNaviItem(VaadinIcon.GLOBE_WIRE, "Servicios Recurrentes", RecurrentServiceView.class);
 		menu.addNaviItem(VaadinIcon.BUILDING, "Servicios Básicos", BasicServicesView.class);
-		menu.addNaviItem(VaadinIcon.BACKWARDS,"Adquiciones", AcquisitionView.class);
+		menu.addNaviItem(VaadinIcon.STORAGE,"Adquiciones", AcquisitionView.class);
 		NaviItem configuration = menu.addNaviItem(VaadinIcon.COGS, "Configuracion",null);
 		menu.addNaviItem(configuration,"Parametros", ParameterView.class);
 		menu.addNaviItem(configuration, "Cuentas", AccountView.class);
