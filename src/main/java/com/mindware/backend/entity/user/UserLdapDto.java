@@ -18,4 +18,6 @@ public class UserLdapDto {
     private String cn;
 
     private String sn;
+
+    private String email;
 }

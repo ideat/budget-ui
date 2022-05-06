@@ -15,6 +15,8 @@ public class Acquisition {
     private Integer acquisitionNumber;
 
     private Integer codeBusinessUnit;
+
+    private String nameBusinessUnit;
     
     private String applicant;
 

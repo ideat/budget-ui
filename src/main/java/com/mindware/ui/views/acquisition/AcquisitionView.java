@@ -12,6 +12,7 @@ import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
@@ -126,6 +127,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
                 .setFlexGrow(1)
                 .setAutoWidth(true)
                 .setSortable(true)
+                .setTextAlign(ColumnTextAlign.CENTER)
                 .setResizable(true);
         grid.addColumn(new ComponentRenderer<>(this::createItem))
                 .setFlexGrow(1)
@@ -142,10 +144,10 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
                 .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
-                .setFlexGrow(0)
+                .setFlexGrow(1)
                 .setAutoWidth(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonSend))
-                .setFlexGrow(0)
+                .setFlexGrow(1)
                 .setAutoWidth(true);
 
         HeaderRow hr = grid.appendHeaderRow();
@@ -163,7 +165,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         hr.getCell(grid.getColumnByKey("nameBusinessUnit")).setComponent(nameBusinessUnitFilter);
 
         receptionDateInitFilter = new DatePicker();
-        receptionDateInitFilter.setWidth("30%");
+        receptionDateInitFilter.setWidth("50%");
         receptionDateInitFilter.setLocale(new Locale("es","BO"));
         receptionDateInitFilter.setClearButtonVisible(true);
         receptionDateInitFilter.addValueChangeListener(e -> {
@@ -171,7 +173,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         });
 
         receptionDateEndFilter = new DatePicker();
-        receptionDateEndFilter.setWidth("30%");
+        receptionDateEndFilter.setWidth("50%");
         receptionDateEndFilter.setLocale(new Locale("es","BO"));
         receptionDateEndFilter.setClearButtonVisible(true);
         receptionDateEndFilter.addValueChangeListener(e -> {
@@ -198,6 +200,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
 
     private Component createItem(AcquisitionDto acquisitionDto){
         TextArea textArea = new TextArea();
+        textArea.setWidthFull();
         textArea.setValue(acquisitionDto.getItems());
         return textArea;
     }
@@ -208,7 +211,16 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         btn.setIcon(VaadinIcon.EDIT.create());
         btn.addClickListener(event -> {
+            Map<String, List<String>> param = new HashMap<>();
+            List<String> id = new ArrayList<>();
+            List<String> numberRequest = new ArrayList<>();
+            id.add(acquisitionDto.getId().toString());
+            numberRequest.add(acquisitionDto.getAcquisitionNumber().toString());
+            param.put("id",id);
+            param.put("numberRequest",numberRequest);
 
+            QueryParameters qp = new QueryParameters(param);
+            UI.getCurrent().navigate("acquisition-register",qp);
         });
         return btn;
     }

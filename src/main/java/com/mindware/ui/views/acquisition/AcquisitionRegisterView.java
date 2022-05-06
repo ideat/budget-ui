@@ -1,5 +1,6 @@
 package com.mindware.ui.views.acquisition;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -56,6 +57,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Route(value = "acquisition-register", layout = MainLayout.class)
@@ -90,6 +92,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     private List<Item> items;
     private Binder<Acquisition> binder;
+    private Binder<Acquisition> binderQuoationRequest;
 
     private DetailsDrawerFooter footer;
     private DetailsDrawer detailsDrawer;
@@ -139,24 +142,26 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         conceptList = conceptRestTemplate.getAgencia();
 
-
+        footer = new DetailsDrawerFooter();
         if(!params.get("id").get(0).equals("NUEVO")){
             current = acquisitionRestTemplate.getById(params.get("id").get(0));
             title = "Adquición";
-            codeBusinessUnit.setValue(current.getCodeBusinessUnit());
+//            codeBusinessUnit.setValue(current.getCodeBusinessUnit());
 
             Concept concept = conceptList.stream()
-                    .filter(c -> c.getCode2().equals(current.getCodeBusinessUnit()))
+                    .filter(c -> c.getCode2().equals(String.valueOf(current.getCodeBusinessUnit())))
                     .findFirst().get();
-            businessUnit.setValue(concept.getDescription());
-
-            contentPurchaseRequest = (FlexBoxLayout) createContent(createPurchaseRequest(current));
-
+//            businessUnit.setValue(concept.getDescription());
 
             itemList = mapper.readValue(current.getItems(), new TypeReference<List<Item>>() {});
             itemDataprovider = new ListDataProvider<>(itemList);
 
-            setViewContent(contentPurchaseRequest);
+            contentPurchaseRequest = (FlexBoxLayout) createContent(createPurchaseRequest(current));
+            contentInformationQuote = (FlexBoxLayout) createContent(createInformationQuote(current));
+
+
+
+            setViewContent(contentPurchaseRequest,contentInformationQuote);
 
         }else{
             current = new Acquisition();
@@ -173,8 +178,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             itemDataprovider = new ListDataProvider<>(itemList);
 
             contentPurchaseRequest = (FlexBoxLayout) createContent(createPurchaseRequest(current));
+            contentInformationQuote = (FlexBoxLayout) createContent(createInformationQuote(current));
 
-            setViewContent(contentPurchaseRequest);
+            setViewContent(contentPurchaseRequest,contentInformationQuote);
         }
 
         conceptList = new ArrayList<>(conceptRestTemplate.getAgencia());
@@ -186,8 +192,25 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         setViewDetails(createDetailDrawer());
         setViewDetailsPosition(Position.BOTTOM);
-        footer = new DetailsDrawerFooter();
+
+        footer.addSaveListener(event -> {
+            if(itemList.size()<=0){
+                UIUtils.showNotificationType("Registre Items para su adquisicion","alert");
+                return;
+            }
+            if(binder.writeBeanIfValid(current)){
+                try {
+                    String jsonItems = mapper.writeValueAsString(itemList);
+                    current.setItems(jsonItems);
+                    current = acquisitionRestTemplate.add(current);
+                    numberRequest.setValue(current.getAcquisitionNumber());
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         setViewFooter(footer);
+        binder.readBean(current);
     }
 
     @Override
@@ -224,7 +247,11 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 Tab selectedTab = appBar.getSelectedTab();
 
                 if(selectedTab.getLabel().equals("Solicitud de Compra")){
-
+                    contentPurchaseRequest.setVisible(true);
+                    contentInformationQuote.setVisible(false);
+                }else if(selectedTab.getLabel().equals("Información Cotización")){
+                    contentPurchaseRequest.setVisible(false);
+                    contentInformationQuote.setVisible(true);
                 }
             }
         });
@@ -235,8 +262,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     }
 
     private void enabledSheets(){
-        if(current.getAcquisitionNumber()!=null){
-
+        if(current.getAcquisitionNumber()==null){
+            contentInformationQuote.setEnabled(false);
+        }else{
+            contentInformationQuote.setEnabled(true);
         }
     }
 
@@ -297,9 +326,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         receptionDate.setLocale(new Locale("es","BO"));
 
         binder = new BeanValidationBinder<>(Acquisition.class);
+        binder.forField(numberRequest)
+                .bind(Acquisition::getAcquisitionNumber,Acquisition::setAcquisitionNumber);
         binder.forField(codeBusinessUnit)
                 .asRequired("Codigo Unidad de Negocio es requerido")
                 .bind(Acquisition::getCodeBusinessUnit,Acquisition::setCodeBusinessUnit);
+        binder.forField(businessUnit)
+                .asRequired("Nombre Unidad de Negocio es requerido")
+                        .bind(Acquisition::getNameBusinessUnit,Acquisition::setNameBusinessUnit);
         binder.forField(applicant)
                 .asRequired("Solicitante es requerido")
                 .bind(Acquisition::getApplicant,Acquisition::setApplicant);
@@ -366,6 +400,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         FormLayout.FormItem applicantItem = form.addFormItem(layoutApplicant,"Solicitante");
         UIUtils.setColSpan(1,applicantItem);
 
+        form.addFormItem(areaApplicant,"Area Solicitante");
 //        footer = new DetailsDrawerFooter();
 
         form.addFormItem(typeRequest,"Tipo adquisición");
@@ -377,7 +412,6 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         detailsDrawer.setPadding(Left.S, Right.S, Top.S);
         detailsDrawer.setContent(form, gridItems());
-//        detailsDrawer.setFooter(footer);
         detailsDrawer.show();
 
 
@@ -525,6 +559,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         Tooltips.getCurrent().setTooltip(btn,"Selecciona Solicitante");
         btn.addClickListener(event -> {
             applicant.setValue(userLdapDto.getCn());
+            areaApplicant.setValue(userLdapDto.getDepartament());
             detailsDrawer.hide();
         });
 
@@ -609,6 +644,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             if(currentItem !=null && itemBinder.writeBeanIfValid(currentItem)){
 
                 itemList.removeIf(ed -> ed.getId().equals(currentItem.getId()));
+                currentItem.setId(UUID.randomUUID());
                 itemList.add(currentItem);
                 detailsDrawerItem.hide();
                 itemGrid.getDataProvider().refreshAll();
@@ -675,6 +711,124 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     }
 
 //***    END ITEMS
+
+
+//      INFORMATION QUOTE
+    private DetailsDrawer createInformationQuote(Acquisition acquisition){
+
+        DatePicker quotationRequestDate = new DatePicker("Fecha de solicitud de cotizaciones");
+        quotationRequestDate.setWidth("30%");
+        quotationRequestDate.setRequired(true);
+        quotationRequestDate.setLocale(new Locale("es","BO"));
+
+        DatePicker quotationReceptionDate = new DatePicker("Fecha de recepción de cotizaciones");
+        quotationReceptionDate.setWidth("30%");
+        quotationReceptionDate.setRequired(true);
+        quotationReceptionDate.setLocale(new Locale("es","BO"));
+
+//        binderQuoationRequest = new BeanValidationBinder<>(Acquisition.class);
+        if(current.getAcquisitionNumber()!=null) {
+            binder.forField(quotationRequestDate)
+                    .asRequired("Fecha solicitud cotización es requerida")
+                    .bind(Acquisition::getQuotationRequestDate, Acquisition::setQuotationRequestDate);
+            binder.forField(quotationReceptionDate)
+                    .asRequired(("Fecha de recepción de contizaciones es requerida"))
+                    .bind(Acquisition::getQuotationReceptionDate, Acquisition::setQuotationReceptionDate);
+            binder.addStatusChangeListener(event ->{
+                boolean isValid = !event.hasValidationErrors();
+                boolean hasChanges = binder.hasChanges();
+                footer.saveState(isValid && hasChanges);
+            });
+        }
+        VerticalLayout layout = new VerticalLayout();
+        layout.setWidthFull();
+        layout.add(quotationRequestDate,quotationReceptionDate);
+        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER,quotationRequestDate,quotationReceptionDate);
+
+        DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+        detailsDrawer.setWidthFull();
+        detailsDrawer.setHeight("90%");
+
+        detailsDrawer.setPadding(Left.S, Right.S, Top.S);
+        detailsDrawer.setContent(layout);
+//        detailsDrawer.setFooter(footer);
+        detailsDrawer.show();
+
+
+        return detailsDrawer;
+    }
+
+//    INFORMATION CAABS
+
+    private DetailsDrawer createInformationCaabs(Acquisition acquisition){
+        IntegerField caabsNumber = new IntegerField();
+        caabsNumber.setWidthFull();
+        caabsNumber.setMin(0);
+
+        ComboBox<String> currency = new ComboBox<>();
+        currency.setWidthFull();
+        currency.setAllowCustomValue(false);
+        currency.setAutoOpen(true);
+        currency.setRequired(true);
+        currency.setItems(utilValues.getValueParameterByCategory("MONEDA"));
+
+        NumberField amount = new NumberField();
+        amount.setMin(0.0);
+        amount.setWidthFull();
+        amount.setClearButtonVisible(true);
+        amount.setRequiredIndicatorVisible(true);
+
+        if(current.getQuotationReceptionDate()!=null){
+            binder.forField(caabsNumber)
+                    .asRequired("Numero CAABS es requerido")
+                    .bind(Acquisition::getCaabsNumber,Acquisition::setCaabsNumber);
+            binder.forField(currency)
+                    .asRequired("Moneda es requerida")
+                    .bind(Acquisition::getCurrency,Acquisition::setCurrency);
+            binder.forField(amount)
+                    .asRequired("Monto es requerido")
+                    .withValidator(a -> a.doubleValue()>0.0,"Monto tiene que se mayor a 0")
+                    .bind(Acquisition::getAmount,Acquisition::setAmount);
+            binder.addStatusChangeListener(event ->{
+                boolean isValid = !event.hasValidationErrors();
+                boolean hasChanges = binder.hasChanges();
+                footer.saveState(isValid && hasChanges);
+            });
+
+        }
+
+        FormLayout form = new FormLayout();
+        form.setWidthFull();
+        form.setResponsiveSteps(
+                new FormLayout.ResponsiveStep("0",1,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("600px",2,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("810px",3,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("1024px",4,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP)
+        );
+
+        form.addFormItem(caabsNumber,"Número de CAABS");
+        form.addFormItem(currency,"Moneda");
+        form.addFormItem(amount,"Monto");
+
+        DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+        detailsDrawer.setWidthFull();
+        detailsDrawer.setHeight("90%");
+
+        detailsDrawer.setPadding(Left.S, Right.S, Top.S);
+        detailsDrawer.setContent(form, gridItems());
+        detailsDrawer.show();
+
+
+        return detailsDrawer;
+    }
+
+
+
+//    END INFORMATION CAABS
 
 //    EXPENSE DISTRIBUITE
 

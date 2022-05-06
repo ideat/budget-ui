@@ -1,6 +1,8 @@
 package com.mindware.ui;
 
+import com.mindware.backend.entity.acquisitionAuthorizer.AcquisitionAuthorizer;
 import com.mindware.ui.views.acquisition.AcquisitionView;
+import com.mindware.ui.views.acquisitionAuthorizer.AcquisitionAuthorizerView;
 import com.mindware.ui.views.basicServices.BasicServicesView;
 import com.mindware.ui.views.config.account.AccountView;
 import com.mindware.ui.views.config.basicServiceProvider.BasicServiceProviderView;
@@ -149,6 +151,7 @@ public class MainLayout extends FlexBoxLayout
 		menu.addNaviItem(VaadinIcon.STORAGE,"Adquiciones", AcquisitionView.class);
 		NaviItem configuration = menu.addNaviItem(VaadinIcon.COGS, "Configuracion",null);
 		menu.addNaviItem(configuration,"Parametros", ParameterView.class);
+		menu.addNaviItem(configuration,"Autorizador Adquisicion", AcquisitionAuthorizerView.class);
 		menu.addNaviItem(configuration, "Cuentas", AccountView.class);
 		menu.addNaviItem(configuration, "Servicios Basicos", BasicServiceProviderView.class);
 		menu.addNaviItem(configuration, "Periodos", PeriodView.class);

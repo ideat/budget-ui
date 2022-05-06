@@ -26,7 +26,7 @@ public class AcquisitionDtoRestTemplate {
 
     public List<AcquisitionDto> getAll(){
         final String uri = url + "/v1/acquisitionDto/getAll";
-        HttpEntity<AcquisitionDto> entity = new HttpEntity<>(HeaderJwt.getHeader());
+        HttpEntity<AcquisitionDto[]> entity = new HttpEntity<>(HeaderJwt.getHeader());
         ResponseEntity<AcquisitionDto[]> response = restTemplate.exchange(uri, HttpMethod.GET, entity, AcquisitionDto[].class);
         return Arrays.asList(response.getBody());
     }
@@ -35,7 +35,7 @@ public class AcquisitionDtoRestTemplate {
         final String uri = url + "/v1/acquisitionDto/getByCodeBusinessUnit/{codebusinessunit}";
         Map<String,Integer> params = new HashMap<>();
         params.put("codebusinessunit",codebusinessunit);
-        HttpEntity<AcquisitionDto> entity = new HttpEntity<>(HeaderJwt.getHeader());
+        HttpEntity<AcquisitionDto[]> entity = new HttpEntity<>(HeaderJwt.getHeader());
         ResponseEntity<AcquisitionDto[]> response = restTemplate.exchange(uri, HttpMethod.GET, entity, AcquisitionDto[].class, params);
         return Arrays.asList(response.getBody());
     }

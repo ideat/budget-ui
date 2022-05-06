@@ -149,9 +149,6 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         grid.setMultiSort(true);
         grid.setSizeFull();
         grid.setDataProvider(dataProviderContractDto);
-        grid.addSelectionListener(event ->{
-
-        });
 
         grid.addColumn(ContractDto::getSupplierName)
                 .setFlexGrow(1)
