@@ -317,6 +317,11 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.forField(typeChangeCurrency)
                 .asRequired("Categoria Tipo Cambio es requerida")
                 .bind(Contract::getTypeChangeCurrency,Contract::setTypeChangeCurrency);
+        binder.addStatusChangeListener(event ->{
+            boolean isValid = !event.hasValidationErrors();
+            boolean hasChanges = binder.hasChanges();
+            footer.saveState(isValid && hasChanges);
+        });
 
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,

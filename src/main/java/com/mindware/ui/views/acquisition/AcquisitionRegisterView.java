@@ -4,12 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.mindware.backend.entity.acquisitionAuthorizer.AcquisitionAuthorizer;
 import com.mindware.backend.entity.adquisition.Acquisition;
+import com.mindware.backend.entity.adquisition.AdjudicationInfomation;
 import com.mindware.backend.entity.adquisition.Item;
+import com.mindware.backend.entity.adquisition.SelectedAuthorizer;
 import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.user.UserLdapDto;
 import com.mindware.backend.rest.acquisition.AcquisitionRestTemplate;
+import com.mindware.backend.rest.acquisitionAuthorizer.AcquisitionAuthorizerRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
 import com.mindware.backend.util.UtilValues;
@@ -19,11 +23,10 @@ import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerHeader;
 import com.mindware.ui.components.navigation.bar.AppBar;
-import com.mindware.ui.layout.size.Left;
-import com.mindware.ui.layout.size.Right;
-import com.mindware.ui.layout.size.Top;
-import com.mindware.ui.layout.size.Vertical;
+import com.mindware.ui.layout.size.*;
+import com.mindware.ui.util.FontSize;
 import com.mindware.ui.util.LumoStyles;
+import com.mindware.ui.util.TextColor;
 import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.views.SplitViewFrame;
 import com.vaadin.flow.component.AttachEvent;
@@ -31,11 +34,13 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
@@ -49,6 +54,7 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
@@ -57,8 +63,9 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Route(value = "acquisition-register", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
@@ -76,6 +83,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     @Autowired
     private DataLdapRestTemplate dataLdapRestTemplate;
+
+    @Autowired
+    private AcquisitionAuthorizerRestTemplate acquisitionAuthorizerRestTemplate;
 
     private Map<String, List<String>> params;
     private ObjectMapper mapper;
@@ -116,12 +126,33 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private List<Item> itemList;
     private Grid<Item> itemGrid;
 
+    private DetailsDrawerFooter footerSelectedAuthorizer;
+    private DetailsDrawer detailsDrawerSelectedAuthorizer;
+    private DetailsDrawerHeader detailsDrawerHeaderSelectedAuthorizer;
+    private Binder<SelectedAuthorizer> selectedAuthorizerBinder;
+    private ListDataProvider<SelectedAuthorizer> selectedAuthorizerDataProvider;
+    private SelectedAuthorizer currentSelectedAuthorizer;
+    private List<SelectedAuthorizer> selectedAuthorizerList;
+    private Grid<SelectedAuthorizer> selectedAuthorizerGrid;
+    //
+    private Binder<SelectedAuthorizer> selectedAuthorizerLevel2Binder;
+    private ListDataProvider<SelectedAuthorizer> selectedAuthorizerLevel2DataProvider;
+    private SelectedAuthorizer currentSelectedAuthorizerLevel2;
+    private List<SelectedAuthorizer> selectedAuthorizerLevel2List;
+    private Grid<SelectedAuthorizer> selectedAuthorizerLevel2Grid;
+
+//
+    private Binder<AdjudicationInfomation> adjudicationInfomationBinder;
+    private AdjudicationInfomation currentAdjudicationInformation;
+
 
     private List<Concept> conceptList;
     private String title;
 
     private FlexBoxLayout contentPurchaseRequest;
     private FlexBoxLayout contentInformationQuote; //informacion sobre cotizacion
+    private FlexBoxLayout contentInformationCaabs;
+    private FlexBoxLayout contentAdjudicationInformation;
 
 //    Filter Concept Agency
     private TextField codeFilter;
@@ -148,20 +179,29 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             title = "Adquición";
 //            codeBusinessUnit.setValue(current.getCodeBusinessUnit());
 
-            Concept concept = conceptList.stream()
-                    .filter(c -> c.getCode2().equals(String.valueOf(current.getCodeBusinessUnit())))
-                    .findFirst().get();
+//            Concept concept = conceptList.stream()
+//                    .filter(c -> String.valueOf(current.getCodeBusinessUnit()).equals(c.getCode2()))
+//                    .findFirst().get();
 //            businessUnit.setValue(concept.getDescription());
 
             itemList = mapper.readValue(current.getItems(), new TypeReference<List<Item>>() {});
             itemDataprovider = new ListDataProvider<>(itemList);
 
+            selectedAuthorizerList = mapper.readValue(current.getAuthorizersLevel1(), new TypeReference<List<SelectedAuthorizer>>(){});
+            selectedAuthorizerDataProvider = new ListDataProvider<>(selectedAuthorizerList);
+
+            selectedAuthorizerLevel2List = mapper.readValue(current.getAuthorizersLevel2(), new TypeReference<List<SelectedAuthorizer>>(){});
+            selectedAuthorizerLevel2DataProvider = new ListDataProvider<>(selectedAuthorizerLevel2List);
+
             contentPurchaseRequest = (FlexBoxLayout) createContent(createPurchaseRequest(current));
             contentInformationQuote = (FlexBoxLayout) createContent(createInformationQuote(current));
+            contentInformationCaabs = (FlexBoxLayout) createContent(createInformationCaabs(current));
+            currentAdjudicationInformation = mapper.readValue(current.getAdjudicationInformation()
+                    , new TypeReference<AdjudicationInfomation>() {});
+//            AdjudicationInfomation adjudicationInfomation = adjudicationList.size()==0? new AdjudicationInfomation(): adjudicationList.get(0);
+            contentAdjudicationInformation = (FlexBoxLayout) createContent(createAdjudicationInformation());
 
-
-
-            setViewContent(contentPurchaseRequest,contentInformationQuote);
+            setViewContent(contentPurchaseRequest,contentInformationQuote,contentInformationCaabs,contentAdjudicationInformation);
 
         }else{
             current = new Acquisition();
@@ -169,18 +209,26 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             current.setAuthorizersLevel2("[]");
             current.setExpenseDistribuite("[]");
             current.setItems("[]");
-            current.setAdjudicationInformation("[]");
-            current.setReceptionInformation("[]");
-            current.setInvoiceInformation("[]");
+            current.setAdjudicationInformation("{}");
+            current.setReceptionInformation("{}");
+            current.setInvoiceInformation("{}");
             title = "Adquición";
 
             itemList = mapper.readValue(current.getItems(), new TypeReference<List<Item>>() {});
             itemDataprovider = new ListDataProvider<>(itemList);
 
+            selectedAuthorizerList = mapper.readValue(current.getAuthorizersLevel1(), new TypeReference<List<SelectedAuthorizer>>(){});
+            selectedAuthorizerDataProvider = new ListDataProvider<>(selectedAuthorizerList);
+
+
             contentPurchaseRequest = (FlexBoxLayout) createContent(createPurchaseRequest(current));
             contentInformationQuote = (FlexBoxLayout) createContent(createInformationQuote(current));
+            contentInformationCaabs = (FlexBoxLayout) createContent(createInformationCaabs(current));
+            currentAdjudicationInformation = mapper.readValue(current.getAdjudicationInformation(), new TypeReference<AdjudicationInfomation>() {});
+//            AdjudicationInfomation adjudicationInfomation = adjudicationList.size()==0? new AdjudicationInfomation(): adjudicationList.get(0);
+            contentAdjudicationInformation = (FlexBoxLayout) createContent(createAdjudicationInformation());
 
-            setViewContent(contentPurchaseRequest,contentInformationQuote);
+            setViewContent(contentPurchaseRequest,contentInformationQuote,contentInformationCaabs,contentAdjudicationInformation);
         }
 
         conceptList = new ArrayList<>(conceptRestTemplate.getAgencia());
@@ -198,11 +246,31 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 UIUtils.showNotificationType("Registre Items para su adquisicion","alert");
                 return;
             }
+            if(adjudicationInfomationBinder!=null){
+                if(adjudicationInfomationBinder.writeBeanIfValid(currentAdjudicationInformation)){
+                    try {
+                        String jsonAcquisitionInformation = mapper.writeValueAsString(currentAdjudicationInformation);
+                        current.setAdjudicationInformation(jsonAcquisitionInformation);
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+
+                }else{
+                    UIUtils.showNotificationType("Datos Informacion Adjudicacion no se completaron","alert");
+                    return;
+                }
+            }
             if(binder.writeBeanIfValid(current)){
                 try {
                     String jsonItems = mapper.writeValueAsString(itemList);
                     current.setItems(jsonItems);
+                    String jsonAcquisitionAuthorizerLevel1 = mapper.writeValueAsString(selectedAuthorizerList);
+                    String jsonAcquisitionAuthorizerLevel2 = mapper.writeValueAsString(selectedAuthorizerLevel2List);
+
+                    current.setAuthorizersLevel1(jsonAcquisitionAuthorizerLevel1);
+                    current.setAuthorizersLevel2(jsonAcquisitionAuthorizerLevel2);
                     current = acquisitionRestTemplate.add(current);
+
                     numberRequest.setValue(current.getAcquisitionNumber());
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
@@ -240,19 +308,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         appBar.addTab("Entrega a Contabilidad y a la AAAF");
 
         appBar.centerTabs();
-
+        hideContent("");
+        enabledSheets();
         appBar.addTabSelectionListener(e -> {
             enabledSheets();
             if(e.getSource().getSelectedTab()!=null){
                 Tab selectedTab = appBar.getSelectedTab();
+                hideContent(selectedTab.getLabel());
 
-                if(selectedTab.getLabel().equals("Solicitud de Compra")){
-                    contentPurchaseRequest.setVisible(true);
-                    contentInformationQuote.setVisible(false);
-                }else if(selectedTab.getLabel().equals("Información Cotización")){
-                    contentPurchaseRequest.setVisible(false);
-                    contentInformationQuote.setVisible(true);
-                }
             }
         });
 
@@ -266,6 +329,44 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             contentInformationQuote.setEnabled(false);
         }else{
             contentInformationQuote.setEnabled(true);
+        }
+        if(current.getQuotationRequestDate()==null){
+            contentInformationCaabs.setEnabled(false);
+        }else{
+            contentInformationCaabs.setEnabled(true);
+        }
+        if(current.getCaabsNumber()==null){
+            contentAdjudicationInformation.setEnabled(false);
+        }else{
+            contentAdjudicationInformation.setEnabled(true);
+        }
+    }
+
+    private void hideContent(String currentTab){
+        contentPurchaseRequest.setVisible(false);
+        contentInformationQuote.setVisible(false);
+        contentInformationCaabs.setVisible(false);
+        contentAdjudicationInformation.setVisible(false);
+        if(currentTab.equals("Solicitud de Compra")){
+            contentPurchaseRequest.setVisible(true);
+            contentInformationQuote.setVisible(false);
+            contentInformationCaabs.setVisible(false);
+            contentAdjudicationInformation.setVisible(false);
+        }else if(currentTab.equals("Información Cotización")){
+            contentPurchaseRequest.setVisible(false);
+            contentInformationQuote.setVisible(true);
+            contentInformationCaabs.setVisible(false);
+            contentAdjudicationInformation.setVisible(false);
+        }else if(currentTab.equals("Información CAABS")){
+            contentPurchaseRequest.setVisible(false);
+            contentInformationQuote.setVisible(false);
+            contentInformationCaabs.setVisible(true);
+            contentAdjudicationInformation.setVisible(false);
+        }else if(currentTab.equals("Información Adjudicación")){
+            contentPurchaseRequest.setVisible(false);
+            contentInformationQuote.setVisible(false);
+            contentInformationCaabs.setVisible(false);
+            contentAdjudicationInformation.setVisible(true);
         }
     }
 
@@ -485,6 +586,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addClickListener(event -> {
             codeBusinessUnit.setValue(Integer.valueOf(concept.getCode2()));
             businessUnit.setValue(concept.getDescription());
+            applicant.clear();
+            areaApplicant.clear();
             detailsDrawer.hide();
         });
 
@@ -819,16 +922,450 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         detailsDrawer.setHeight("90%");
 
         detailsDrawer.setPadding(Left.S, Right.S, Top.S);
-        detailsDrawer.setContent(form, gridItems());
+        Label title2 = UIUtils.createLabel(FontSize.M, TextColor.SECONDARY,"Esta solicitud debe ser revisada por:");
+
+        detailsDrawer.setContent(form, gridSelectedAuthorizer(), gridSelectedAuthorizerLevel2());
         detailsDrawer.show();
 
 
         return detailsDrawer;
     }
 
+    private FormLayout layoutAuthorizersLevel(SelectedAuthorizer selectedAuthorizer){
+        Concept concept = conceptList.stream()
+                .filter(c -> String.valueOf(current.getCodeBusinessUnit()).equals(c.getCode2()))
+                .findFirst().get();
+        List<AcquisitionAuthorizer> acquisitionAuthorizerList = acquisitionAuthorizerRestTemplate
+                .getByCodeBranchOffice(Integer.valueOf(concept.getCode()));
 
+        TextField codePosition = new TextField();
+        codePosition.setWidthFull();
+        codePosition.setRequired(true);
+        codePosition.setReadOnly(true);
+
+        TextField nameBranchOffice = new TextField();
+        nameBranchOffice.setWidthFull();
+        nameBranchOffice.setRequired(true);
+        nameBranchOffice.setReadOnly(true);
+
+        ComboBox<String> fullName = new ComboBox<>();
+        fullName.setRequired(true);
+        fullName.setWidthFull();
+        fullName.setAllowCustomValue(false);
+        fullName.setItems(acquisitionAuthorizerList.stream()
+                .map(AcquisitionAuthorizer::getFullName)
+                .collect(Collectors.toList()));
+        fullName.addValueChangeListener(event -> {
+            AcquisitionAuthorizer acquisitionAuthorizer = acquisitionAuthorizerList.stream()
+                    .filter(a -> event.getValue().equals(a.getFullName()))
+                    .findFirst().get();
+            codePosition.setValue(acquisitionAuthorizer.getCodePosition());
+            nameBranchOffice.setValue(acquisitionAuthorizer.getNameBranchOffice());
+        });
+
+        DatePicker deliverDate = new DatePicker();
+        deliverDate.setRequired(true);
+        deliverDate.setWidthFull();
+        deliverDate.setLocale(new Locale("es","BO"));
+
+        DatePicker receptionDate = new DatePicker();
+        receptionDate.setRequired(true);
+        receptionDate.setWidthFull();
+        receptionDate.setLocale(new Locale("es","BO"));
+
+        selectedAuthorizerBinder = new BeanValidationBinder<>(SelectedAuthorizer.class);
+        selectedAuthorizerBinder.forField(fullName)
+                .asRequired("Autorizador es requerido")
+                .bind(SelectedAuthorizer::getFullName,SelectedAuthorizer::setFullName);
+        selectedAuthorizerBinder.forField(codePosition)
+                .asRequired("Codigo Cargo es requerido")
+                .bind(SelectedAuthorizer::getCodePosition,SelectedAuthorizer::setCodePosition);
+        selectedAuthorizerBinder.forField(nameBranchOffice)
+                .asRequired("Sucursal es requerida")
+                .bind(SelectedAuthorizer::getNameBranchOffice,SelectedAuthorizer::setNameBranchOffice);
+        selectedAuthorizerBinder.forField(deliverDate)
+                .asRequired("Fecha de Entrega es requerida")
+                .bind(SelectedAuthorizer::getDeliverDate,SelectedAuthorizer::setDeliverDate);
+        selectedAuthorizerBinder.forField(receptionDate)
+                .bind(SelectedAuthorizer::getReceptionDate,SelectedAuthorizer::setReceptionDate);
+
+        FormLayout form = new FormLayout();
+        form.addClassNames(LumoStyles.Padding.Bottom.L,
+                LumoStyles.Padding.Horizontal.S, LumoStyles.Padding.Top.S);
+        form.setResponsiveSteps(
+                new FormLayout.ResponsiveStep("0", 1,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("21em", 2,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP));
+
+        FormLayout.FormItem fullNameItem = form.addFormItem(fullName,"Autorizador");
+        UIUtils.setColSpan(2,fullNameItem);
+        form.addFormItem(codePosition,"Código Cargo");
+        FormLayout.FormItem nameBranchOfficeItem = form.addFormItem(nameBranchOffice,"Unidad Negocio");
+        UIUtils.setColSpan(2,nameBranchOfficeItem);
+        form.addFormItem(deliverDate,"Fecha Entrega");
+        form.addFormItem(receptionDate,"Fecha Recepción");
+
+        return form;
+    }
+
+    private void showDetailsSelectedAuthorizer(SelectedAuthorizer selectedAuthorizer){
+        setViewDetails(createDetailsDrawerSelectedAuthorizer());
+        setViewDetailsPosition(Position.RIGHT);
+        currentSelectedAuthorizer = selectedAuthorizer;
+        detailsDrawerHeaderSelectedAuthorizer.setTitle("Autorizador: "
+                .concat(selectedAuthorizer.getFullName()==null?"Nuevo Autorizador":selectedAuthorizer.getFullName()));
+        detailsDrawerSelectedAuthorizer.setContent(layoutAuthorizersLevel(currentSelectedAuthorizer));
+        detailsDrawerSelectedAuthorizer.show();
+    }
+
+    private DetailsDrawer createDetailsDrawerSelectedAuthorizer(){
+        detailsDrawerSelectedAuthorizer = new DetailsDrawer(DetailsDrawer.Position.RIGHT);
+
+        detailsDrawerHeaderSelectedAuthorizer = new DetailsDrawerHeader("");
+        detailsDrawerHeaderSelectedAuthorizer.addCloseListener(event -> detailsDrawerSelectedAuthorizer.hide());
+        detailsDrawerSelectedAuthorizer.setHeader(detailsDrawerHeaderSelectedAuthorizer);
+
+        footerSelectedAuthorizer = new DetailsDrawerFooter();
+        footerSelectedAuthorizer.addSaveListener(e -> {
+           if(currentSelectedAuthorizer !=null && selectedAuthorizerBinder.writeBeanIfValid(currentSelectedAuthorizer) ){
+
+               selectedAuthorizerList.removeIf(sa -> sa.getId().equals(currentSelectedAuthorizer.getId()));
+               currentSelectedAuthorizer.setId(UUID.randomUUID());
+               selectedAuthorizerList.add(currentSelectedAuthorizer);
+               detailsDrawerSelectedAuthorizer.hide();
+               selectedAuthorizerGrid.getDataProvider().refreshAll();
+               footerSelectedAuthorizer.saveState(true);
+               footer.saveState(true);
+           }
+        });
+        footerSelectedAuthorizer.addCancelListener(e -> detailsDrawerSelectedAuthorizer.hide());
+        detailsDrawerSelectedAuthorizer.setFooter(footerSelectedAuthorizer);
+
+        return detailsDrawerSelectedAuthorizer;
+    }
+
+    private VerticalLayout gridSelectedAuthorizer(){
+
+        VerticalLayout layout = new VerticalLayout();
+        layout.setWidthFull();
+        Button btnAdd = new Button("Adicionar");
+        btnAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
+        btnAdd.addClickListener(event -> {
+            setViewDetailsPosition(Position.RIGHT);
+            setViewDetails(createDetailsDrawerSelectedAuthorizer());
+            showDetailsSelectedAuthorizer(new SelectedAuthorizer());
+        });
+
+        selectedAuthorizerGrid = new Grid<>();
+        selectedAuthorizerGrid.setWidthFull();
+        selectedAuthorizerGrid.setHeight("200px");
+        selectedAuthorizerGrid.setDataProvider(selectedAuthorizerDataProvider);
+
+        selectedAuthorizerGrid.addColumn(SelectedAuthorizer::getFullName)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Autorizador");
+        selectedAuthorizerGrid.addColumn(SelectedAuthorizer::getCodePosition)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Cargo");
+        selectedAuthorizerGrid.addColumn(SelectedAuthorizer::getNameBranchOffice)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Unidad Negocio");
+        selectedAuthorizerGrid.addColumn(new LocalDateRenderer<>(SelectedAuthorizer::getDeliverDate
+                , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Feche Entrega");
+        selectedAuthorizerGrid.addColumn(new LocalDateRenderer<>(SelectedAuthorizer::getReceptionDate
+                        , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Feche Recepcion");
+        selectedAuthorizerGrid.addColumn(new ComponentRenderer<>(this::createButtonDeleteSelectedAuthorizer))
+                .setFlexGrow(1)
+                .setAutoWidth(true);
+        HorizontalLayout headerGrid = new HorizontalLayout();
+        headerGrid.setWidthFull();
+        Label title2 = UIUtils.createLabel(FontSize.L, TextColor.TERTIARY
+                ,"Esta solicitud debe ser aprobada por: ");
+
+        VerticalLayout layoutTitle = new VerticalLayout();
+        layoutTitle.add(title2);
+        layoutTitle.setHorizontalComponentAlignment(FlexComponent.Alignment.START,title2);
+        VerticalLayout layoutButton = new VerticalLayout();
+        layoutButton.add(btnAdd);
+        layoutButton.setHorizontalComponentAlignment(FlexComponent.Alignment.END,btnAdd);
+        headerGrid.add(layoutTitle,layoutButton);
+
+        layout.add(headerGrid,selectedAuthorizerGrid);
+//        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.END,headerGrid);
+
+        return layout;
+
+    }
+
+    private Component createButtonDeleteSelectedAuthorizer(SelectedAuthorizer selectedAuthorizer){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.TRASH.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        btn.addClickListener(event -> {
+            selectedAuthorizerList.remove(selectedAuthorizer);
+            selectedAuthorizerGrid.getDataProvider().refreshAll();
+//            footerSelectedAuthorizer.saveState(true);
+        });
+
+        return btn;
+    }
+
+//    AuthorizerLevel 2
+
+    private void showDetailsSelectedAuthorizerLevel2(SelectedAuthorizer selectedAuthorizer){
+        setViewDetails(createDetailsDrawerSelectedAuthorizerLevel2());
+        setViewDetailsPosition(Position.RIGHT);
+        currentSelectedAuthorizerLevel2 = selectedAuthorizer;
+        detailsDrawerHeaderSelectedAuthorizer.setTitle("Autorizador: "
+                .concat(selectedAuthorizer.getFullName()==null?"Nuevo Autorizador":selectedAuthorizer.getFullName()));
+        detailsDrawerSelectedAuthorizer.setContent(layoutAuthorizersLevel(currentSelectedAuthorizer));
+        detailsDrawerSelectedAuthorizer.show();
+    }
+
+    private DetailsDrawer createDetailsDrawerSelectedAuthorizerLevel2(){
+        detailsDrawerSelectedAuthorizer = new DetailsDrawer(DetailsDrawer.Position.RIGHT);
+
+        detailsDrawerHeaderSelectedAuthorizer = new DetailsDrawerHeader("");
+        detailsDrawerHeaderSelectedAuthorizer.addCloseListener(event -> detailsDrawerSelectedAuthorizer.hide());
+        detailsDrawerSelectedAuthorizer.setHeader(detailsDrawerHeaderSelectedAuthorizer);
+
+        footerSelectedAuthorizer = new DetailsDrawerFooter();
+        footerSelectedAuthorizer.addSaveListener(e -> {
+            if(currentSelectedAuthorizerLevel2 !=null && selectedAuthorizerBinder.writeBeanIfValid(currentSelectedAuthorizerLevel2) ){
+
+                selectedAuthorizerLevel2List.removeIf(sa -> sa.getId().equals(currentSelectedAuthorizerLevel2.getId()));
+                currentSelectedAuthorizerLevel2.setId(UUID.randomUUID());
+                selectedAuthorizerLevel2List.add(currentSelectedAuthorizerLevel2);
+                detailsDrawerSelectedAuthorizer.hide();
+                selectedAuthorizerLevel2Grid.getDataProvider().refreshAll();
+                footerSelectedAuthorizer.saveState(true);
+                footer.saveState(true);
+            }
+        });
+        footerSelectedAuthorizer.addCancelListener(e -> detailsDrawerSelectedAuthorizer.hide());
+        detailsDrawerSelectedAuthorizer.setFooter(footerSelectedAuthorizer);
+
+        return detailsDrawerSelectedAuthorizer;
+    }
+
+    private VerticalLayout gridSelectedAuthorizerLevel2(){
+
+    VerticalLayout layout = new VerticalLayout();
+    layout.setWidthFull();
+    Button btnAdd = new Button("Adicionar");
+      btnAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
+    btnAdd.addClickListener(event -> {
+        setViewDetailsPosition(Position.RIGHT);
+        setViewDetails(createDetailsDrawerSelectedAuthorizerLevel2());
+        showDetailsSelectedAuthorizerLevel2(new SelectedAuthorizer());
+    });
+
+    selectedAuthorizerLevel2Grid = new Grid<>();
+    selectedAuthorizerLevel2Grid.setWidthFull();
+    selectedAuthorizerLevel2Grid.setHeight("200px");
+    selectedAuthorizerLevel2Grid.setDataProvider(selectedAuthorizerLevel2DataProvider);
+
+    selectedAuthorizerLevel2Grid.addColumn(SelectedAuthorizer::getFullName)
+            .setSortable(true)
+            .setAutoWidth(true)
+            .setResizable(true)
+            .setFlexGrow(1)
+            .setHeader("Autorizador");
+    selectedAuthorizerLevel2Grid.addColumn(SelectedAuthorizer::getCodePosition)
+            .setSortable(true)
+            .setAutoWidth(true)
+            .setResizable(true)
+            .setFlexGrow(1)
+            .setHeader("Cargo");
+    selectedAuthorizerLevel2Grid.addColumn(SelectedAuthorizer::getNameBranchOffice)
+            .setSortable(true)
+            .setAutoWidth(true)
+            .setResizable(true)
+            .setFlexGrow(1)
+            .setHeader("Unidad Negocio");
+    selectedAuthorizerLevel2Grid.addColumn(new LocalDateRenderer<>(SelectedAuthorizer::getDeliverDate
+                    , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+            .setSortable(true)
+            .setAutoWidth(true)
+            .setResizable(true)
+            .setFlexGrow(1)
+            .setHeader("Feche Entrega");
+    selectedAuthorizerLevel2Grid.addColumn(new LocalDateRenderer<>(SelectedAuthorizer::getReceptionDate
+                    , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+            .setSortable(true)
+            .setAutoWidth(true)
+            .setResizable(true)
+            .setFlexGrow(1)
+            .setHeader("Feche Recepcion");
+    selectedAuthorizerLevel2Grid.addColumn(new ComponentRenderer<>(this::createButtonDeleteSelectedAuthorizerLevel2))
+            .setFlexGrow(1)
+            .setAutoWidth(true);
+
+        HorizontalLayout headerGrid = new HorizontalLayout();
+        headerGrid.setWidthFull();
+        Label title2 = UIUtils.createLabel(FontSize.L, TextColor.TERTIARY
+                ,"Esta solicitud debe ser revisada por: ");
+
+        VerticalLayout layoutTitle = new VerticalLayout();
+        layoutTitle.add(title2);
+        layoutTitle.setHorizontalComponentAlignment(FlexComponent.Alignment.START,title2);
+        VerticalLayout layoutButton = new VerticalLayout();
+        layoutButton.add(btnAdd);
+        layoutButton.setHorizontalComponentAlignment(FlexComponent.Alignment.END,btnAdd);
+        headerGrid.add(layoutTitle,layoutButton);
+
+        layout.add(headerGrid,selectedAuthorizerLevel2Grid);
+
+//    layout.add(btnAdd,selectedAuthorizerLevel2Grid);
+//    layout.setHorizontalComponentAlignment(FlexComponent.Alignment.END,btnAdd);
+
+    return layout;
+
+}
+
+    private Component createButtonDeleteSelectedAuthorizerLevel2(SelectedAuthorizer selectedAuthorizer){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.TRASH.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        btn.addClickListener(event -> {
+            selectedAuthorizerLevel2List.remove(selectedAuthorizer);
+            selectedAuthorizerLevel2Grid.getDataProvider().refreshAll();
+//            footerSelectedAuthorizer.saveState(true);
+        });
+
+        return btn;
+    }
+//    End AuthorizerLevel2
 
 //    END INFORMATION CAABS
+
+//    ADJUDICATION INFORMATION
+
+    private DetailsDrawer createAdjudicationInformation(){
+
+        DatePicker  purchaseOrder = new DatePicker();
+        purchaseOrder.setWidthFull();
+        purchaseOrder.setRequired(true);
+        purchaseOrder.setLocale(new Locale("es","BO"));
+
+        IntegerField deliverTime = new IntegerField();
+        deliverTime.setWidthFull();
+        deliverTime.setMin(0);
+        deliverTime.setRequiredIndicatorVisible(true);
+
+        Checkbox requiresAdvance = new Checkbox("El proveedor solicita adelanto?");
+        requiresAdvance.setWidthFull();
+
+        Checkbox correspondsContract = new Checkbox("Corresponde contrato?");
+        correspondsContract.setWidthFull();
+
+        DatePicker requireUpdateDoc = new DatePicker();
+        requireUpdateDoc.setWidthFull();
+        requireUpdateDoc.setLocale(new Locale("es","BO"));
+
+        DatePicker contractRequestDateToLegal = new DatePicker();
+        contractRequestDateToLegal.setWidthFull();
+        contractRequestDateToLegal.setLocale(new Locale("es","BO"));
+
+        DatePicker contractDeliverContractFromLegal = new DatePicker();
+        contractDeliverContractFromLegal.setWidthFull();
+        contractDeliverContractFromLegal.setLocale(new Locale("es","BO"));
+
+        DatePicker dateSignature = new DatePicker();
+        dateSignature.setWidthFull();
+        dateSignature.setLocale(new Locale("es","BO"));
+
+        if(current.getCaabsNumber()!=null){
+            adjudicationInfomationBinder = new BeanValidationBinder<>(AdjudicationInfomation.class);
+            adjudicationInfomationBinder.readBean(currentAdjudicationInformation);
+            adjudicationInfomationBinder.forField(purchaseOrder)
+                    .asRequired("Fecha de envio de la orden de compra es requerido")
+                    .bind(AdjudicationInfomation::getPurchaseOrder,AdjudicationInfomation::setPurchaseOrder);
+            adjudicationInfomationBinder.forField(deliverTime)
+                    .asRequired("Tiempo de entrega es requerido")
+                    .withValidator(d -> d.intValue()>0,"Tiempo entrega debe ser positivo")
+                    .bind(AdjudicationInfomation::getDeliveryTime,AdjudicationInfomation::setDeliveryTime);
+            adjudicationInfomationBinder.forField(requiresAdvance)
+                    .bind(AdjudicationInfomation::isRequiresAdvance,AdjudicationInfomation::setRequiresAdvance);
+            adjudicationInfomationBinder.forField(correspondsContract)
+                    .bind(AdjudicationInfomation::isCorrespondsContract,AdjudicationInfomation::setCorrespondsContract);
+            adjudicationInfomationBinder.forField(requireUpdateDoc)
+                    .bind(AdjudicationInfomation::getRequireUpdateDoc,AdjudicationInfomation::setRequireUpdateDoc);
+            adjudicationInfomationBinder.forField(contractRequestDateToLegal)
+                    .bind(AdjudicationInfomation::getContractRequestDateToLegal,AdjudicationInfomation::setContractRequestDateToLegal);
+            adjudicationInfomationBinder.forField(contractDeliverContractFromLegal)
+                    .bind(AdjudicationInfomation::getContractDeliverContractFromLegal,AdjudicationInfomation::setContractDeliverContractFromLegal);
+            adjudicationInfomationBinder.forField(dateSignature)
+                    .bind(AdjudicationInfomation::getDateSignature,AdjudicationInfomation::setDateSignature);
+            adjudicationInfomationBinder.addStatusChangeListener(event -> {
+                boolean isValid = !event.hasValidationErrors();
+                boolean hasChanges = adjudicationInfomationBinder.hasChanges();
+                footer.saveState(isValid && hasChanges);
+            });
+
+        }
+
+        FormLayout form = new FormLayout();
+        form.setWidth("30%");
+        form.setResponsiveSteps(
+                new FormLayout.ResponsiveStep("0",1,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("600px",2,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("810px",3,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("1024px",4,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP)
+        );
+
+        form.addFormItem(purchaseOrder,"Fecha de envío de la orden de compra");
+        form.addFormItem(deliverTime,"Registro tiempo de entrega (días)");
+        form.addFormItem(requiresAdvance,"");
+        form.addFormItem(correspondsContract,"");
+        form.addFormItem(requireUpdateDoc,"Fecha solicitud actualización documentos al proveedor");
+        form.addFormItem(contractRequestDateToLegal,"Fecha solicitud contrato por legal");
+        form.addFormItem(contractDeliverContractFromLegal,"Fecha entrega contrato por legal");
+        form.addFormItem(dateSignature,"Fecha de firmas");
+
+        VerticalLayout layout = new VerticalLayout();
+        layout.setWidthFull();
+        layout.add(form);
+        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER,form);
+
+        DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+        detailsDrawer.setWidthFull();
+        detailsDrawer.setHeight("90%");
+
+        detailsDrawer.setPadding(Left.M, Right.S, Top.S);
+        detailsDrawer.setContent(layout);
+
+        return detailsDrawer;
+    }
+
+//    END ADJUDICATION INFORMATION
+
 
 //    EXPENSE DISTRIBUITE
 

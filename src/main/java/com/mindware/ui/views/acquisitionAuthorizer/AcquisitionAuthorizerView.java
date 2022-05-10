@@ -280,6 +280,11 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
         binder.forField(email)
                 .asRequired("Correo Autorizador es requerido")
                 .bind(AcquisitionAuthorizer::getEmail,AcquisitionAuthorizer::setEmail);
+        binder.addStatusChangeListener(event ->{
+            boolean isValid = !event.hasValidationErrors();
+            boolean hasChanges = binder.hasChanges();
+            footer.saveState(isValid && hasChanges);
+        });
 
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
