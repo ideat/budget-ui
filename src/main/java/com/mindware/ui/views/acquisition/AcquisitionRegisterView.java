@@ -4,18 +4,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.mindware.backend.Invoice;
 import com.mindware.backend.entity.acquisitionAuthorizer.AcquisitionAuthorizer;
-import com.mindware.backend.entity.adquisition.Acquisition;
-import com.mindware.backend.entity.adquisition.AdjudicationInfomation;
-import com.mindware.backend.entity.adquisition.Item;
-import com.mindware.backend.entity.adquisition.SelectedAuthorizer;
+import com.mindware.backend.entity.adquisition.*;
 import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
 import com.mindware.backend.entity.corebank.Concept;
+import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.entity.user.UserLdapDto;
 import com.mindware.backend.rest.acquisition.AcquisitionRestTemplate;
 import com.mindware.backend.rest.acquisitionAuthorizer.AcquisitionAuthorizerRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
+import com.mindware.backend.rest.supplier.SupplierRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -31,15 +31,18 @@ import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.views.SplitViewFrame;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -87,6 +90,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     @Autowired
     private AcquisitionAuthorizerRestTemplate acquisitionAuthorizerRestTemplate;
 
+    @Autowired
+    private SupplierRestTemplate supplierRestTemplate;
+
     private Map<String, List<String>> params;
     private ObjectMapper mapper;
 
@@ -125,7 +131,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private Item currentItem;
     private List<Item> itemList;
     private Grid<Item> itemGrid;
-
+//  AutorizerLevel
     private DetailsDrawerFooter footerSelectedAuthorizer;
     private DetailsDrawer detailsDrawerSelectedAuthorizer;
     private DetailsDrawerHeader detailsDrawerHeaderSelectedAuthorizer;
@@ -134,18 +140,34 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private SelectedAuthorizer currentSelectedAuthorizer;
     private List<SelectedAuthorizer> selectedAuthorizerList;
     private Grid<SelectedAuthorizer> selectedAuthorizerGrid;
-    //
+    //AuthorizerLevel2
     private Binder<SelectedAuthorizer> selectedAuthorizerLevel2Binder;
     private ListDataProvider<SelectedAuthorizer> selectedAuthorizerLevel2DataProvider;
     private SelectedAuthorizer currentSelectedAuthorizerLevel2;
     private List<SelectedAuthorizer> selectedAuthorizerLevel2List;
     private Grid<SelectedAuthorizer> selectedAuthorizerLevel2Grid;
 
-//
+//  AdjudicationInformation
     private Binder<AdjudicationInfomation> adjudicationInfomationBinder;
     private AdjudicationInfomation currentAdjudicationInformation;
+//  ReceptionInformation
+    private Binder<ReceptionInformation> receptionInformationBinder;
+    private ReceptionInformation currentReceptionInformation;
+    private TextField nameBusinessUnitReceptionInformation;
+    private IntegerField codeBusinessUnitReceptionInformation;
+    private TextField receiveBy;
 
-
+//    InvoiceInformation
+    private DetailsDrawerFooter footerInvoiceInformation;
+    private DetailsDrawer detailsDrawerInvoiceInformation;
+    private DetailsDrawerHeader detailsDrawerHeaderInvoiceInformation;
+    private Binder<InvoiceInformation> invoiceInformationBinder;
+    private InvoiceInformation currentInvoiceInformation;
+    private Grid<InvoiceInformation> invoiceInformationGrid;
+    private ListDataProvider<InvoiceInformation> invoiceInformationDataProvider;
+    private List<InvoiceInformation> invoiceInformationList;
+    private TextField nameSupplierInvoiceInformation;
+    private TextField idSupplierInvoiceInformation;
     private List<Concept> conceptList;
     private String title;
 
@@ -153,6 +175,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private FlexBoxLayout contentInformationQuote; //informacion sobre cotizacion
     private FlexBoxLayout contentInformationCaabs;
     private FlexBoxLayout contentAdjudicationInformation;
+    private FlexBoxLayout contentReceptionInformation;
+    private FlexBoxLayout contentInvoiceInformation;
 
 //    Filter Concept Agency
     private TextField codeFilter;
@@ -162,6 +186,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 //    Filter User Agency
     private TextField cnFilter;
     private TextField titleFilter;
+
+    private String currentTab;
 
     @SneakyThrows
     @Override
@@ -198,10 +224,17 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             contentInformationCaabs = (FlexBoxLayout) createContent(createInformationCaabs(current));
             currentAdjudicationInformation = mapper.readValue(current.getAdjudicationInformation()
                     , new TypeReference<AdjudicationInfomation>() {});
-//            AdjudicationInfomation adjudicationInfomation = adjudicationList.size()==0? new AdjudicationInfomation(): adjudicationList.get(0);
             contentAdjudicationInformation = (FlexBoxLayout) createContent(createAdjudicationInformation());
 
-            setViewContent(contentPurchaseRequest,contentInformationQuote,contentInformationCaabs,contentAdjudicationInformation);
+            currentReceptionInformation = mapper.readValue(current.getReceptionInformation(), new TypeReference<ReceptionInformation>(){});
+            contentReceptionInformation = (FlexBoxLayout) createContent(createReceptionInformation());
+
+            invoiceInformationList = mapper.readValue(current.getInvoiceInformation(), new TypeReference<List<InvoiceInformation>>(){});
+            invoiceInformationDataProvider = new ListDataProvider(invoiceInformationList);
+            contentInvoiceInformation = (FlexBoxLayout) createContent(createInvoiceInformation());
+
+            setViewContent(contentPurchaseRequest,contentInformationQuote,contentInformationCaabs
+                    ,contentAdjudicationInformation, contentReceptionInformation,contentInvoiceInformation);
 
         }else{
             current = new Acquisition();
@@ -211,7 +244,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             current.setItems("[]");
             current.setAdjudicationInformation("{}");
             current.setReceptionInformation("{}");
-            current.setInvoiceInformation("{}");
+            current.setInvoiceInformation("[]");
             title = "Adquición";
 
             itemList = mapper.readValue(current.getItems(), new TypeReference<List<Item>>() {});
@@ -220,15 +253,24 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             selectedAuthorizerList = mapper.readValue(current.getAuthorizersLevel1(), new TypeReference<List<SelectedAuthorizer>>(){});
             selectedAuthorizerDataProvider = new ListDataProvider<>(selectedAuthorizerList);
 
+            selectedAuthorizerLevel2List = mapper.readValue(current.getAuthorizersLevel2(), new TypeReference<List<SelectedAuthorizer>>(){});
+            selectedAuthorizerLevel2DataProvider = new ListDataProvider<>(selectedAuthorizerLevel2List);
 
             contentPurchaseRequest = (FlexBoxLayout) createContent(createPurchaseRequest(current));
             contentInformationQuote = (FlexBoxLayout) createContent(createInformationQuote(current));
             contentInformationCaabs = (FlexBoxLayout) createContent(createInformationCaabs(current));
             currentAdjudicationInformation = mapper.readValue(current.getAdjudicationInformation(), new TypeReference<AdjudicationInfomation>() {});
-//            AdjudicationInfomation adjudicationInfomation = adjudicationList.size()==0? new AdjudicationInfomation(): adjudicationList.get(0);
             contentAdjudicationInformation = (FlexBoxLayout) createContent(createAdjudicationInformation());
 
-            setViewContent(contentPurchaseRequest,contentInformationQuote,contentInformationCaabs,contentAdjudicationInformation);
+            currentReceptionInformation = mapper.readValue(current.getReceptionInformation(), new TypeReference<ReceptionInformation>(){});
+            contentReceptionInformation = (FlexBoxLayout) createContent(createReceptionInformation());
+
+            invoiceInformationList = mapper.readValue(current.getInvoiceInformation(), new TypeReference<List<InvoiceInformation>>(){});
+            invoiceInformationDataProvider = new ListDataProvider(invoiceInformationList);
+            contentInvoiceInformation = (FlexBoxLayout) createContent(createInvoiceInformation());
+
+            setViewContent(contentPurchaseRequest,contentInformationQuote,contentInformationCaabs,
+                    contentAdjudicationInformation, contentReceptionInformation, contentInvoiceInformation);
         }
 
         conceptList = new ArrayList<>(conceptRestTemplate.getAgencia());
@@ -243,7 +285,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         footer.addSaveListener(event -> {
             if(itemList.size()<=0){
-                UIUtils.showNotificationType("Registre Items para su adquisicion","alert");
+                UIUtils.showNotificationType("Registre Items para su adquisición","alert");
                 return;
             }
             if(adjudicationInfomationBinder!=null){
@@ -256,10 +298,34 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     }
 
                 }else{
-                    UIUtils.showNotificationType("Datos Informacion Adjudicacion no se completaron","alert");
+                    UIUtils.showNotificationType("Datos Información Adjudicacion no se completaron","alert");
                     return;
                 }
             }
+
+            if(receptionInformationBinder!=null){
+                if(receptionInformationBinder.writeBeanIfValid(currentReceptionInformation)){
+                    try {
+                        String jsonReceptionInformation = mapper.writeValueAsString(currentReceptionInformation);
+                        current.setReceptionInformation(jsonReceptionInformation);
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                }else {
+                    UIUtils.showNotificationType("Datos Recepción del Bien o Servicio no se completo", "alert");
+                    return;
+                }
+            }
+
+            if(invoiceInformationBinder!=null){
+                try {
+                    String jsonInvoiceInformation = mapper.writeValueAsString(invoiceInformationList);
+                    current.setInvoiceInformation(jsonInvoiceInformation);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+
             if(binder.writeBeanIfValid(current)){
                 try {
                     String jsonItems = mapper.writeValueAsString(itemList);
@@ -315,6 +381,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             if(e.getSource().getSelectedTab()!=null){
                 Tab selectedTab = appBar.getSelectedTab();
                 hideContent(selectedTab.getLabel());
+                currentTab = selectedTab.getLabel();
 
             }
         });
@@ -340,33 +407,67 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         }else{
             contentAdjudicationInformation.setEnabled(true);
         }
+        if(current.getAdjudicationInformation()==null || current.getAdjudicationInformation().equals("{}")){
+            contentReceptionInformation.setEnabled(false);
+        }else{
+            contentReceptionInformation.setEnabled(true);
+        }
+        if(current.getReceptionInformation()==null || current.getReceptionInformation().equals("[]")){
+            contentInvoiceInformation.setEnabled(false);
+        }else{
+            contentInvoiceInformation.setEnabled(true);
+        }
     }
 
     private void hideContent(String currentTab){
-        contentPurchaseRequest.setVisible(false);
+        contentPurchaseRequest.setVisible(true);
         contentInformationQuote.setVisible(false);
         contentInformationCaabs.setVisible(false);
         contentAdjudicationInformation.setVisible(false);
+        contentReceptionInformation.setVisible(false);
+        contentInvoiceInformation.setVisible(false);
         if(currentTab.equals("Solicitud de Compra")){
             contentPurchaseRequest.setVisible(true);
             contentInformationQuote.setVisible(false);
             contentInformationCaabs.setVisible(false);
             contentAdjudicationInformation.setVisible(false);
+            contentReceptionInformation.setVisible(false);
+            contentInvoiceInformation.setVisible(false);
         }else if(currentTab.equals("Información Cotización")){
             contentPurchaseRequest.setVisible(false);
             contentInformationQuote.setVisible(true);
             contentInformationCaabs.setVisible(false);
             contentAdjudicationInformation.setVisible(false);
+            contentReceptionInformation.setVisible(false);
+            contentInvoiceInformation.setVisible(false);
         }else if(currentTab.equals("Información CAABS")){
             contentPurchaseRequest.setVisible(false);
             contentInformationQuote.setVisible(false);
             contentInformationCaabs.setVisible(true);
             contentAdjudicationInformation.setVisible(false);
+            contentReceptionInformation.setVisible(false);
+            contentInvoiceInformation.setVisible(false);
         }else if(currentTab.equals("Información Adjudicación")){
             contentPurchaseRequest.setVisible(false);
             contentInformationQuote.setVisible(false);
             contentInformationCaabs.setVisible(false);
             contentAdjudicationInformation.setVisible(true);
+            contentReceptionInformation.setVisible(false);
+            contentInvoiceInformation.setVisible(false);
+        }else if(currentTab.equals("Recepción del Bien o Servicio")){
+            contentPurchaseRequest.setVisible(false);
+            contentInformationQuote.setVisible(false);
+            contentInformationCaabs.setVisible(false);
+            contentAdjudicationInformation.setVisible(false);
+            contentReceptionInformation.setVisible(true);
+            contentInvoiceInformation.setVisible(false);
+        }else if(currentTab.equals("Información de la Factura")){
+            contentPurchaseRequest.setVisible(false);
+            contentInformationQuote.setVisible(false);
+            contentInformationCaabs.setVisible(false);
+            contentAdjudicationInformation.setVisible(false);
+            contentReceptionInformation.setVisible(false);
+            contentInvoiceInformation.setVisible(true);
         }
     }
 
@@ -584,11 +685,18 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Tooltips.getCurrent().setTooltip(btn,"Selecciona Unidad Negocio");
         btn.addClickListener(event -> {
-            codeBusinessUnit.setValue(Integer.valueOf(concept.getCode2()));
-            businessUnit.setValue(concept.getDescription());
-            applicant.clear();
-            areaApplicant.clear();
+            if(currentTab.equals("Solicitud de Compra")) {
+                codeBusinessUnit.setValue(Integer.valueOf(concept.getCode2()));
+                businessUnit.setValue(concept.getDescription());
+                applicant.clear();
+                areaApplicant.clear();
+            }else if(currentTab.equals("Recepción del Bien o Servicio")){
+
+                nameBusinessUnitReceptionInformation.setValue(concept.getDescription());
+                codeBusinessUnitReceptionInformation.setValue(Integer.valueOf(concept.getCode2()));
+            }
             detailsDrawer.hide();
+
         });
 
         return btn;
@@ -661,8 +769,12 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Tooltips.getCurrent().setTooltip(btn,"Selecciona Solicitante");
         btn.addClickListener(event -> {
-            applicant.setValue(userLdapDto.getCn());
-            areaApplicant.setValue(userLdapDto.getDepartament());
+            if(currentTab.equals("Solicitud de Compra")) {
+                applicant.setValue(userLdapDto.getCn());
+                areaApplicant.setValue(userLdapDto.getDepartament());
+            }else if(currentTab.equals("Recepción del Bien o Servicio")){
+               receiveBy.setValue(userLdapDto.getCn());
+            }
             detailsDrawer.hide();
         });
 
@@ -1299,7 +1411,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         if(current.getCaabsNumber()!=null){
             adjudicationInfomationBinder = new BeanValidationBinder<>(AdjudicationInfomation.class);
-            adjudicationInfomationBinder.readBean(currentAdjudicationInformation);
+
             adjudicationInfomationBinder.forField(purchaseOrder)
                     .asRequired("Fecha de envio de la orden de compra es requerido")
                     .bind(AdjudicationInfomation::getPurchaseOrder,AdjudicationInfomation::setPurchaseOrder);
@@ -1325,6 +1437,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 footer.saveState(isValid && hasChanges);
             });
 
+            adjudicationInfomationBinder.readBean(currentAdjudicationInformation);
         }
 
         FormLayout form = new FormLayout();
@@ -1366,7 +1479,430 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
 //    END ADJUDICATION INFORMATION
 
+//    RECEPTION INFORMATION
 
+    private DetailsDrawer createReceptionInformation(){
+
+        DatePicker dateReception = new DatePicker();
+        dateReception.setWidthFull();
+        dateReception.setRequired(true);
+        dateReception.setLocale(new Locale("es","BO"));
+
+        nameBusinessUnitReceptionInformation = new TextField();
+        nameBusinessUnitReceptionInformation.setWidth("50%");
+        nameBusinessUnitReceptionInformation.setReadOnly(true);
+        nameBusinessUnitReceptionInformation.setRequired(true);
+
+        codeBusinessUnitReceptionInformation = new IntegerField();
+        codeBusinessUnitReceptionInformation.setRequiredIndicatorVisible(true);
+        codeBusinessUnitReceptionInformation.setWidth("20%");
+        codeBusinessUnitReceptionInformation.setReadOnly(true);
+
+        receiveBy = new TextField();
+        receiveBy.setWidthFull();
+        receiveBy.setRequired(true);
+        receiveBy.setReadOnly(true);
+
+        if(current.getAdjudicationInformation()!=null && !current.getAdjudicationInformation().equals("{}")){
+            receptionInformationBinder = new BeanValidationBinder<>(ReceptionInformation.class);
+
+            receptionInformationBinder.forField(dateReception)
+                    .asRequired("Fecha de recepción es requerida")
+                    .bind(ReceptionInformation::getDateReception,ReceptionInformation::setDateReception);
+            receptionInformationBinder.forField(nameBusinessUnitReceptionInformation)
+                    .asRequired("Unidad Negocio es requerido")
+                    .bind(ReceptionInformation::getNameBusinessUnit,ReceptionInformation::setNameBusinessUnit);
+            receptionInformationBinder.forField(codeBusinessUnitReceptionInformation)
+                    .asRequired("Codigo Unidad de Negocio es requerido")
+                    .bind(ReceptionInformation::getCodeBusinessUnit,ReceptionInformation::setCodeBusinessUnit);
+            receptionInformationBinder.forField(receiveBy)
+                    .asRequired("Persona que firma la conformidad de recepción es requerida")
+                    .bind(ReceptionInformation::getReceivedBy,ReceptionInformation::setReceivedBy);
+            receptionInformationBinder.addStatusChangeListener(event -> {
+                boolean isValid = !event.hasValidationErrors();
+                boolean hasChanges = receptionInformationBinder.hasChanges();
+                footer.saveState(isValid && hasChanges);
+            });
+
+            receptionInformationBinder.readBean(currentReceptionInformation);
+        }
+
+        FormLayout form = new FormLayout();
+        form.setWidth("40%");
+        form.setResponsiveSteps(
+                new FormLayout.ResponsiveStep("0",1,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("600px",2,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("810px",3,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("1024px",4,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP)
+        );
+
+        form.addFormItem(dateReception,"Fecha de recepción");
+        HorizontalLayout layoutBusinessUnit = new HorizontalLayout();
+        Button btnSearchBusinessUnit = new Button();
+        btnSearchBusinessUnit.setWidth("10%");
+        btnSearchBusinessUnit.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY);
+        btnSearchBusinessUnit.setIcon(VaadinIcon.SEARCH_PLUS.create());
+        btnSearchBusinessUnit.addClickListener(event -> {
+            setViewDetails(createDetailDrawer());
+            setViewDetailsPosition(Position.BOTTOM);
+            showSearchBusinessUnit();
+        });
+
+        layoutBusinessUnit.add(codeBusinessUnitReceptionInformation,nameBusinessUnitReceptionInformation,btnSearchBusinessUnit);
+        FormLayout.FormItem businessUnitItem = form.addFormItem(layoutBusinessUnit,"Unidad Negocio: Agencias y Sucursales");
+        UIUtils.setColSpan(2,businessUnitItem);
+
+        HorizontalLayout layoutApplicant = new HorizontalLayout();
+        Button btnSearchApplicant = new Button();
+        btnSearchApplicant.setWidth("10%");
+        btnSearchApplicant.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY);
+        btnSearchApplicant.setIcon(VaadinIcon.SEARCH_PLUS.create());
+        btnSearchApplicant.addClickListener(event -> {
+            if(!codeBusinessUnitReceptionInformation.isEmpty()) {
+                setViewDetails(createDetailDrawer());
+                setViewDetailsPosition(Position.BOTTOM);
+                showSearchApplicant();
+            }else{
+                UIUtils.showNotificationType("Seleccione una Unidad de Negocio", "alert");
+            }
+        });
+        layoutApplicant.add(receiveBy,btnSearchApplicant);
+        FormLayout.FormItem applicantItem = form.addFormItem(layoutApplicant,"Firma la conformidad de recepción");
+        UIUtils.setColSpan(2,applicantItem);
+
+        VerticalLayout layout = new VerticalLayout();
+        layout.setWidthFull();
+        layout.add(form);
+        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER,form);
+
+        DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+        detailsDrawer.setWidthFull();
+        detailsDrawer.setHeight("90%");
+
+        detailsDrawer.setPadding(Left.M, Right.S, Top.S);
+        detailsDrawer.setContent(layout);
+
+        return detailsDrawer;
+    }
+
+//    END RECEPTION INFORMATION
+
+//    INVOICE INFORMATION
+
+    private DetailsDrawer createInvoiceInformation(){
+
+        VerticalLayout layout = new VerticalLayout();
+        layout.setWidthFull();
+        Button btnAdd = new Button("Adicionar");
+        btnAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
+        btnAdd.addClickListener(event -> {
+            setViewDetailsPosition(Position.RIGHT);
+            setViewDetails(createDetailsDrawerInvoiceInformation());
+            showDetailsInvoiceInformation(new InvoiceInformation());
+        });
+
+        invoiceInformationGrid = new Grid<>();
+
+        invoiceInformationGrid.setDataProvider(invoiceInformationDataProvider);
+        invoiceInformationGrid.addColumn(InvoiceInformation::getNameSupplier)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Proveedor");
+        invoiceInformationGrid.addColumn(InvoiceInformation::getInvoiceNumber)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Número Factura");
+        invoiceInformationGrid.addColumn(new LocalDateRenderer<>(InvoiceInformation::getDateInvoice
+                , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Fecha Factura");
+        invoiceInformationGrid.addColumn(new NumberRenderer<>(InvoiceInformation::getAmount
+                , " %(,.2f",
+                Locale.US, "0.00"))
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Monto(Bs.)");
+        invoiceInformationGrid.addColumn(new ComponentRenderer<>(this::createButtonDeleteInvoiceInformation))
+                .setAutoWidth(true)
+                .setFlexGrow(1);
+        invoiceInformationGrid.addColumn(new ComponentRenderer<>(this::createButtonEditInvoiceInformation))
+                .setAutoWidth(true)
+                .setFlexGrow(1);
+
+        layout.add(btnAdd,invoiceInformationGrid);
+        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.END,btnAdd);
+
+        DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+        detailsDrawer.setWidthFull();
+        detailsDrawer.setHeight("90%");
+
+        detailsDrawer.setPadding(Left.M, Right.S, Top.S);
+        detailsDrawer.setContent(layout);
+
+        return detailsDrawer;
+    }
+
+    private Component createButtonDeleteInvoiceInformation(InvoiceInformation invoiceInformation){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.TRASH.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        btn.addClickListener(event -> {
+            invoiceInformationList.remove(invoiceInformation);
+            invoiceInformationGrid.getDataProvider().refreshAll();
+            footer.saveState(true);
+        });
+
+        return btn;
+    }
+
+    private Component createButtonEditInvoiceInformation(InvoiceInformation invoiceInformation){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        Tooltips.getCurrent().setTooltip(btn,"Editar");
+        btn.addClickListener(event -> {
+            setViewDetailsPosition(Position.RIGHT);
+            setViewDetails(createDetailsDrawerInvoiceInformation());
+            showDetailsInvoiceInformation(invoiceInformation);
+        });
+
+        return btn;
+    }
+
+    private void showDetailsInvoiceInformation(InvoiceInformation invoiceInformation){
+        setViewDetails(createDetailsDrawerInvoiceInformation());
+        setViewDetailsPosition(Position.RIGHT);
+        currentInvoiceInformation = invoiceInformation;
+        detailsDrawerHeaderInvoiceInformation.setTitle("Factura Nro: "
+                .concat(invoiceInformation.getInvoiceNumber()==null?"Nuevo":invoiceInformation.getInvoiceNumber().toString()));
+        detailsDrawerInvoiceInformation.setContent(layoutInvoiceInformation(currentInvoiceInformation));
+        detailsDrawerInvoiceInformation.show();
+
+    }
+
+    private DetailsDrawer createDetailsDrawerInvoiceInformation(){
+        detailsDrawerInvoiceInformation = new DetailsDrawer(DetailsDrawer.Position.RIGHT);
+
+        detailsDrawerHeaderInvoiceInformation = new DetailsDrawerHeader("");
+        detailsDrawerHeaderInvoiceInformation.addCloseListener(event -> detailsDrawerInvoiceInformation.hide());
+        detailsDrawerInvoiceInformation.setHeader(detailsDrawerHeaderInvoiceInformation);
+
+        footerInvoiceInformation = new DetailsDrawerFooter();
+        footerInvoiceInformation.addSaveListener(e -> {
+            if(currentInvoiceInformation != null && invoiceInformationBinder.writeBeanIfValid(currentInvoiceInformation)){
+                invoiceInformationList.removeIf(ii -> ii.getId().equals(currentInvoiceInformation.getId()));
+                currentInvoiceInformation.setId(UUID.randomUUID());
+                invoiceInformationList.add(currentInvoiceInformation);
+                detailsDrawerInvoiceInformation.hide();
+                invoiceInformationGrid.getDataProvider().refreshAll();
+                footerInvoiceInformation.saveState(true);
+                footer.saveState(true);
+            }
+        });
+        footerInvoiceInformation.addCancelListener(e -> detailsDrawerInvoiceInformation.hide());
+        detailsDrawerInvoiceInformation.setFooter(footerInvoiceInformation);
+
+        return detailsDrawerInvoiceInformation;
+    }
+
+    private FormLayout layoutInvoiceInformation(InvoiceInformation invoiceInformation){
+
+        idSupplierInvoiceInformation = new TextField();
+        idSupplierInvoiceInformation.setWidthFull();
+
+        TextField nit = new TextField();
+        nit.setWidthFull();
+        nit.setErrorMessage("Ingrese NIT");
+
+        nameSupplierInvoiceInformation = new TextField();
+        nameSupplierInvoiceInformation.setRequired(true);
+        nameSupplierInvoiceInformation.setWidthFull();
+        nameSupplierInvoiceInformation.setReadOnly(true);
+
+
+        DatePicker dateInvoice = new DatePicker();
+        dateInvoice.setWidthFull();
+        dateInvoice.setRequired(true);
+        dateInvoice.setLocale(new Locale("es","BO"));
+
+        NumberField amount = new NumberField();
+        amount.setMin(0.0);
+        amount.setWidthFull();
+        amount.setRequiredIndicatorVisible(true);
+        amount.setClearButtonVisible(true);
+
+        IntegerField invoiceNumber = new IntegerField();
+        invoiceNumber.setWidthFull();
+        invoiceNumber.setClearButtonVisible(true);
+
+
+        invoiceInformationBinder = new BeanValidationBinder<>(InvoiceInformation.class);
+        invoiceInformationBinder.forField(idSupplierInvoiceInformation)
+                        .bind(InvoiceInformation::getIdSupplier,InvoiceInformation::setIdSupplier);
+        invoiceInformationBinder.forField(nameSupplierInvoiceInformation)
+                .asRequired("Razon social del proveedor es requerida")
+                .bind(InvoiceInformation::getNameSupplier,InvoiceInformation::setNameSupplier);
+        invoiceInformationBinder.forField(dateInvoice)
+                .asRequired("Fecha factura es requerida")
+                .bind(InvoiceInformation::getDateInvoice,InvoiceInformation::setDateInvoice);
+        invoiceInformationBinder.forField(amount)
+                .asRequired("Monto factura es requerida")
+                .withValidator(a -> a.doubleValue()>0.0,"Monto factura debe ser mayor a cero")
+                .bind(InvoiceInformation::getAmount,InvoiceInformation::setAmount);
+        invoiceInformationBinder.forField(invoiceNumber)
+                .asRequired("Número factura es requerido")
+                .withValidator(n -> n.intValue()>0,"Número factura debe ser mayor a cero")
+                .bind(InvoiceInformation::getInvoiceNumber,InvoiceInformation::setInvoiceNumber);
+
+        FormLayout form = new FormLayout();
+        form.addClassNames(LumoStyles.Padding.Bottom.L,
+                LumoStyles.Padding.Horizontal.S, LumoStyles.Padding.Top.S);
+        form.setResponsiveSteps(
+                new FormLayout.ResponsiveStep("0", 1,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("21em", 2,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP));
+
+        HorizontalLayout layoutNit = new HorizontalLayout();
+        Button btnNit = new Button();
+        btnNit.setWidth("10%");
+        btnNit.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY);
+        btnNit.setIcon(VaadinIcon.SEARCH_PLUS.create());
+        layoutNit.add(nit,btnNit);
+        FormLayout.FormItem nitItem = form.addFormItem(layoutNit,"Buscar proveedor por NIT");
+        UIUtils.setColSpan(2,nitItem);
+
+        FormLayout.FormItem nameSupplierItem = form.addFormItem(nameSupplierInvoiceInformation,"Nombre Proveedor");
+        UIUtils.setColSpan(2,nameSupplierItem);
+        form.addFormItem(dateInvoice,"Fecha factura");
+        form.addFormItem(amount,"Monto factura");
+        form.addFormItem(invoiceNumber,"Número factura");
+
+        btnNit.addClickListener(event -> {
+            if(!nit.isEmpty()){
+                nit.setInvalid(false);
+                Supplier supplier = supplierRestTemplate.getByNit(nit.getValue());
+                if(supplier.getId()==null){
+                    UIUtils.showNotificationType("No existe Proveedor, registre el proveedor", "info");
+                    Dialog dialog = new Dialog();
+                    VerticalLayout dialogLayout = createDialogLayout(dialog,nit.getValue());
+                    dialog.add(dialogLayout);
+                    dialog.setModal(true);
+                    dialog.open();
+                }else{
+                    idSupplierInvoiceInformation.setValue(supplier.getId().toString());
+                    nameSupplierInvoiceInformation.setValue(supplier.getName());
+                }
+            }else{
+               nit.setInvalid(true);
+
+            }
+
+        });
+        invoiceInformationBinder.readBean(invoiceInformation);
+
+        return form;
+
+    }
+
+    private VerticalLayout createDialogLayout(Dialog dialog,String nitValue) {
+        H2 headline = new H2("Crear Nuevo Proveedor");
+        headline.getStyle().set("margin", "var(--lumo-space-m) 0 0 0")
+                .set("font-size", "1.5em").set("font-weight", "bold");
+
+        TextField nit = new TextField("Número NIT");
+        nit.setWidthFull();
+        nit.setRequiredIndicatorVisible(true);
+        nit.setRequired(true);
+        nit.setReadOnly(true);
+        nit.setValue(nitValue);
+
+        TextField name = new TextField("Razon Social");
+        name.setWidthFull();
+        name.setRequired(true);
+
+        TextField legalRepresentative = new TextField("Representante Legal");
+        legalRepresentative.setRequired(true);
+        legalRepresentative.setWidthFull();
+
+        ComboBox<String> typeBusinessCompany = new ComboBox<>("Tipo Sociedad");
+        typeBusinessCompany.setRequired(true);
+        typeBusinessCompany.setItems(utilValues.getValueParameterByCategory("TIPO SOCIEDAD"));
+        typeBusinessCompany.setAllowCustomValue(false);
+        typeBusinessCompany.setAutoOpen(true);
+
+        TextField address = new TextField("Direccion");
+        address.setWidthFull();
+        address.setRequired(true);
+
+
+        VerticalLayout layout = new VerticalLayout(nit, name, legalRepresentative,typeBusinessCompany,address);
+        layout.setSpacing(false);
+        layout.setPadding(false);
+        layout.setAlignItems(FlexComponent.Alignment.STRETCH);
+
+        Binder<Supplier> supplierBinder = new BeanValidationBinder<>(Supplier.class);
+        supplierBinder.forField(nit)
+                .asRequired("NIT es requerido")
+                .bind(Supplier::getNit,Supplier::setNit);
+        supplierBinder.forField(name)
+                .asRequired("Razon Social es requerida")
+                .bind(Supplier::getName,Supplier::setName);
+        supplierBinder.forField(legalRepresentative)
+                .asRequired("Representante legal es requerido")
+                .bind(Supplier::getLegalRepresentative, Supplier::setLegalRepresentative);
+        supplierBinder.forField(typeBusinessCompany)
+                .asRequired("Tipo sociedad es requerido")
+                .bind(Supplier::getTypeBusinessCompany, Supplier::setTypeBusinessCompany);
+        supplierBinder.forField(address)
+                .asRequired("Direccion es requerida")
+                .bind(Supplier::getAddress,Supplier::setAddress);
+
+
+        Button cancelButton = new Button("Cancelar", e -> dialog.close());
+        Button saveButton = new Button("Guardar", e -> {
+            Supplier supplier = new Supplier();
+            if(supplierBinder.writeBeanIfValid(supplier)){
+                supplier.setPendingCompleting("NO");
+                supplier = supplierRestTemplate.add(supplier);
+                nameSupplierInvoiceInformation.setValue(name.getValue());
+                idSupplierInvoiceInformation.setValue(supplier.getId().toString());
+                dialog.close();
+            }else{
+                UIUtils.showNotificationType("Datos incompletos Registro Rapido de Proveedor", "alert");
+            }
+
+        } );
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        HorizontalLayout buttonLayout = new HorizontalLayout(cancelButton,
+                saveButton);
+        buttonLayout
+                .setJustifyContentMode(FlexComponent.JustifyContentMode.END);
+
+        VerticalLayout dialogLayout = new VerticalLayout(headline, layout,
+                buttonLayout);
+        dialogLayout.setPadding(false);
+        dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+        dialogLayout.getStyle().set("width", "300px").set("max-width", "100%");
+
+        return dialogLayout;
+    }
+
+//    END INVOICE INFORMATION
 //    EXPENSE DISTRIBUITE
 
     private FormLayout layoutExpenseDistribuite(ExpenseDistribuite expenseDistribuite){
