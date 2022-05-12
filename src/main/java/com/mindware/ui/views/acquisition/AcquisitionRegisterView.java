@@ -3,11 +3,8 @@ package com.mindware.ui.views.acquisition;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.mindware.backend.Invoice;
 import com.mindware.backend.entity.acquisitionAuthorizer.AcquisitionAuthorizer;
 import com.mindware.backend.entity.adquisition.*;
-import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.entity.user.UserLdapDto;
@@ -23,7 +20,10 @@ import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerHeader;
 import com.mindware.ui.components.navigation.bar.AppBar;
-import com.mindware.ui.layout.size.*;
+import com.mindware.ui.layout.size.Left;
+import com.mindware.ui.layout.size.Right;
+import com.mindware.ui.layout.size.Top;
+import com.mindware.ui.layout.size.Vertical;
 import com.mindware.ui.util.FontSize;
 import com.mindware.ui.util.LumoStyles;
 import com.mindware.ui.util.TextColor;
@@ -31,7 +31,6 @@ import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.views.SplitViewFrame;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -114,14 +113,15 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private DetailsDrawer detailsDrawer;
     private DetailsDrawerHeader detailsDrawerHeader;
 
+//   Expense Distribuite
     private DetailsDrawerFooter footerExpenseDistribuite;
     private DetailsDrawer detailsDrawerExpenseDistribuite;
     private DetailsDrawerHeader detailsDrawerHeaderExpenseDistribuite;
-    private Binder<ExpenseDistribuite> expenseDistribuiteBinder;
-    private ListDataProvider<ExpenseDistribuite> expenseDistribuiteDataProvider;
-    private ExpenseDistribuite currentExpenseDistribuite;
-    private List<ExpenseDistribuite> expenseDistribuiteList;
-    private Grid<ExpenseDistribuite> expenseDistribuiteGrid;
+    private Binder<ExpenseDistribuiteAcquisition> expenseDistribuiteBinder;
+    private ListDataProvider<ExpenseDistribuiteAcquisition> expenseDistribuiteDataProvider;
+    private ExpenseDistribuiteAcquisition currentExpenseDistribuite;
+    private List<ExpenseDistribuiteAcquisition> expenseDistribuiteList;
+    private Grid<ExpenseDistribuiteAcquisition> expenseDistribuiteGrid;
 
     private DetailsDrawerFooter footerItem;
     private DetailsDrawer detailsDrawerItem;
@@ -177,6 +177,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private FlexBoxLayout contentAdjudicationInformation;
     private FlexBoxLayout contentReceptionInformation;
     private FlexBoxLayout contentInvoiceInformation;
+    private FlexBoxLayout contentExpenseDistribuite;
+    private FlexBoxLayout contentDeliveyAccounting;
 
 //    Filter Concept Agency
     private TextField codeFilter;
@@ -188,6 +190,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private TextField titleFilter;
 
     private String currentTab;
+    private boolean isFirsLoadExpenseDistribuite;
 
     @SneakyThrows
     @Override
@@ -233,8 +236,15 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             invoiceInformationDataProvider = new ListDataProvider(invoiceInformationList);
             contentInvoiceInformation = (FlexBoxLayout) createContent(createInvoiceInformation());
 
+            expenseDistribuiteList = mapper.readValue(current.getExpenseDistribuite(),new TypeReference<List<ExpenseDistribuiteAcquisition>>(){});
+            expenseDistribuiteDataProvider = new ListDataProvider<>(expenseDistribuiteList);
+            contentExpenseDistribuite = (FlexBoxLayout) createContent(createExpenseDistribuite());
+
+            contentDeliveyAccounting = (FlexBoxLayout) createContent(createDeliverAccounting());
+
             setViewContent(contentPurchaseRequest,contentInformationQuote,contentInformationCaabs
-                    ,contentAdjudicationInformation, contentReceptionInformation,contentInvoiceInformation);
+                    ,contentAdjudicationInformation, contentReceptionInformation,contentInvoiceInformation,
+                    contentExpenseDistribuite,contentDeliveyAccounting);
 
         }else{
             current = new Acquisition();
@@ -269,16 +279,22 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             invoiceInformationDataProvider = new ListDataProvider(invoiceInformationList);
             contentInvoiceInformation = (FlexBoxLayout) createContent(createInvoiceInformation());
 
+            expenseDistribuiteList = mapper.readValue(current.getExpenseDistribuite(),new TypeReference<List<ExpenseDistribuiteAcquisition>>(){});
+            expenseDistribuiteDataProvider = new ListDataProvider<>(expenseDistribuiteList);
+            contentExpenseDistribuite = (FlexBoxLayout) createContent(createExpenseDistribuite());
+
+            contentDeliveyAccounting = (FlexBoxLayout) createContent(createDeliverAccounting());
+
             setViewContent(contentPurchaseRequest,contentInformationQuote,contentInformationCaabs,
-                    contentAdjudicationInformation, contentReceptionInformation, contentInvoiceInformation);
+                    contentAdjudicationInformation, contentReceptionInformation, contentInvoiceInformation,
+                    contentExpenseDistribuite,contentDeliveyAccounting);
         }
 
         conceptList = new ArrayList<>(conceptRestTemplate.getAgencia());
         conceptList.addAll(conceptRestTemplate.getSucursal());
         conceptList.sort(Comparator.comparing(Concept::getCode));
 
-        expenseDistribuiteList = mapper.readValue(current.getExpenseDistribuite(),new TypeReference<List<ExpenseDistribuite>>(){});
-        expenseDistribuiteDataProvider = new ListDataProvider<>(expenseDistribuiteList);
+
 
         setViewDetails(createDetailDrawer());
         setViewDetailsPosition(Position.BOTTOM);
@@ -321,6 +337,15 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 try {
                     String jsonInvoiceInformation = mapper.writeValueAsString(invoiceInformationList);
                     current.setInvoiceInformation(jsonInvoiceInformation);
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if(expenseDistribuiteBinder!=null){
+                try {
+                    String jsonExpenseDistribuite = mapper.writeValueAsString(expenseDistribuiteList);
+                    current.setExpenseDistribuite(jsonExpenseDistribuite);
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
@@ -417,6 +442,16 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         }else{
             contentInvoiceInformation.setEnabled(true);
         }
+        if(current.getInvoiceInformation()==null || current.getInvoiceInformation().equals("[]")){
+            contentExpenseDistribuite.setEnabled(false);
+        }else{
+            contentExpenseDistribuite.setEnabled(true);
+        }
+        if(current.getExpenseDistribuite()==null || current.getExpenseDistribuite().equals("[]")){
+            contentDeliveyAccounting.setEnabled(false);
+        }else{
+            contentDeliveyAccounting.setEnabled(true);
+        }
     }
 
     private void hideContent(String currentTab){
@@ -426,6 +461,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         contentAdjudicationInformation.setVisible(false);
         contentReceptionInformation.setVisible(false);
         contentInvoiceInformation.setVisible(false);
+        contentExpenseDistribuite.setVisible(false);
+        contentDeliveyAccounting.setVisible(false);
         if(currentTab.equals("Solicitud de Compra")){
             contentPurchaseRequest.setVisible(true);
             contentInformationQuote.setVisible(false);
@@ -433,6 +470,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             contentAdjudicationInformation.setVisible(false);
             contentReceptionInformation.setVisible(false);
             contentInvoiceInformation.setVisible(false);
+            contentExpenseDistribuite.setVisible(false);
+            contentDeliveyAccounting.setVisible(false);
         }else if(currentTab.equals("Información Cotización")){
             contentPurchaseRequest.setVisible(false);
             contentInformationQuote.setVisible(true);
@@ -440,6 +479,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             contentAdjudicationInformation.setVisible(false);
             contentReceptionInformation.setVisible(false);
             contentInvoiceInformation.setVisible(false);
+            contentExpenseDistribuite.setVisible(false);
+            contentDeliveyAccounting.setVisible(false);
         }else if(currentTab.equals("Información CAABS")){
             contentPurchaseRequest.setVisible(false);
             contentInformationQuote.setVisible(false);
@@ -447,6 +488,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             contentAdjudicationInformation.setVisible(false);
             contentReceptionInformation.setVisible(false);
             contentInvoiceInformation.setVisible(false);
+            contentExpenseDistribuite.setVisible(false);
+            contentDeliveyAccounting.setVisible(false);
         }else if(currentTab.equals("Información Adjudicación")){
             contentPurchaseRequest.setVisible(false);
             contentInformationQuote.setVisible(false);
@@ -454,6 +497,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             contentAdjudicationInformation.setVisible(true);
             contentReceptionInformation.setVisible(false);
             contentInvoiceInformation.setVisible(false);
+            contentExpenseDistribuite.setVisible(false);
+            contentDeliveyAccounting.setVisible(false);
         }else if(currentTab.equals("Recepción del Bien o Servicio")){
             contentPurchaseRequest.setVisible(false);
             contentInformationQuote.setVisible(false);
@@ -461,6 +506,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             contentAdjudicationInformation.setVisible(false);
             contentReceptionInformation.setVisible(true);
             contentInvoiceInformation.setVisible(false);
+            contentExpenseDistribuite.setVisible(false);
+            contentDeliveyAccounting.setVisible(false);
         }else if(currentTab.equals("Información de la Factura")){
             contentPurchaseRequest.setVisible(false);
             contentInformationQuote.setVisible(false);
@@ -468,6 +515,26 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             contentAdjudicationInformation.setVisible(false);
             contentReceptionInformation.setVisible(false);
             contentInvoiceInformation.setVisible(true);
+            contentExpenseDistribuite.setVisible(false);
+            contentDeliveyAccounting.setVisible(false);
+        }else if(currentTab.equals("Distribución del Gasto")){
+            contentPurchaseRequest.setVisible(false);
+            contentInformationQuote.setVisible(false);
+            contentInformationCaabs.setVisible(false);
+            contentAdjudicationInformation.setVisible(false);
+            contentReceptionInformation.setVisible(false);
+            contentInvoiceInformation.setVisible(false);
+            contentExpenseDistribuite.setVisible(true);
+            contentDeliveyAccounting.setVisible(false);
+        }else if(currentTab.equals("Entrega a Contabilidad y a la AAAF")){
+            contentPurchaseRequest.setVisible(false);
+            contentInformationQuote.setVisible(false);
+            contentInformationCaabs.setVisible(false);
+            contentAdjudicationInformation.setVisible(false);
+            contentReceptionInformation.setVisible(false);
+            contentInvoiceInformation.setVisible(false);
+            contentExpenseDistribuite.setVisible(false);
+            contentDeliveyAccounting.setVisible(true);
         }
     }
 
@@ -1905,7 +1972,18 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 //    END INVOICE INFORMATION
 //    EXPENSE DISTRIBUITE
 
-    private FormLayout layoutExpenseDistribuite(ExpenseDistribuite expenseDistribuite){
+    private FormLayout layoutExpenseDistribuite(ExpenseDistribuiteAcquisition expenseDistribuite){
+        isFirsLoadExpenseDistribuite = false;
+        List<Item> itemList = new ArrayList<>();
+        try {
+            itemList = mapper.readValue(current.getItems(), new TypeReference<List<Item>>() {});
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        List<String> itemNameList = itemList.stream()
+                .map(Item::getDescription)
+                .collect(Collectors.toList());
+
 
         IntegerField codeBusinessUnit = new IntegerField();
         codeBusinessUnit.setWidth("20%");
@@ -1920,6 +1998,18 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         amount.setMin(0.0);
         amount.setRequiredIndicatorVisible(true);
 
+        ComboBox<String> items = new ComboBox<>();
+        items.setWidthFull();
+        items.setRequired(true);
+        items.setAllowCustomValue(false);
+        items.setItems(itemNameList);
+
+        IntegerField quantity = new IntegerField();
+        quantity.setWidthFull();
+        quantity.setRequiredIndicatorVisible(true);
+        quantity.setClearButtonVisible(true);
+
+
         ComboBox<Concept> unitBusiness = new ComboBox<>();
         unitBusiness.setWidthFull();
         unitBusiness.setItems(conceptList);
@@ -1928,41 +2018,83 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         unitBusiness.setErrorMessage("Seleccione la unidad de negocios");
         unitBusiness.addValueChangeListener(event -> {
             if(event.getValue() != null) {
-                Optional<ExpenseDistribuite> opt = expenseDistribuiteList.stream()
-                        .filter(exp -> exp.getCodeBusinessUnit().equals(Integer.parseInt(event.getValue().getCode())))
+                Optional<ExpenseDistribuiteAcquisition> opt = expenseDistribuiteList.stream()
+                        .filter(exp -> exp.getCodeBusinessUnit().equals(Integer.parseInt(event.getValue().getCode2())))
                         .findFirst();
-                if (!opt.isPresent()) {
-                    codeBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode()));
-                    nameBusinessUnit.setValue(event.getValue().getDescription());
-                } else {
-                    UIUtils.showNotificationType("Unidad de Negocio ya fue agregada", "alert");
-                    unitBusiness.clear();
-                    codeBusinessUnit.clear();
-                    nameBusinessUnit.clear();
+                if(!isFirsLoadExpenseDistribuite) {
+                    if (!opt.isPresent()) {
+                        codeBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode2()));
+                        nameBusinessUnit.setValue(event.getValue().getDescription());
+                    } else {
+                        UIUtils.showNotificationType("Unidad de Negocio ya fue agregada", "alert");
+                        unitBusiness.clear();
+                        codeBusinessUnit.clear();
+                        nameBusinessUnit.clear();
+                    }
+                }else{
+                    isFirsLoadExpenseDistribuite = false;
                 }
             }
         });
+        if(expenseDistribuite.getCodeBusinessUnit()!=null) {
+            isFirsLoadExpenseDistribuite = true;
+            unitBusiness.setValue(conceptList.stream()
+                    .filter(f -> f.getCode2().equals(String.valueOf(expenseDistribuite.getCodeBusinessUnit()))).findFirst().get());
 
-        expenseDistribuiteBinder = new BeanValidationBinder<>(ExpenseDistribuite.class);
+        }
+        ComboBox<String> subAccount = new ComboBox<>();
+        subAccount.setWidthFull();
+        subAccount.setAutoOpen(true);
+        subAccount.setRequired(true);
+        subAccount.setRequiredIndicatorVisible(true);
+
+
+        ComboBox<String> account = new ComboBox<>();
+        account.setWidthFull();
+        account.setAutoOpen(true);
+        account.setRequired(true);
+        account.setAllowCustomValue(false);
+        account.setItems(utilValues.getAccounts());
+        account.addValueChangeListener(event -> {
+           subAccount.clear();
+           subAccount.setItems(utilValues.getSubAccounts(event.getValue()));
+        });
+
+
+        expenseDistribuiteBinder = new BeanValidationBinder<>(ExpenseDistribuiteAcquisition.class);
         expenseDistribuiteBinder.forField(codeBusinessUnit)
                 .asRequired("Codigo Unidad negocio es requerido")
-                .bind(ExpenseDistribuite::getCodeBusinessUnit,ExpenseDistribuite::setCodeBusinessUnit);
+                .bind(ExpenseDistribuiteAcquisition::getCodeBusinessUnit,ExpenseDistribuiteAcquisition::setCodeBusinessUnit);
         expenseDistribuiteBinder.forField(nameBusinessUnit)
                 .asRequired("Nombre unidad negocio es requerido")
-                .bind(ExpenseDistribuite::getNameBusinessUnit,ExpenseDistribuite::setNameBusinessUnit);
+                .bind(ExpenseDistribuiteAcquisition::getNameBusinessUnit,ExpenseDistribuiteAcquisition::setNameBusinessUnit);
         expenseDistribuiteBinder.forField(amount)
                 .asRequired("Monto es requerido")
                 .withValidator(m -> m.doubleValue()>0.0,"Monto debe ser mayor a 0")
-                .bind(ExpenseDistribuite::getAmount,ExpenseDistribuite::setAmount);
+                .bind(ExpenseDistribuiteAcquisition::getAmount,ExpenseDistribuiteAcquisition::setAmount);
+        expenseDistribuiteBinder.forField(account)
+                .asRequired("Cuenta es requerida")
+                .bind(ExpenseDistribuiteAcquisition::getAccount,ExpenseDistribuiteAcquisition::setAccount);
+        expenseDistribuiteBinder.forField(subAccount)
+                .asRequired("Subcuenta es requerida")
+                .bind(ExpenseDistribuiteAcquisition::getSubAccount,ExpenseDistribuiteAcquisition::setSubAccount);
+        expenseDistribuiteBinder.forField(items)
+                .asRequired("Item es querido")
+                .bind(ExpenseDistribuiteAcquisition::getNameItem,ExpenseDistribuiteAcquisition::setNameItem);
+        expenseDistribuiteBinder.forField(quantity)
+                .asRequired("Cantidad de items ese requerida")
+                .withValidator(q -> q.intValue()>0,"Cantidad de itms debe ser mayour a cero")
+                .bind(ExpenseDistribuiteAcquisition::getQuantity,ExpenseDistribuiteAcquisition::setQuantity);
 
         expenseDistribuiteBinder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = expenseDistribuiteBinder.hasChanges();
 //            footer.saveState(hasChanges && isValid && GrantOptions.grantedOption("Parametros"));
             footerExpenseDistribuite.saveState(hasChanges && isValid);
+            footer.saveState(true);
         });
 
-
+        expenseDistribuiteBinder.readBean(currentExpenseDistribuite);
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
                 LumoStyles.Padding.Horizontal.S, LumoStyles.Padding.Top.S);
@@ -1972,16 +2104,22 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 new FormLayout.ResponsiveStep("21em", 2,
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
 
+
         FormLayout.FormItem unitBusinessItem = form.addFormItem(unitBusiness,"Unidad de Negocio");
         UIUtils.setColSpan(2,unitBusinessItem);
-
-        FormLayout.FormItem amountItem = form.addFormItem(amount,"Monto");
-        UIUtils.setColSpan(2,amountItem);
+        FormLayout.FormItem itemItem = form.addFormItem(items,"Items");
+        UIUtils.setColSpan(2,itemItem);
+        form.addFormItem(quantity,"Cantidad");
+        form.addFormItem(amount,"Monto");
+        FormLayout.FormItem accountItem = form.addFormItem(account,"Cuenta");
+        UIUtils.setColSpan(2,accountItem);
+        FormLayout.FormItem subAccountItem = form.addFormItem(subAccount,"Sub Cuenta");
+        UIUtils.setColSpan(2,subAccountItem);
 
         return form;
     }
 
-    private void showDetailsExpenseDistribuite(ExpenseDistribuite expenseDistribuite){
+    private void showDetailsExpenseDistribuite(ExpenseDistribuiteAcquisition expenseDistribuite){
         setViewDetails(createDetailsDrawerExpenseDistribuite());
         setViewDetailsPosition(Position.RIGHT);
         currentExpenseDistribuite = expenseDistribuite;
@@ -2000,8 +2138,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         footerExpenseDistribuite = new DetailsDrawerFooter();
         footerExpenseDistribuite.addSaveListener(e -> {
             if(currentExpenseDistribuite !=null && expenseDistribuiteBinder.writeBeanIfValid(currentExpenseDistribuite)){
+                if(currentExpenseDistribuite.getId()==null) currentExpenseDistribuite.setId(UUID.randomUUID());
 
-                expenseDistribuiteList.removeIf(ed -> ed.getCodeBusinessUnit().equals(currentExpenseDistribuite.getCodeBusinessUnit()));
+                expenseDistribuiteList.removeIf(ed -> ed.getId().equals(currentExpenseDistribuite.getId()));
                 expenseDistribuiteList.add(currentExpenseDistribuite);
                 detailsDrawerExpenseDistribuite.hide();
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
@@ -2016,7 +2155,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     }
 
 
-    private VerticalLayout gridExpenseDistribuite(){
+    private DetailsDrawer createExpenseDistribuite(){
 
         VerticalLayout layout = new VerticalLayout();
         layout.setWidthFull();
@@ -2026,37 +2165,71 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 //            setViewContent(layoutExpenseDistribuite(currentExpenseDistribuite));
             setViewDetailsPosition(Position.RIGHT);
             setViewDetails(createDetailsDrawerExpenseDistribuite());
-            showDetailsExpenseDistribuite(new ExpenseDistribuite());
+            showDetailsExpenseDistribuite(new ExpenseDistribuiteAcquisition());
         });
 
 
         expenseDistribuiteGrid = new Grid<>();
         expenseDistribuiteGrid.setWidthFull();
         expenseDistribuiteGrid.setDataProvider(expenseDistribuiteDataProvider);
-        expenseDistribuiteGrid.addColumn(ExpenseDistribuite::getNameBusinessUnit)
+        expenseDistribuiteGrid.addColumn(ExpenseDistribuiteAcquisition::getQuantity)
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true)
-                .setFlexGrow(0)
+                .setFlexGrow(1)
+                .setHeader("Cantidad");
+        expenseDistribuiteGrid.addColumn(ExpenseDistribuiteAcquisition::getNameItem)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Item");
+        expenseDistribuiteGrid.addColumn(ExpenseDistribuiteAcquisition::getNameBusinessUnit)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
                 .setHeader("Unidad de Negocio");
-        expenseDistribuiteGrid.addColumn(new NumberRenderer<>(ExpenseDistribuite::getAmount, " %(,.2f",
+        expenseDistribuiteGrid.addColumn(ExpenseDistribuiteAcquisition::getAccount)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Cuenta");
+        expenseDistribuiteGrid.addColumn(ExpenseDistribuiteAcquisition::getSubAccount)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Subcuenta");
+        expenseDistribuiteGrid.addColumn(new NumberRenderer<>(ExpenseDistribuiteAcquisition::getAmount, " %(,.2f",
                         Locale.US, "0.00"))
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true)
-                .setFlexGrow(0)
+                .setFlexGrow(1)
                 .setHeader("Monto(Bs.)");
+        expenseDistribuiteGrid.addColumn(new ComponentRenderer<>(this::createButtonEditExpense))
+                .setFlexGrow(1)
+                .setAutoWidth(true);
         expenseDistribuiteGrid.addColumn(new ComponentRenderer<>(this::createButtonDelete))
-                .setFlexGrow(0)
+                .setFlexGrow(1)
                 .setAutoWidth(true);
 
         layout.add(btnAdd,expenseDistribuiteGrid);
         layout.setHorizontalComponentAlignment(FlexComponent.Alignment.END,btnAdd);
 
-        return layout;
+        DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+        detailsDrawer.setWidthFull();
+        detailsDrawer.setHeight("90%");
+
+        detailsDrawer.setPadding(Left.M, Right.S, Top.S);
+        detailsDrawer.setContent(layout);
+
+        return detailsDrawer;
     }
 
-    private Component createButtonDelete(ExpenseDistribuite expenseDistribuite){
+    private Component createButtonDelete(ExpenseDistribuiteAcquisition expenseDistribuite){
         Button btn = new Button();
         btn.setIcon(VaadinIcon.TRASH.create());
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
@@ -2070,7 +2243,78 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         return btn;
     }
 
+    private Component createButtonEditExpense(ExpenseDistribuiteAcquisition expenseDistribuite){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        btn.addClickListener(event ->{
+            setViewDetailsPosition(Position.RIGHT);
+            setViewDetails(createDetailsDrawerExpenseDistribuite());
+            showDetailsExpenseDistribuite(expenseDistribuite);
+        });
+        return btn;
+    }
 //      END EXPENSEDISTRIBUITE
 
-//
+//  DELIVER ACCOUNTING
+
+    private DetailsDrawer createDeliverAccounting(){
+
+        DatePicker dateDeliveryAccounting = new DatePicker("Fecha de entrega a contabilidad");
+        dateDeliveryAccounting.setWidth("30%");
+        dateDeliveryAccounting.setRequired(true);
+        dateDeliveryAccounting.setClearButtonVisible(true);
+        dateDeliveryAccounting.setRequiredIndicatorVisible(true);
+        dateDeliveryAccounting.setLocale(new Locale("es","BO"));
+
+        ComboBox<String> accountingPerson = new ComboBox<>("Entregado a");
+        accountingPerson.setWidth("30%");
+        accountingPerson.setRequired(true);
+        accountingPerson.setRequiredIndicatorVisible(true);
+
+        DatePicker dateDeliveryAaaf = new DatePicker("Fecha de entrega AAAF");
+        dateDeliveryAaaf.setWidth("30%");
+        dateDeliveryAaaf.setRequired(true);
+        dateDeliveryAaaf.setClearButtonVisible(true);
+        dateDeliveryAaaf.setRequiredIndicatorVisible(true);
+        dateDeliveryAaaf.setLocale(new Locale("es","BO"));
+
+        if(current.getExpenseDistribuite()!=null && !current.getExpenseDistribuite().equals("[]")) {
+            binder.forField(dateDeliveryAccounting)
+                    .asRequired("Fecha entrega a contabilidad es requerida")
+                    .bind(Acquisition::getDateDeliveryAccounting, Acquisition::setDateDeliveryAccounting);
+            binder.forField(accountingPerson)
+                    .asRequired("Responsable de contabilidad es requerido")
+                    .bind(Acquisition::getAccoutingPerson, Acquisition::setAccoutingPerson);
+            binder.forField(dateDeliveryAaaf)
+                    .asRequired("Fecha de entrega a AAAF es requerida")
+                    .bind(Acquisition::getDateDeliveryAaaf, Acquisition::setDateDeliveryAaaf);
+            binder.addStatusChangeListener(event -> {
+                boolean isValid = !event.hasValidationErrors();
+                boolean hasChanges = binder.hasChanges();
+                footer.saveState(isValid && hasChanges);
+            });
+        }
+            VerticalLayout layout = new VerticalLayout();
+            layout.setWidthFull();
+            layout.add(dateDeliveryAccounting,accountingPerson,dateDeliveryAaaf);
+            layout.setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER,dateDeliveryAccounting,
+                    accountingPerson,dateDeliveryAaaf);
+
+            DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+            detailsDrawer.setWidthFull();
+            detailsDrawer.setHeight("90%");
+
+            detailsDrawer.setPadding(Left.S, Right.S, Top.S);
+            detailsDrawer.setContent(layout);
+//        detailsDrawer.setFooter(footer);
+            detailsDrawer.show();
+
+
+            return detailsDrawer;
+        }
+
+
+//    END DELIVER ACCOUNTING
 }

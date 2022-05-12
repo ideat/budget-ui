@@ -11,7 +11,7 @@ public class ExpenseDistribuiteAcquisition {
 
     private UUID id;
 
-    private UUID idItem;
+    private String nameItem;
 
     private Integer quantity;
 
@@ -20,5 +20,9 @@ public class ExpenseDistribuiteAcquisition {
     private String account;
 
     private String subAccount;
+
+    private Integer codeBusinessUnit;
+
+    private String nameBusinessUnit;
 
 }

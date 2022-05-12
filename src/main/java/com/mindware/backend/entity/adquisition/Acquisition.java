@@ -52,6 +52,12 @@ public class Acquisition {
 
     private String expenseDistribuite; //json
 
+    private LocalDate dateDeliveryAccounting;
+
+    private String accoutingPerson;
+
+    private LocalDate dateDeliveryAaaf;
+
     private String state; //INICIADO, ENVIADO, OBSERVADO, POR REGULARIZAR, FINALIZADO
 
     private UUID idSupplier;

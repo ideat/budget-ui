@@ -14,4 +14,8 @@ public class ExpenseDistribuite {
     private Double amount;
 
     private String currency;
+
+    private String account;
+
+    private String subAccount;
 }
