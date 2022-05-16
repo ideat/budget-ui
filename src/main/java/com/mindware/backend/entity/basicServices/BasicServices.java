@@ -33,4 +33,6 @@ public class BasicServices {
     private Integer numberDocumentReceived;
 
     private String expenseDistribuite; //json
+
+    private String invoiceAuthorizer;
 }

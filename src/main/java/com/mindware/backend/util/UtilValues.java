@@ -6,7 +6,9 @@ import com.mindware.backend.entity.config.Account;
 import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.config.Period;
 import com.mindware.backend.entity.config.SubAccount;
+import com.mindware.backend.entity.user.UserLdapDto;
 import com.mindware.backend.rest.account.AccountRestTemplate;
+import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.rest.period.PeriodRestTemplate;
 import lombok.SneakyThrows;
@@ -28,6 +30,9 @@ public class UtilValues {
 
     @Autowired
     AccountRestTemplate accountRestTemplate;
+
+    @Autowired
+    private DataLdapRestTemplate dataLdapRestTemplate;
 
     private String[] months = {"ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO"
             ,"JULIO","AGOSTO","SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE","DICIEMBRE"};
@@ -99,5 +104,13 @@ public class UtilValues {
         }
 
         return periods;
+    }
+
+    public List<String> getNameUserLdapByCriteria(String criteria, String value){
+        List<UserLdapDto> userLdapDtoList = dataLdapRestTemplate.getUserByCriteria(criteria,value);
+        List<String> nameUsers = userLdapDtoList.stream()
+                .map(UserLdapDto::getCn)
+                .collect(Collectors.toList());
+        return nameUsers;
     }
 }

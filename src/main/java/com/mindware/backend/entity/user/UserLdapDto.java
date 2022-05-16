@@ -20,4 +20,6 @@ public class UserLdapDto {
     private String sn;
 
     private String email;
+
+    private String employeeNumber;
 }

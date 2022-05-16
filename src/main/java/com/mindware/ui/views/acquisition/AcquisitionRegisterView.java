@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindware.backend.entity.acquisitionAuthorizer.AcquisitionAuthorizer;
 import com.mindware.backend.entity.adquisition.*;
+import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.entity.user.UserLdapDto;
@@ -12,6 +13,7 @@ import com.mindware.backend.rest.acquisition.AcquisitionRestTemplate;
 import com.mindware.backend.rest.acquisitionAuthorizer.AcquisitionAuthorizerRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
+import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
@@ -92,6 +94,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     @Autowired
     private SupplierRestTemplate supplierRestTemplate;
 
+    @Autowired
+    private ParameterRestTemplate parameterRestTemplate;
+
     private Map<String, List<String>> params;
     private ObjectMapper mapper;
 
@@ -147,6 +152,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private List<SelectedAuthorizer> selectedAuthorizerLevel2List;
     private Grid<SelectedAuthorizer> selectedAuthorizerLevel2Grid;
 
+    private NumberField amountCaabs;
+
 //  AdjudicationInformation
     private Binder<AdjudicationInfomation> adjudicationInfomationBinder;
     private AdjudicationInfomation currentAdjudicationInformation;
@@ -191,6 +198,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     private String currentTab;
     private boolean isFirsLoadExpenseDistribuite;
+    private Double amountMaxLevel1;
 
     @SneakyThrows
     @Override
@@ -201,6 +209,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         params = queryParameters.getParameters();
 
         conceptList = conceptRestTemplate.getAgencia();
+        String strAmount = parameterRestTemplate.getByCategory("MONTO AUTORIZACION").stream()
+                .map(Parameter::getValue)
+                .findFirst().get();
+        amountMaxLevel1 = Double.valueOf(strAmount);
 
         footer = new DetailsDrawerFooter();
         if(!params.get("id").get(0).equals("NUEVO")){
@@ -353,21 +365,30 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
             if(binder.writeBeanIfValid(current)){
                 try {
+                    if(current.getId()==null){
+                        current.setState("INICIADO");
+                    }
                     String jsonItems = mapper.writeValueAsString(itemList);
                     current.setItems(jsonItems);
                     String jsonAcquisitionAuthorizerLevel1 = mapper.writeValueAsString(selectedAuthorizerList);
-                    String jsonAcquisitionAuthorizerLevel2 = mapper.writeValueAsString(selectedAuthorizerLevel2List);
-
+                    String jsonAcquisitionAuthorizerLevel2 = "";
+                    if( current.getAmount()==null || current.getAmount()<= amountMaxLevel1){
+                        jsonAcquisitionAuthorizerLevel2 = "[]";
+                    }else {
+                        jsonAcquisitionAuthorizerLevel2 = mapper.writeValueAsString(selectedAuthorizerLevel2List);
+                    }
                     current.setAuthorizersLevel1(jsonAcquisitionAuthorizerLevel1);
                     current.setAuthorizersLevel2(jsonAcquisitionAuthorizerLevel2);
                     current = acquisitionRestTemplate.add(current);
 
                     numberRequest.setValue(current.getAcquisitionNumber());
+                    UIUtils.showNotificationType("Registro Guardado","success");
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
             }
         });
+        footer.addCancelListener(event -> UI.getCurrent().navigate(AcquisitionView.class));
         setViewFooter(footer);
         binder.readBean(current);
     }
@@ -398,6 +419,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         appBar.addTab("Distribución del Gasto");
         appBar.addTab("Entrega a Contabilidad y a la AAAF");
 
+        currentTab = "Solicitud de Compra";
         appBar.centerTabs();
         hideContent("");
         enabledSheets();
@@ -1015,6 +1037,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     .bind(Acquisition::getQuotationRequestDate, Acquisition::setQuotationRequestDate);
             binder.forField(quotationReceptionDate)
                     .asRequired(("Fecha de recepción de contizaciones es requerida"))
+                    .withValidator(f -> f.isAfter(quotationRequestDate.getValue()),"Fecha recepcion no puede ser anterior a la fechade solicitud")
                     .bind(Acquisition::getQuotationReceptionDate, Acquisition::setQuotationReceptionDate);
             binder.addStatusChangeListener(event ->{
                 boolean isValid = !event.hasValidationErrors();
@@ -1043,6 +1066,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 //    INFORMATION CAABS
 
     private DetailsDrawer createInformationCaabs(Acquisition acquisition){
+
+        VerticalLayout layoutAuthorizerLevel2 = gridSelectedAuthorizerLevel2();
+
         IntegerField caabsNumber = new IntegerField();
         caabsNumber.setWidthFull();
         caabsNumber.setMin(0);
@@ -1054,11 +1080,18 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         currency.setRequired(true);
         currency.setItems(utilValues.getValueParameterByCategory("MONEDA"));
 
-        NumberField amount = new NumberField();
-        amount.setMin(0.0);
-        amount.setWidthFull();
-        amount.setClearButtonVisible(true);
-        amount.setRequiredIndicatorVisible(true);
+        amountCaabs = new NumberField();
+        amountCaabs.setMin(0.0);
+        amountCaabs.setWidthFull();
+        amountCaabs.setClearButtonVisible(true);
+        amountCaabs.setRequiredIndicatorVisible(true);
+        amountCaabs.addValueChangeListener(event -> {
+           if(event.getValue().doubleValue()>amountMaxLevel1){
+              layoutAuthorizerLevel2.setVisible(true);
+           }else{
+               layoutAuthorizerLevel2.setVisible(false);
+           }
+        });
 
         if(current.getQuotationReceptionDate()!=null){
             binder.forField(caabsNumber)
@@ -1067,7 +1100,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             binder.forField(currency)
                     .asRequired("Moneda es requerida")
                     .bind(Acquisition::getCurrency,Acquisition::setCurrency);
-            binder.forField(amount)
+            binder.forField(amountCaabs)
                     .asRequired("Monto es requerido")
                     .withValidator(a -> a.doubleValue()>0.0,"Monto tiene que se mayor a 0")
                     .bind(Acquisition::getAmount,Acquisition::setAmount);
@@ -1094,28 +1127,45 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         form.addFormItem(caabsNumber,"Número de CAABS");
         form.addFormItem(currency,"Moneda");
-        form.addFormItem(amount,"Monto");
+        form.addFormItem(amountCaabs,"Monto");
 
         DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
         detailsDrawer.setWidthFull();
         detailsDrawer.setHeight("90%");
 
         detailsDrawer.setPadding(Left.S, Right.S, Top.S);
-        Label title2 = UIUtils.createLabel(FontSize.M, TextColor.SECONDARY,"Esta solicitud debe ser revisada por:");
+//        Label title2 = UIUtils.createLabel(FontSize.M, TextColor.SECONDARY,"Esta solicitud debe ser revisada por:");
 
-        detailsDrawer.setContent(form, gridSelectedAuthorizer(), gridSelectedAuthorizerLevel2());
+
+        if(amountCaabs.isEmpty() || amountCaabs.getValue().doubleValue()<amountMaxLevel1){
+            layoutAuthorizerLevel2.setVisible(false);
+        }
+        detailsDrawer.setContent(form, gridSelectedAuthorizer(), layoutAuthorizerLevel2);
+
         detailsDrawer.show();
 
 
         return detailsDrawer;
     }
 
-    private FormLayout layoutAuthorizersLevel(SelectedAuthorizer selectedAuthorizer){
+    private FormLayout layoutAuthorizersLevel(SelectedAuthorizer selectedAuthorizer, String level){
         Concept concept = conceptList.stream()
                 .filter(c -> String.valueOf(current.getCodeBusinessUnit()).equals(c.getCode2()))
                 .findFirst().get();
         List<AcquisitionAuthorizer> acquisitionAuthorizerList = acquisitionAuthorizerRestTemplate
-                .getByCodeBranchOffice(Integer.valueOf(concept.getCode()));
+                .getByCodeBranchOffice(Integer.valueOf(concept.getCode()))
+                .stream()
+                .filter(au -> au.getMaxAmount().doubleValue()>= amountCaabs.getValue())
+                .collect(Collectors.toList());
+
+        if(level.equals("level2")) {
+            List<AcquisitionAuthorizer> acquisitionAuthorizerLevel2 = new ArrayList<>(acquisitionAuthorizerRestTemplate.getAll());
+            for (AcquisitionAuthorizer ac : acquisitionAuthorizerList) {
+                acquisitionAuthorizerLevel2.removeIf(a -> a.getId().equals(ac.getId()));
+            }
+            acquisitionAuthorizerList.clear();
+            acquisitionAuthorizerList.addAll(acquisitionAuthorizerLevel2);
+        }
 
         TextField codePosition = new TextField();
         codePosition.setWidthFull();
@@ -1160,7 +1210,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .asRequired("Codigo Cargo es requerido")
                 .bind(SelectedAuthorizer::getCodePosition,SelectedAuthorizer::setCodePosition);
         selectedAuthorizerBinder.forField(nameBranchOffice)
-                .asRequired("Sucursal es requerida")
+                .asRequired("Unidad Negocio es requerida")
                 .bind(SelectedAuthorizer::getNameBranchOffice,SelectedAuthorizer::setNameBranchOffice);
         selectedAuthorizerBinder.forField(deliverDate)
                 .asRequired("Fecha de Entrega es requerida")
@@ -1194,7 +1244,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         currentSelectedAuthorizer = selectedAuthorizer;
         detailsDrawerHeaderSelectedAuthorizer.setTitle("Autorizador: "
                 .concat(selectedAuthorizer.getFullName()==null?"Nuevo Autorizador":selectedAuthorizer.getFullName()));
-        detailsDrawerSelectedAuthorizer.setContent(layoutAuthorizersLevel(currentSelectedAuthorizer));
+        detailsDrawerSelectedAuthorizer.setContent(layoutAuthorizersLevel(currentSelectedAuthorizer,"level1"));
         detailsDrawerSelectedAuthorizer.show();
     }
 
@@ -1231,9 +1281,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         Button btnAdd = new Button("Adicionar");
         btnAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
         btnAdd.addClickListener(event -> {
-            setViewDetailsPosition(Position.RIGHT);
-            setViewDetails(createDetailsDrawerSelectedAuthorizer());
-            showDetailsSelectedAuthorizer(new SelectedAuthorizer());
+            if(!amountCaabs.isEmpty()) {
+                setViewDetailsPosition(Position.RIGHT);
+                setViewDetails(createDetailsDrawerSelectedAuthorizer());
+                showDetailsSelectedAuthorizer(new SelectedAuthorizer());
+            }else{
+                UIUtils.showNotificationType("Ingrese el monto, antes de adicionar autorizadores","alert");
+                amountCaabs.focus();
+            }
         });
 
         selectedAuthorizerGrid = new Grid<>();
@@ -1318,7 +1373,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         currentSelectedAuthorizerLevel2 = selectedAuthorizer;
         detailsDrawerHeaderSelectedAuthorizer.setTitle("Autorizador: "
                 .concat(selectedAuthorizer.getFullName()==null?"Nuevo Autorizador":selectedAuthorizer.getFullName()));
-        detailsDrawerSelectedAuthorizer.setContent(layoutAuthorizersLevel(currentSelectedAuthorizer));
+        detailsDrawerSelectedAuthorizer.setContent(layoutAuthorizersLevel(currentSelectedAuthorizer,"level2"));
         detailsDrawerSelectedAuthorizer.show();
     }
 
@@ -1350,15 +1405,20 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     private VerticalLayout gridSelectedAuthorizerLevel2(){
 
-    VerticalLayout layout = new VerticalLayout();
-    layout.setWidthFull();
-    Button btnAdd = new Button("Adicionar");
-      btnAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
-    btnAdd.addClickListener(event -> {
-        setViewDetailsPosition(Position.RIGHT);
-        setViewDetails(createDetailsDrawerSelectedAuthorizerLevel2());
-        showDetailsSelectedAuthorizerLevel2(new SelectedAuthorizer());
-    });
+        VerticalLayout layout = new VerticalLayout();
+        layout.setWidthFull();
+        Button btnAdd = new Button("Adicionar");
+        btnAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
+        btnAdd.addClickListener(event -> {
+            if(!amountCaabs.isEmpty()) {
+                setViewDetailsPosition(Position.RIGHT);
+                setViewDetails(createDetailsDrawerSelectedAuthorizerLevel2());
+                showDetailsSelectedAuthorizerLevel2(new SelectedAuthorizer());
+            }else{
+                UIUtils.showNotificationType("Ingrese el monto, antes de adicionar revisores","alert");
+                amountCaabs.focus();
+            }
+        });
 
     selectedAuthorizerLevel2Grid = new Grid<>();
     selectedAuthorizerLevel2Grid.setWidthFull();
@@ -1945,6 +2005,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             Supplier supplier = new Supplier();
             if(supplierBinder.writeBeanIfValid(supplier)){
                 supplier.setPendingCompleting("NO");
+                supplier.setShareHolders("[]");
                 supplier = supplierRestTemplate.add(supplier);
                 nameSupplierInvoiceInformation.setValue(name.getValue());
                 idSupplierInvoiceInformation.setValue(supplier.getId().toString());
@@ -2039,6 +2100,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         if(expenseDistribuite.getCodeBusinessUnit()!=null) {
             isFirsLoadExpenseDistribuite = true;
             unitBusiness.setValue(conceptList.stream()
+                    .filter(f -> f.getCode2()!=null)
                     .filter(f -> f.getCode2().equals(String.valueOf(expenseDistribuite.getCodeBusinessUnit()))).findFirst().get());
 
         }
@@ -2272,6 +2334,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         accountingPerson.setWidth("30%");
         accountingPerson.setRequired(true);
         accountingPerson.setRequiredIndicatorVisible(true);
+        List<Parameter> parameterList = parameterRestTemplate.getByCategory("CODIGO CARGOS");
+
+        String position = parameterList.stream()
+                .filter(p -> p.getValue().equals("CONTABILIDAD"))
+                .map(Parameter::getDetails)
+                .findFirst().get();
+        List<String> nameUsersPosition =  utilValues.getNameUserLdapByCriteria("title",position);
+        accountingPerson.setItems(nameUsersPosition);
 
         DatePicker dateDeliveryAaaf = new DatePicker("Fecha de entrega AAAF");
         dateDeliveryAaaf.setWidth("30%");
@@ -2286,7 +2356,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     .bind(Acquisition::getDateDeliveryAccounting, Acquisition::setDateDeliveryAccounting);
             binder.forField(accountingPerson)
                     .asRequired("Responsable de contabilidad es requerido")
-                    .bind(Acquisition::getAccoutingPerson, Acquisition::setAccoutingPerson);
+                    .bind(Acquisition::getAccountingPerson, Acquisition::setAccountingPerson);
             binder.forField(dateDeliveryAaaf)
                     .asRequired("Fecha de entrega a AAAF es requerida")
                     .bind(Acquisition::getDateDeliveryAaaf, Acquisition::setDateDeliveryAaaf);

@@ -106,6 +106,14 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);
 
+        grid.addColumn(AcquisitionDto::getAcquisitionNumber)
+                .setFlexGrow(1)
+                .setKey("acquisitionNumber")
+                .setHeader("Nro. Adquisición")
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setTextAlign(ColumnTextAlign.CENTER)
+                .setResizable(true);
         grid.addColumn(AcquisitionDto::getSupplier)
                 .setFlexGrow(1)
                 .setKey("supplier")

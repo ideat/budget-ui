@@ -54,7 +54,7 @@ public class Acquisition {
 
     private LocalDate dateDeliveryAccounting;
 
-    private String accoutingPerson;
+    private String accountingPerson;
 
     private LocalDate dateDeliveryAaaf;
 

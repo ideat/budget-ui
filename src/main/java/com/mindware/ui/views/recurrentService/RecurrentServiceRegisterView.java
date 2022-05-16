@@ -380,14 +380,18 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(event ->{
             if(binder.writeBeanIfValid(recurrentServiceDto)){
-                recurrentServiceDto.setIdSupplier(supplierSelected.getId());
-                try {
-                    recurrentServiceRestTemplate.add(fillRecurrentService());
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
+                if(validateAmountExpenseDistribuite()) {
+                    recurrentServiceDto.setIdSupplier(supplierSelected.getId());
+                    try {
+                        recurrentServiceRestTemplate.add(fillRecurrentService());
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                    UI.getCurrent().navigate(RecurrentServiceView.class);
+                    UIUtils.showNotificationType("Datos registratos", "success");
+                }else{
+                    UIUtils.showNotificationType("Monto distribuido no cuadra con el monto del contrato","alert");
                 }
-                UI.getCurrent().navigate(RecurrentServiceView.class);
-                UIUtils.showNotificationType("Datos registratos","success");
             }
         });
         footer.addCancelListener(event -> UI.getCurrent().navigate(RecurrentServiceView.class));
@@ -796,5 +800,11 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         recurrentService.setNumberDocumentReceived(recurrentServiceDto.getNumberDocumentReceived());
         recurrentService.setNumberContract(recurrentServiceDto.getNumberContract());
         return  recurrentService;
+    }
+
+    private boolean validateAmountExpenseDistribuite(){
+        Double result = expenseDistribuiteList.stream()
+                .mapToDouble(e -> e.getAmount()).sum();
+       return (result.doubleValue() == recurrentServiceDto.getAmount().doubleValue());
     }
 }

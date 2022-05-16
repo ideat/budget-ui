@@ -37,4 +37,6 @@ public class BasicServicesDto {
     private Integer numberDocumentReceived;
 
     private String expenseDistribuite; //json
+
+    private String invoiceAuthorizer;
 }

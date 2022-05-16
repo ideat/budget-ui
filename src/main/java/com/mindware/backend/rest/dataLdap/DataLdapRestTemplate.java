@@ -32,4 +32,14 @@ public class DataLdapRestTemplate {
         ResponseEntity<UserLdapDto[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,UserLdapDto[].class,params);
         return Arrays.asList(response.getBody());
     }
+
+    public List<UserLdapDto> getUserByCriteria(String criteria, String value){
+        final String uri = url + "/ldap/getUserByCriteria/{criteria}/{value}";
+        Map<String,String> params = new HashMap<>();
+        params.put("criteria",criteria);
+        params.put("value", value);
+        HttpEntity<UserLdapDto[]> entity = new HttpEntity<>(HeaderJwt.getHeader());
+        ResponseEntity<UserLdapDto[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,UserLdapDto[].class,params);
+        return Arrays.asList(response.getBody());
+    }
 }

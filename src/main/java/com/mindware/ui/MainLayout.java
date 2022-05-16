@@ -10,6 +10,7 @@ import com.mindware.ui.views.config.parameter.ParameterView;
 import com.mindware.ui.views.config.period.PeriodView;
 import com.mindware.ui.views.config.typeChangeCurrency.TypeChangeCurrencyView;
 import com.mindware.ui.views.contract.ContractView;
+import com.mindware.ui.views.invoiceAuthorizer.InvoiceAuthorizerView;
 import com.mindware.ui.views.recurrentService.RecurrentServiceView;
 import com.mindware.ui.views.supplier.SupplierView;
 import com.vaadin.flow.component.Component;
@@ -151,7 +152,8 @@ public class MainLayout extends FlexBoxLayout
 		menu.addNaviItem(VaadinIcon.STORAGE,"Adquiciones", AcquisitionView.class);
 		NaviItem configuration = menu.addNaviItem(VaadinIcon.COGS, "Configuracion",null);
 		menu.addNaviItem(configuration,"Parametros", ParameterView.class);
-		menu.addNaviItem(configuration,"Autorizador Adquisicion", AcquisitionAuthorizerView.class);
+		menu.addNaviItem(configuration,"Niveles Autorización Adquisición", AcquisitionAuthorizerView.class);
+		menu.addNaviItem(configuration,"Autorizadores de Facturas", InvoiceAuthorizerView.class);
 		menu.addNaviItem(configuration, "Cuentas", AccountView.class);
 		menu.addNaviItem(configuration, "Servicios Basicos", BasicServiceProviderView.class);
 		menu.addNaviItem(configuration, "Periodos", PeriodView.class);
