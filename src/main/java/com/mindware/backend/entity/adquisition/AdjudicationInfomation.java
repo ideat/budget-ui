@@ -21,9 +21,9 @@ public class AdjudicationInfomation {
 
     private Integer deliveryTime;
 
-    private boolean requiresAdvance;
+    private Boolean requiresAdvance;
 
-    private boolean correspondsContract;
+    private Boolean correspondsContract;
 
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)

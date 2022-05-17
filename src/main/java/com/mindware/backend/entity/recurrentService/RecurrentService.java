@@ -38,4 +38,5 @@ public class RecurrentService {
 
     private Integer numberContract;//***
 
+    private String invoiceAuthorizer;
 }

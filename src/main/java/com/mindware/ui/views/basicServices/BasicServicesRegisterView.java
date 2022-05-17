@@ -149,6 +149,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         }else{
             basicServicesDto = new BasicServicesDto();
             basicServicesDto.setExpenseDistribuite("[]");
+            basicServicesDto.setInvoiceAuthorizer("[]");
             title = "Registro Nuevo";
         }
 
@@ -397,33 +398,6 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         form.addFormItem(subAccount,"Subcuenta");
         form.addFormItem(typeDocumentReceived,"Tipo Documento");
         form.addFormItem(numberDocumentReceived,"Nro Factura/Recibo");
-
-//        footer = new DetailsDrawerFooter();
-//        footer.addSaveListener(event -> {
-//            try {
-//                if (binder.writeBeanIfValid(basicServicesDto)) {
-//                    basicServicesDto.setIdBasicServicesProvider(basicServiceProviderSelected.getId());
-//                    if(validateAmountExpenseDistribuite()) {
-//                        try {
-//                            basicServicesRestTemplate.add(fillBasicServices());
-//                        } catch (JsonProcessingException e) {
-//                            e.printStackTrace();
-//                        }
-//
-//                        UI.getCurrent().navigate(BasicServicesView.class);
-//                        UIUtils.showNotificationType("Datos registratos", "success");
-//                    }else{
-//                        UIUtils.showNotificationType("Monto distribuido no cuadra con el monto del contrato","alert");
-//                    }
-//                } else {
-//                    UIUtils.showNotificationType("Datos no completos, revisar","alert");
-//                }
-//            }catch (Exception e){
-//                UIUtils.showNotificationType(e.getMessage(), "error");
-//            }
-//        });
-
-//        footer.addCancelListener(event -> UI.getCurrent().navigate(RecurrentServiceView.class));
 
         DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
         detailsDrawer.setHeight("100%");
@@ -786,7 +760,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                 .filter(c -> String.valueOf(expenseDistribuiteList.get(0).getCodeBusinessUnit()).equals(c.getCode2()))
                 .findFirst().get();
         List<InvoiceAuthorizer> invoiceAuthorizerList = invoiceAuthorizerTemplate
-                .getByCodeBranchOffice(Integer.valueOf(concept.getCode2()));
+                .getByCodeBranchOffice(Integer.valueOf(concept.getCode()));
 
         TextField codePosition = new TextField();
         codePosition.setWidthFull();

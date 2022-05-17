@@ -49,4 +49,6 @@ public class RecurrentServiceDto {
     private Boolean tacitReductionClause;
 
     private String paymentFrecuency;
+
+    private String invoiceAuthorizer;
 }

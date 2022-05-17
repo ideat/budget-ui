@@ -94,6 +94,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 //    private ListDataProvider<Contract> contractDataProvider;
 
     private ComboBox<Supplier> supplier;
+    private ComboBox<String> typeChangeCurrency;
 
     private Contract current;
     private  Grid<ContractDto> grid;
@@ -234,7 +235,6 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         supplier.setValue(supplierList.stream()
                 .filter(sup -> sup.getId().equals(contract.getIdSupplier())).collect(Collectors.toList()).get(0));
 
-
         DatePicker dateSubscription = new DatePicker();
         dateSubscription.setLocale(new Locale("es","BO"));
         dateSubscription.setRequired(true);
@@ -244,6 +244,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         currency.setWidth("40%");
         currency.setItems(utilValues.getValueParameterByCategory("MONEDA"));
         currency.setRequired(true);
+
 
         NumberField amount = new NumberField();
         amount.setWidth("55%");
@@ -287,10 +288,13 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         paymentFrecuency.setRequired(true);
         paymentFrecuency.setItems(utilValues.getValueParameterByCategory("FRECUENCIA PAGO"));
 
-        ComboBox<String> typeChangeCurrency = new ComboBox<>();
+        typeChangeCurrency = new ComboBox<>();
         typeChangeCurrency.setWidthFull();
         typeChangeCurrency.setItems(utilValues.getValueParameterByCategory("CATEGORIA TIPO CAMBIO"));
         typeChangeCurrency.setAllowCustomValue(false);
+        typeChangeCurrency.setErrorMessage("Categoria Tipo Cambio es requerida");
+        typeChangeCurrency.setRequired(true);
+
 
         binder = new BeanValidationBinder<>(Contract.class);
 
@@ -315,8 +319,8 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.forField(paymentFrecuency).asRequired("Frecuencia de pago es requerida")
                 .bind(Contract::getPaymentFrecuency,Contract::setPaymentFrecuency);
         binder.forField(typeChangeCurrency)
-                .asRequired("Categoria Tipo Cambio es requerida")
-                .bind(Contract::getTypeChangeCurrency,Contract::setTypeChangeCurrency);
+//                .asRequired("Categoria Tipo Cambio es requerida")
+                .bind(Contract::getTypeChangeCurrency, Contract::setTypeChangeCurrency);
         binder.addStatusChangeListener(event ->{
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
@@ -351,6 +355,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         FormLayout.FormItem layoutChecksItem = form.addFormItem(layoutChecks,"");
         UIUtils.setColSpan(2,layoutChecksItem);
         form.addFormItem(paymentFrecuency,"Frecuencia Pago");
+
         form.addFormItem(typeChangeCurrency,"Categoria Tipo Cambio");
 
         return form;
@@ -376,6 +381,11 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
             if (current !=null && binder.writeBeanIfValid(current)){
+                if(current.getCurrency().equals("$us") && (current.getTypeChangeCurrency()==null || current.getTypeChangeCurrency().isEmpty())){
+                    typeChangeCurrency.setInvalid(true);
+
+                    return;
+                }
                 current.setIdSupplier(supplier.getValue().getId());
                 Contract result = restTemplate.add(current);
                 if (current.getId()==null){

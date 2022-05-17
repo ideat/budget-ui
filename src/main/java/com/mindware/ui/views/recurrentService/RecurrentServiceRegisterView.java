@@ -6,16 +6,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindware.backend.entity.contract.Contract;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
+import com.mindware.backend.entity.invoiceAuthorizer.InvoiceAuthorizer;
+import com.mindware.backend.entity.invoiceAuthorizer.SelectedInvoiceAuthorizer;
 import com.mindware.backend.entity.recurrentService.RecurrentService;
 import com.mindware.backend.entity.recurrentService.RecurrentServiceDto;
 import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.rest.contract.ContractRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
+import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
 import com.mindware.backend.rest.recurrentService.RecurrentServiceDtoRestTemplate;
 import com.mindware.backend.rest.recurrentService.RecurrentServiceRestTemplate;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
+import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerHeader;
@@ -23,6 +27,7 @@ import com.mindware.ui.components.navigation.bar.AppBar;
 import com.mindware.ui.layout.size.Left;
 import com.mindware.ui.layout.size.Right;
 import com.mindware.ui.layout.size.Top;
+import com.mindware.ui.layout.size.Vertical;
 import com.mindware.ui.util.LumoStyles;
 import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.views.SplitViewFrame;
@@ -39,8 +44,10 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -58,6 +65,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Route(value = "recurrent-service-register", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
@@ -81,6 +89,9 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
     @Autowired
     private ConceptRestTemplate conceptRestTemplate;
+
+    @Autowired
+    private InvoiceAuthorizerRestTemplate invoiceAuthorizerTemplate;
 
     private Supplier supplierSelected;
 
@@ -123,10 +134,23 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private DatePicker finishDate;
     private  Checkbox tacitReductionClause;
 
-
     private List<Concept> conceptList;
 
     private Map<String, List<String>> param;
+
+    private FlexBoxLayout contentCreateRecurrentService;
+    private FlexBoxLayout contentInvoiceAuthorizer;
+
+    private String currentTab;
+
+    private Grid<SelectedInvoiceAuthorizer> selectedInvoiceAuthorizerGrid;
+    private SelectedInvoiceAuthorizer currentSelectedInvoiceAuthorizer;
+    private DetailsDrawerHeader detailsDrawerHeaderSelectedInvoiceAuthorizer;
+    private DetailsDrawer detailsDrawerSelectedInvoiceAuthorizer;
+    private DetailsDrawerFooter footerInvoiceAuthorizer;
+    private Binder<SelectedInvoiceAuthorizer> selectedInvoiceAuthorizerBinder;
+    private List<SelectedInvoiceAuthorizer> selectedInvoiceAuthorizerList;
+    private ListDataProvider<SelectedInvoiceAuthorizer> selectedInvoiceAuthorizerDataProvider;
 
     @Override
     public void setParameter(BeforeEvent beforeEvent, @OptionalParameter String s) {
@@ -144,40 +168,113 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         }else{
             recurrentServiceDto = new RecurrentServiceDto();
             recurrentServiceDto.setExpenseDistribuite("[]");
+            recurrentServiceDto.setInvoiceAuthorizer("[]");
             title = "Registro Nuevo ";
         }
 
         try {
             expenseDistribuiteList = mapper.readValue(recurrentServiceDto.getExpenseDistribuite(), new TypeReference<List<ExpenseDistribuite>>() {});
+            selectedInvoiceAuthorizerList = mapper.readValue(recurrentServiceDto.getInvoiceAuthorizer(), new TypeReference<List<SelectedInvoiceAuthorizer>>(){});
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
 
         expenseDistribuiteDataProvider = new ListDataProvider<>(expenseDistribuiteList);
+        selectedInvoiceAuthorizerDataProvider = new ListDataProvider<>(selectedInvoiceAuthorizerList);
+
 
         conceptList = new ArrayList<>(conceptRestTemplate.getAgencia());
         conceptList.addAll(conceptRestTemplate.getSucursal());
         conceptList.sort(Comparator.comparing(Concept::getCode));
 
+        contentCreateRecurrentService = (FlexBoxLayout) createContent(createRecurrentServiceDtoForm(recurrentServiceDto));
+        contentInvoiceAuthorizer = (FlexBoxLayout) createContent(createGridSelectedInvoiceAuthorizer());
+
         setViewDetails(createDetailDrawer());
         setViewDetailsPosition(Position.BOTTOM);
+
+        footer = new DetailsDrawerFooter();
+        footer.addSaveListener(event ->{
+            if(binder.writeBeanIfValid(recurrentServiceDto)){
+                if(validateAmountExpenseDistribuite()) {
+                    recurrentServiceDto.setIdSupplier(supplierSelected.getId());
+                    try {
+                        recurrentServiceRestTemplate.add(fillRecurrentService());
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                    UI.getCurrent().navigate(RecurrentServiceView.class);
+                    UIUtils.showNotificationType("Datos registratos", "success");
+                }else{
+                    UIUtils.showNotificationType("Monto distribuido no cuadra con el monto del contrato","alert");
+                }
+            }
+        });
+        footer.addCancelListener(event -> UI.getCurrent().navigate(RecurrentServiceView.class));
+        setViewFooter(footer);
     }
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
         super.onAttach(attachEvent);
         initBar();
-        setViewContent(createRecurrentServiceDtoForm(recurrentServiceDto));
+        setViewContent(contentCreateRecurrentService,contentInvoiceAuthorizer);
         binder.readBean(recurrentServiceDto);
     }
 
     private AppBar initBar(){
+        MainLayout.get().getAppBar().reset();
         AppBar appBar = MainLayout.get().getAppBar();
+
+        appBar.addTab("Registro Factura Servicio Recurrente");
+        appBar.addTab("Autorización Factura");
+        appBar.centerTabs();
+
+        currentTab = "Registro Factura Servicio Recurrente";
+
+        appBar.addTabSelectionListener(e -> {
+            enabledSheets();
+            if(e.getSource().getSelectedTab()!=null) {
+                Tab selectTab = appBar.getSelectedTab();
+                currentTab = selectTab.getLabel();
+                hideContent();
+            }
+        });
+
         appBar.setNaviMode(AppBar.NaviMode.CONTEXTUAL);
         appBar.setTitle(title);
         appBar.getContextIcon().addClickListener(e -> UI.getCurrent().navigate("recurrent-service"));
 
         return appBar;
+    }
+
+    private void enabledSheets(){
+        if(recurrentServiceDto.getId()==null){
+            contentInvoiceAuthorizer.setEnabled(false);
+        }else{
+            contentInvoiceAuthorizer.setEnabled(true);
+        }
+    }
+
+    private void hideContent(){
+        contentCreateRecurrentService.setVisible(true);
+        contentInvoiceAuthorizer.setVisible(false);
+        if(currentTab.equals("Registro Factura Servicio Recurrente")){
+            contentCreateRecurrentService.setVisible(true);
+            contentInvoiceAuthorizer.setVisible(false);
+        }else if(currentTab.equals("Autorización Factura")){
+            contentCreateRecurrentService.setVisible(false);
+            contentInvoiceAuthorizer.setVisible(true);
+        }
+    }
+
+    private Component createContent(DetailsDrawer component){
+        FlexBoxLayout content = new FlexBoxLayout(component);
+        content.setFlexDirection(FlexLayout.FlexDirection.ROW);
+        content.setMargin(Vertical.AUTO, Vertical.RESPONSIVE_L);
+        content.setSizeFull();
+
+        return content;
     }
 
     private DetailsDrawer createRecurrentServiceDtoForm(RecurrentServiceDto recurrentServiceDto){
@@ -377,30 +474,13 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         form.addFormItem(tacitReductionClause,"");
         form.addFormItem(paymentFrecuency,"Frecuencia pago");
 
-        footer = new DetailsDrawerFooter();
-        footer.addSaveListener(event ->{
-            if(binder.writeBeanIfValid(recurrentServiceDto)){
-                if(validateAmountExpenseDistribuite()) {
-                    recurrentServiceDto.setIdSupplier(supplierSelected.getId());
-                    try {
-                        recurrentServiceRestTemplate.add(fillRecurrentService());
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
-                    UI.getCurrent().navigate(RecurrentServiceView.class);
-                    UIUtils.showNotificationType("Datos registratos", "success");
-                }else{
-                    UIUtils.showNotificationType("Monto distribuido no cuadra con el monto del contrato","alert");
-                }
-            }
-        });
-        footer.addCancelListener(event -> UI.getCurrent().navigate(RecurrentServiceView.class));
+
 
         DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
         detailsDrawer.setHeight("100%");
         detailsDrawer.setPadding(Left.S, Right.S, Top.S);
         detailsDrawer.setContent(form, gridExpenseDistribuite());
-        detailsDrawer.setFooter(footer);
+//        detailsDrawer.setFooter(footer);
         detailsDrawer.show();
 
 
@@ -780,8 +860,6 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
     }
 
-
-
     private RecurrentService fillRecurrentService() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         RecurrentService recurrentService = new RecurrentService();
@@ -799,6 +877,8 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         recurrentService.setTypeDocumentReceived(recurrentServiceDto.getTypeDocumentReceived());
         recurrentService.setNumberDocumentReceived(recurrentServiceDto.getNumberDocumentReceived());
         recurrentService.setNumberContract(recurrentServiceDto.getNumberContract());
+        String jsonInvoiceAuthorizer = mapper.writeValueAsString(selectedInvoiceAuthorizerList);
+        recurrentService.setInvoiceAuthorizer(jsonInvoiceAuthorizer);
         return  recurrentService;
     }
 
@@ -806,5 +886,172 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         Double result = expenseDistribuiteList.stream()
                 .mapToDouble(e -> e.getAmount()).sum();
        return (result.doubleValue() == recurrentServiceDto.getAmount().doubleValue());
+    }
+
+    //Invoice Authorizer
+    private void showDetailsInvoiceAuthorizer(SelectedInvoiceAuthorizer selectedInvoiceAuthorizer){
+        setViewDetails(createDetailsDrawerSelectedInvoiceAuthorizer());
+        setViewDetailsPosition(Position.RIGHT);
+        currentSelectedInvoiceAuthorizer = selectedInvoiceAuthorizer;
+        detailsDrawerHeaderSelectedInvoiceAuthorizer.setTitle("Autorizador: "
+                .concat(selectedInvoiceAuthorizer.getFullName()==null?"Nuevo Autorizador":selectedInvoiceAuthorizer.getFullName()));
+        detailsDrawerSelectedInvoiceAuthorizer.setContent(layoutInvoiceAuthorizers(currentSelectedInvoiceAuthorizer));
+        detailsDrawerSelectedInvoiceAuthorizer.show();
+    }
+
+    private DetailsDrawer createDetailsDrawerSelectedInvoiceAuthorizer(){
+
+        detailsDrawerSelectedInvoiceAuthorizer = new DetailsDrawer(DetailsDrawer.Position.RIGHT);
+        detailsDrawerHeaderSelectedInvoiceAuthorizer = new DetailsDrawerHeader("");
+        detailsDrawerHeaderSelectedInvoiceAuthorizer.addCloseListener(event -> detailsDrawerSelectedInvoiceAuthorizer.hide());
+        detailsDrawerSelectedInvoiceAuthorizer.setHeader(detailsDrawerHeaderSelectedInvoiceAuthorizer);
+
+        footerInvoiceAuthorizer = new DetailsDrawerFooter();
+        footerInvoiceAuthorizer.addSaveListener(e -> {
+            if(currentSelectedInvoiceAuthorizer != null && selectedInvoiceAuthorizerBinder.writeBeanIfValid(currentSelectedInvoiceAuthorizer)){
+                selectedInvoiceAuthorizerList.removeIf(sa -> sa.getId().equals(currentSelectedInvoiceAuthorizer.getId()));
+                currentSelectedInvoiceAuthorizer.setId(UUID.randomUUID());
+
+                selectedInvoiceAuthorizerList.add(currentSelectedInvoiceAuthorizer);
+                detailsDrawerSelectedInvoiceAuthorizer.hide();
+                selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
+                footerInvoiceAuthorizer.saveState(true);
+                footer.saveState(true);
+            }
+        });
+
+        footerInvoiceAuthorizer.addCancelListener(e -> detailsDrawerSelectedInvoiceAuthorizer.hide());
+        detailsDrawerSelectedInvoiceAuthorizer.setFooter(footerInvoiceAuthorizer);
+
+        return detailsDrawerSelectedInvoiceAuthorizer;
+
+    }
+
+    private FormLayout layoutInvoiceAuthorizers(SelectedInvoiceAuthorizer selectedInvoiceAuthorizer){
+
+        Concept concept = conceptList.stream()
+                .filter(c -> String.valueOf(expenseDistribuiteList.get(0).getCodeBusinessUnit()).equals(c.getCode2()))
+                .findFirst().get();
+        List<InvoiceAuthorizer> invoiceAuthorizerList = invoiceAuthorizerTemplate
+                .getByCodeBranchOffice(Integer.valueOf(concept.getCode()));
+
+        TextField codePosition = new TextField();
+        codePosition.setWidthFull();
+        codePosition.setRequired(true);
+        codePosition.setReadOnly(true);
+
+        TextField nameBranchOffice = new TextField();
+        nameBranchOffice.setWidthFull();
+        nameBranchOffice.setRequired(true);
+        nameBranchOffice.setReadOnly(true);
+
+        ComboBox<String> fullName = new ComboBox<>();
+        fullName.setRequired(true);
+        fullName.setWidthFull();
+        fullName.setAllowCustomValue(false);
+        fullName.setItems(invoiceAuthorizerList.stream()
+                .map(InvoiceAuthorizer::getFullName)
+                .collect(Collectors.toList()));
+        fullName.addValueChangeListener(event -> {
+            InvoiceAuthorizer invoiceAuthorizer = invoiceAuthorizerList.stream()
+                    .filter(a -> event.getValue().equals(a.getFullName()))
+                    .findFirst().get();
+            codePosition.setValue(invoiceAuthorizer.getCodePosition());
+            nameBranchOffice.setValue(invoiceAuthorizer.getNameBranchOffice());
+        });
+
+        selectedInvoiceAuthorizerBinder = new BeanValidationBinder<>(SelectedInvoiceAuthorizer.class);
+        selectedInvoiceAuthorizerBinder.forField(fullName)
+                .asRequired("Autorizador es requerido")
+                .bind(SelectedInvoiceAuthorizer::getFullName,SelectedInvoiceAuthorizer::setFullName);
+        selectedInvoiceAuthorizerBinder.forField(codePosition)
+                .asRequired("Codigo Cargo es requerido")
+                .bind(SelectedInvoiceAuthorizer::getCodePosition,SelectedInvoiceAuthorizer::setCodePosition);
+        selectedInvoiceAuthorizerBinder.forField(nameBranchOffice)
+                .asRequired("Unidad Negocio es requerida")
+                .bind(SelectedInvoiceAuthorizer::getNameBranchOffice,SelectedInvoiceAuthorizer::setNameBranchOffice);
+
+        FormLayout form = new FormLayout();
+        form.addClassNames(LumoStyles.Padding.Bottom.L,
+                LumoStyles.Padding.Horizontal.S, LumoStyles.Padding.Top.S);
+        form.setResponsiveSteps(
+                new FormLayout.ResponsiveStep("0", 1,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP),
+                new FormLayout.ResponsiveStep("21em", 2,
+                        FormLayout.ResponsiveStep.LabelsPosition.TOP));
+
+        FormLayout.FormItem fullNameItem = form.addFormItem(fullName,"Autorizador");
+        UIUtils.setColSpan(2,fullNameItem);
+        form.addFormItem(codePosition,"Código Cargo");
+        FormLayout.FormItem nameBranchOfficeItem = form.addFormItem(nameBranchOffice,"Unidad Negocio");
+        UIUtils.setColSpan(2,nameBranchOfficeItem);
+
+        return form;
+    }
+
+    private DetailsDrawer createGridSelectedInvoiceAuthorizer(){
+
+        VerticalLayout layout = new VerticalLayout();
+        layout.setWidthFull();
+        Button btnAdd = new Button("Adicionar");
+        btnAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
+        btnAdd.addClickListener(event -> {
+            setViewDetailsPosition(Position.RIGHT);
+            setViewDetails(createDetailsDrawerSelectedInvoiceAuthorizer());
+            showDetailsInvoiceAuthorizer(new SelectedInvoiceAuthorizer());
+        });
+
+        selectedInvoiceAuthorizerGrid = new Grid<>();
+        selectedInvoiceAuthorizerGrid.setWidthFull();
+        selectedInvoiceAuthorizerGrid.setDataProvider(selectedInvoiceAuthorizerDataProvider);
+
+        selectedInvoiceAuthorizerGrid.addColumn(SelectedInvoiceAuthorizer::getFullName)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Autorizador");
+        selectedInvoiceAuthorizerGrid.addColumn(SelectedInvoiceAuthorizer::getCodePosition)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Cargo");
+        selectedInvoiceAuthorizerGrid.addColumn(SelectedInvoiceAuthorizer::getNameBranchOffice)
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true)
+                .setFlexGrow(1)
+                .setHeader("Unidad Negocio");
+        selectedInvoiceAuthorizerGrid.addColumn(new ComponentRenderer<>(this::createButtonDeleteSelectedInvoiceAuthorizer))
+                .setFlexGrow(1)
+                .setAutoWidth(true);
+
+        layout.add(btnAdd,selectedInvoiceAuthorizerGrid);
+        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.END,btnAdd);
+
+        DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+        detailsDrawer.setWidthFull();
+        detailsDrawer.setHeight("90%");
+
+        detailsDrawer.setPadding(Left.S, Right.S, Top.S);
+        detailsDrawer.setContent(layout);
+//        detailsDrawer.setFooter(footer);
+        detailsDrawer.show();
+
+        return detailsDrawer;
+    }
+
+    private Component createButtonDeleteSelectedInvoiceAuthorizer(SelectedInvoiceAuthorizer selectedInvoiceAuthorizer){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.TRASH.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        btn.addClickListener(event -> {
+            selectedInvoiceAuthorizerList.remove(selectedInvoiceAuthorizer);
+            selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
+        });
+
+        return btn;
     }
 }

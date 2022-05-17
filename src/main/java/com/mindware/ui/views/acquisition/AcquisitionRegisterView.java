@@ -37,6 +37,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -50,6 +51,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
@@ -200,6 +202,15 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private boolean isFirsLoadExpenseDistribuite;
     private Double amountMaxLevel1;
 
+    private Checkbox requiresAdvance;
+    private DatePicker  purchaseOrder;
+    private IntegerField deliverTime;
+    private  Checkbox correspondsContract;
+    private DatePicker requireUpdateDoc;
+    private  DatePicker contractRequestDateToLegal;
+    private DatePicker contractDeliverContractFromLegal;
+    private DatePicker dateSignature;
+
     @SneakyThrows
     @Override
     public void setParameter(BeforeEvent beforeEvent, @OptionalParameter String s) {
@@ -318,6 +329,32 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             }
             if(adjudicationInfomationBinder!=null){
                 if(adjudicationInfomationBinder.writeBeanIfValid(currentAdjudicationInformation)){
+                    if(currentAdjudicationInformation.getRequiresAdvance()==true){
+                        boolean isValid=true;
+                        if(currentAdjudicationInformation.getRequireUpdateDoc()==null){
+                           requireUpdateDoc.setInvalid(true);
+                           footer.saveState(false);
+                           isValid=false;
+                        }
+                        if(currentAdjudicationInformation.getContractRequestDateToLegal()==null){
+                            contractRequestDateToLegal.setInvalid(true);
+                            footer.saveState(false);
+                            isValid=false;
+                        }
+                        if(currentAdjudicationInformation.getContractDeliverContractFromLegal()==null){
+                            contractDeliverContractFromLegal.setInvalid(true);
+                            footer.saveState(false);
+                            isValid=false;
+                        }
+                        if(currentAdjudicationInformation.getDateSignature()==null){
+                            dateSignature.setInvalid(true);
+                            footer.saveState(false);
+                            isValid=false;
+                        }
+                        if (!isValid){
+                            return;
+                        }
+                    }
                     try {
                         String jsonAcquisitionInformation = mapper.writeValueAsString(currentAdjudicationInformation);
                         current.setAdjudicationInformation(jsonAcquisitionInformation);
@@ -356,8 +393,20 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
             if(expenseDistribuiteBinder!=null){
                 try {
+                    Double totalDistribuite = expenseDistribuiteList.stream()
+                            .mapToDouble(ExpenseDistribuiteAcquisition::getAmount)
+                            .sum();
+                    Double totalInvoice = invoiceInformationList.stream()
+                            .mapToDouble(InvoiceInformation::getAmount)
+                            .sum();
+                    if(totalDistribuite.doubleValue()!= totalInvoice.doubleValue() ){
+                        UIUtils.showNotificationType("Total facturas no coincide con el monto distrituido","alert");
+                        return;
+                    }
                     String jsonExpenseDistribuite = mapper.writeValueAsString(expenseDistribuiteList);
                     current.setExpenseDistribuite(jsonExpenseDistribuite);
+
+
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
@@ -1504,37 +1553,67 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     private DetailsDrawer createAdjudicationInformation(){
 
-        DatePicker  purchaseOrder = new DatePicker();
+        requiresAdvance = new Checkbox("El proveedor solicita adelanto?"); //
+
+
+        purchaseOrder = new DatePicker();
         purchaseOrder.setWidthFull();
         purchaseOrder.setRequired(true);
         purchaseOrder.setLocale(new Locale("es","BO"));
 
-        IntegerField deliverTime = new IntegerField();
+        deliverTime = new IntegerField();
         deliverTime.setWidthFull();
         deliverTime.setMin(0);
         deliverTime.setRequiredIndicatorVisible(true);
 
-        Checkbox requiresAdvance = new Checkbox("El proveedor solicita adelanto?");
-        requiresAdvance.setWidthFull();
-
-        Checkbox correspondsContract = new Checkbox("Corresponde contrato?");
+        correspondsContract = new Checkbox("Corresponde contrato?");
         correspondsContract.setWidthFull();
 
-        DatePicker requireUpdateDoc = new DatePicker();
+        requireUpdateDoc = new DatePicker();
         requireUpdateDoc.setWidthFull();
         requireUpdateDoc.setLocale(new Locale("es","BO"));
+        requireUpdateDoc.setErrorMessage("Fecha solicitud actualizacion documentos es requerido");
 
-        DatePicker contractRequestDateToLegal = new DatePicker();
+        contractRequestDateToLegal = new DatePicker();
         contractRequestDateToLegal.setWidthFull();
         contractRequestDateToLegal.setLocale(new Locale("es","BO"));
+        contractRequestDateToLegal.setErrorMessage("Fecha solicitud contrato es requerida");
 
-        DatePicker contractDeliverContractFromLegal = new DatePicker();
+        contractDeliverContractFromLegal = new DatePicker();
         contractDeliverContractFromLegal.setWidthFull();
         contractDeliverContractFromLegal.setLocale(new Locale("es","BO"));
+        contractDeliverContractFromLegal.setErrorMessage("Fecha entrega contrato es requerida");
 
-        DatePicker dateSignature = new DatePicker();
+        dateSignature = new DatePicker();
         dateSignature.setWidthFull();
         dateSignature.setLocale(new Locale("es","BO"));
+        dateSignature.setErrorMessage("Fecha firmas es requerida");
+
+//        requiresAdvance(Boolean.TRUE,Boolean.FALSE);
+        requiresAdvance.setWidthFull();
+        requiresAdvance.addValueChangeListener(event ->{
+            if(event.getSource().getValue()){
+                correspondsContract.setValue(true);
+                correspondsContract.setReadOnly(true);
+                requireUpdateDoc.setReadOnly(false);
+                contractRequestDateToLegal.setReadOnly(false);
+                contractDeliverContractFromLegal.setReadOnly(false);
+                dateSignature.setReadOnly(false);
+            }else{
+                correspondsContract.setReadOnly(true);
+                requireUpdateDoc.setReadOnly(true);
+                contractRequestDateToLegal.setReadOnly(true);
+                contractDeliverContractFromLegal.setReadOnly(true);
+                dateSignature.setReadOnly(true);
+
+                correspondsContract.clear();
+                requireUpdateDoc.clear();
+                contractRequestDateToLegal.clear();
+                contractDeliverContractFromLegal.clear();
+                dateSignature.clear();
+            }
+
+        });
 
         if(current.getCaabsNumber()!=null){
             adjudicationInfomationBinder = new BeanValidationBinder<>(AdjudicationInfomation.class);
@@ -1547,9 +1626,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     .withValidator(d -> d.intValue()>0,"Tiempo entrega debe ser positivo")
                     .bind(AdjudicationInfomation::getDeliveryTime,AdjudicationInfomation::setDeliveryTime);
             adjudicationInfomationBinder.forField(requiresAdvance)
-                    .bind(AdjudicationInfomation::isRequiresAdvance,AdjudicationInfomation::setRequiresAdvance);
+                    .bind(AdjudicationInfomation::getRequiresAdvance,AdjudicationInfomation::setRequiresAdvance);
             adjudicationInfomationBinder.forField(correspondsContract)
-                    .bind(AdjudicationInfomation::isCorrespondsContract,AdjudicationInfomation::setCorrespondsContract);
+                    .bind(AdjudicationInfomation::getCorrespondsContract,AdjudicationInfomation::setCorrespondsContract);
             adjudicationInfomationBinder.forField(requireUpdateDoc)
                     .bind(AdjudicationInfomation::getRequireUpdateDoc,AdjudicationInfomation::setRequireUpdateDoc);
             adjudicationInfomationBinder.forField(contractRequestDateToLegal)
@@ -1962,9 +2041,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         name.setWidthFull();
         name.setRequired(true);
 
-        TextField legalRepresentative = new TextField("Representante Legal");
-        legalRepresentative.setRequired(true);
-        legalRepresentative.setWidthFull();
+//        TextField legalRepresentative = new TextField("Representante Legal");
+//        legalRepresentative.setRequired(true);
+//        legalRepresentative.setWidthFull();
 
         ComboBox<String> typeBusinessCompany = new ComboBox<>("Tipo Sociedad");
         typeBusinessCompany.setRequired(true);
@@ -1977,7 +2056,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         address.setRequired(true);
 
 
-        VerticalLayout layout = new VerticalLayout(nit, name, legalRepresentative,typeBusinessCompany,address);
+        VerticalLayout layout = new VerticalLayout(nit, name, /*legalRepresentative,*/typeBusinessCompany,address);
         layout.setSpacing(false);
         layout.setPadding(false);
         layout.setAlignItems(FlexComponent.Alignment.STRETCH);
@@ -1989,9 +2068,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         supplierBinder.forField(name)
                 .asRequired("Razon Social es requerida")
                 .bind(Supplier::getName,Supplier::setName);
-        supplierBinder.forField(legalRepresentative)
-                .asRequired("Representante legal es requerido")
-                .bind(Supplier::getLegalRepresentative, Supplier::setLegalRepresentative);
+//        supplierBinder.forField(legalRepresentative)
+//                .asRequired("Representante legal es requerido")
+//                .bind(Supplier::getLegalRepresentative, Supplier::setLegalRepresentative);
         supplierBinder.forField(typeBusinessCompany)
                 .asRequired("Tipo sociedad es requerido")
                 .bind(Supplier::getTypeBusinessCompany, Supplier::setTypeBusinessCompany);
