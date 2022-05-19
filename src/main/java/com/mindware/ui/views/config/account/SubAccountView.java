@@ -30,12 +30,15 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import dev.mett.vaadin.tooltip.Tooltips;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Route(value = "subAccount", layout = MainLayout.class)
@@ -51,6 +54,7 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
 
     private Binder<SubAccount> binder;
     private ListDataProvider<SubAccount> dataProvider;
+    private Grid<SubAccount> grid;
 
     private ObjectMapper mapper;
     private Map<String, List<String>> param;
@@ -132,6 +136,21 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
             if(binder.writeBeanIfValid(current)){
+                Optional<SubAccount> searchNameSubAccount = subAccountList.stream()
+                        .filter(s -> s.getNameSubAccount().equals(current.getNameSubAccount()))
+                        .findFirst();
+                Optional<SubAccount> searchNumberSubAccount = subAccountList.stream()
+                        .filter(s -> s.getNumberSubAccount().equals(current.getNumberSubAccount()))
+                        .findFirst();
+                if(searchNumberSubAccount.isPresent() && !searchNumberSubAccount.get().getId().equals(current.getId())){
+                    UIUtils.showNotificationType("Número subcuenta ya se ecuentra registrada ","alert");
+                    return;
+                }
+                if(searchNameSubAccount.isPresent() && !searchNameSubAccount.get().getId().equals(current.getId())){
+                    UIUtils.showNotificationType("Nombre subcuenta ya se ecuentra registrada ","alert");
+                    return;
+                }
+
                 if(current.getId()==null){
                     current.setId(UUID.randomUUID());
                 }else{
@@ -210,8 +229,8 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
     }
 
     private Grid createGridSubAccount(){
-        Grid<SubAccount> grid = new Grid<>();
-        grid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(this::showDetails));
+        grid = new Grid<>();
+//        grid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(this::showDetails));
         grid.setDataProvider(dataProvider);
         grid.setSizeFull();
 
@@ -227,6 +246,38 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
                 .setSortable(true)
                 .setResizable(true)
                 .setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
+                .setFlexGrow(1)
+                .setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonDelete))
+                .setFlexGrow(1)
+                .setAutoWidth(true);
         return grid;
     }
+
+    private Component createButtonEdit(SubAccount subAccount){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addClickListener(event -> {
+            showDetails(subAccount);
+        });
+        return btn;
+    }
+
+    private Component createButtonDelete(SubAccount subAccount){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.TRASH.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        btn.addClickListener(event -> {
+            subAccountList.remove(subAccount);
+            grid.getDataProvider().refreshAll();
+            footer.saveState(true);
+        });
+
+        return btn;
+    }
+
 }

@@ -48,4 +48,16 @@ public class TypeChangeCurrencyRestTemplate {
         return response.getBody();
     }
 
+    public TypeChangeCurrency getCurrentTypeChangeCurrencyByValidityStart(String name, String validityStarat, String currency){
+        final String uri = url + "/v1/typechangecurrency/getCurrentTypeChangeCurrency/{name}";
+        Map<String,String> params = new HashMap<>();
+        params.put("name",name);
+        params.put("validitystart",validityStarat);
+        params.put("currency",currency);
+
+
+        HttpEntity<TypeChangeCurrency> entity = new HttpEntity<>(HeaderJwt.getHeader());
+        ResponseEntity<TypeChangeCurrency> response = restTemplate.exchange(uri, HttpMethod.GET,entity,TypeChangeCurrency.class,params);
+        return response.getBody();
+    }
 }

@@ -24,4 +24,6 @@ public class Account {
     private Integer period;
 
     private String state;
+
+    private String typeAccount;
 }

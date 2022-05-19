@@ -2,21 +2,20 @@ package com.mindware.backend.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mindware.backend.entity.config.Account;
-import com.mindware.backend.entity.config.Parameter;
-import com.mindware.backend.entity.config.Period;
-import com.mindware.backend.entity.config.SubAccount;
+import com.mindware.backend.entity.config.*;
 import com.mindware.backend.entity.user.UserLdapDto;
 import com.mindware.backend.rest.account.AccountRestTemplate;
 import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.rest.period.PeriodRestTemplate;
+import com.mindware.backend.rest.typeChangeCurrency.TypeChangeCurrencyRestTemplate;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +32,9 @@ public class UtilValues {
 
     @Autowired
     private DataLdapRestTemplate dataLdapRestTemplate;
+
+    @Autowired
+    private TypeChangeCurrencyRestTemplate typeChangeCurrencyRestTemplate;
 
     private String[] months = {"ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO"
             ,"JULIO","AGOSTO","SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE","DICIEMBRE"};
@@ -80,6 +82,14 @@ public class UtilValues {
         return accountNumberList;
     }
 
+    public List<String> getNameAccounts(){
+        List<Account> accounts = accountRestTemplate.getAllByPeriod(getActivePeriod());
+        List<String> accountNumberList = accounts.stream()
+                .map(Account::getNameAccount)
+                .collect(Collectors.toList());
+        return accountNumberList;
+    }
+
     @SneakyThrows
     public List<String> getSubAccounts(String numberAccount)  {
         List<Account> accounts = accountRestTemplate.getAllByPeriod(getActivePeriod());
@@ -92,6 +102,25 @@ public class UtilValues {
                 .map(SubAccount::getNumberSubAccount)
                 .collect(Collectors.toList());
         return subAccountNumberList;
+    }
+
+    @SneakyThrows
+    public List<String> getNameSubAccounts(String nameAccount)  {
+        List<Account> accounts = accountRestTemplate.getAllByPeriod(getActivePeriod());
+        Optional<Account> account = accounts.stream()
+                .filter(p -> p.getNameAccount().equals(nameAccount))
+                .findFirst();
+        List<SubAccount> subAccounts=new ArrayList<>();
+        List<String> subAccountNameList = new ArrayList<>();
+        if(account.isPresent()) {
+            ObjectMapper mapper = new ObjectMapper();
+            subAccounts = mapper.readValue(account.get().getSubAccount(), new TypeReference<List<SubAccount>>() {
+            });
+            subAccountNameList = subAccounts.stream()
+                    .map(SubAccount::getNameSubAccount)
+                    .collect(Collectors.toList());
+        }
+        return subAccountNameList;
     }
 
     public List<String> generatePeriods(){
@@ -112,5 +141,14 @@ public class UtilValues {
                 .map(UserLdapDto::getCn)
                 .collect(Collectors.toList());
         return nameUsers;
+    }
+
+    public TypeChangeCurrency getCurrentTypeChangeCurrency(String name){
+        return typeChangeCurrencyRestTemplate.getCurrentTypeChangeCurrency(name);
+
+    }
+
+    public TypeChangeCurrency getCurrentTypeChangeCurrencyByValidityStart(String name, String validityStart, String currency){
+        return typeChangeCurrencyRestTemplate.getCurrentTypeChangeCurrencyByValidityStart(name,validityStart,currency);
     }
 }

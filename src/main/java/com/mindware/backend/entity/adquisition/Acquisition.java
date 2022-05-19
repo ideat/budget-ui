@@ -34,7 +34,7 @@ public class Acquisition {
 
     //Approbation board CAABS
 
-    private Integer caabsNumber;
+    private String caabsNumber;
 
     private String currency;
 

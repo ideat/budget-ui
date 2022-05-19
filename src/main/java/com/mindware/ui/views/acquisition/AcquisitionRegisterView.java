@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindware.backend.entity.acquisitionAuthorizer.AcquisitionAuthorizer;
 import com.mindware.backend.entity.adquisition.*;
 import com.mindware.backend.entity.config.Parameter;
+import com.mindware.backend.entity.config.TypeChangeCurrency;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.entity.user.UserLdapDto;
@@ -384,6 +385,17 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
             if(invoiceInformationBinder!=null){
                 try {
+                    TypeChangeCurrency typeChangeCurrency = utilValues
+                            .getCurrentTypeChangeCurrencyByValidityStart("COMERCIAL",current.getReceptionDate().toString(),current.getCurrency());
+
+                    Double summaryAmountInvoice = (invoiceInformationList.stream()
+                            .mapToDouble(InvoiceInformation::getAmount)
+                            .sum()) / typeChangeCurrency.getAmountChange();
+                    if(summaryAmountInvoice.doubleValue() > current.getAmount().doubleValue()){
+                        UIUtils.showNotificationType("Monto de facturas supera el monto de la solicitud, Revise los datos","alert");
+                        return;
+                    }
+
                     String jsonInvoiceInformation = mapper.writeValueAsString(invoiceInformationList);
                     current.setInvoiceInformation(jsonInvoiceInformation);
                 } catch (JsonProcessingException e) {
@@ -428,7 +440,12 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     }
                     current.setAuthorizersLevel1(jsonAcquisitionAuthorizerLevel1);
                     current.setAuthorizersLevel2(jsonAcquisitionAuthorizerLevel2);
-                    current = acquisitionRestTemplate.add(current);
+                    try {
+                        current = acquisitionRestTemplate.add(current);
+                    }catch(Exception e){
+                        UIUtils.showNotificationType(e.getMessage(),"alert");
+                        return;
+                    }
 
                     numberRequest.setValue(current.getAcquisitionNumber());
                     UIUtils.showNotificationType("Registro Guardado","success");
@@ -633,7 +650,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private DetailsDrawer createPurchaseRequest(Acquisition acquisition){
         numberRequest = new IntegerField();
         numberRequest.setWidthFull();
-        numberRequest.setReadOnly(true);
+//        numberRequest.setReadOnly(true);
 
         codeBusinessUnit = new IntegerField();
         codeBusinessUnit.setWidth("30%");
@@ -667,9 +684,11 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         binder = new BeanValidationBinder<>(Acquisition.class);
         binder.forField(numberRequest)
+                .asRequired("Numero de solicitud es requerido")
+                .withValidator(n -> n.intValue()>0,"Número de solicitud debe ser positivo")
                 .bind(Acquisition::getAcquisitionNumber,Acquisition::setAcquisitionNumber);
         binder.forField(codeBusinessUnit)
-                .asRequired("Codigo Unidad de Negocio es requerido")
+                .asRequired("Código Unidad de Negocio es requerido")
                 .bind(Acquisition::getCodeBusinessUnit,Acquisition::setCodeBusinessUnit);
         binder.forField(businessUnit)
                 .asRequired("Nombre Unidad de Negocio es requerido")
@@ -678,13 +697,13 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .asRequired("Solicitante es requerido")
                 .bind(Acquisition::getApplicant,Acquisition::setApplicant);
         binder.forField(areaApplicant)
-                .asRequired("Area de trabajo del solicitante es requerida")
+                .asRequired("Área de trabajo del solicitante es requerida")
                 .bind(Acquisition::getAreaApplicant,Acquisition::setAreaApplicant);
         binder.forField(typeRequest)
                 .asRequired("Tipo de solicitud es requerido")
                 .bind(Acquisition::getTypeRequest,Acquisition::setTypeRequest);
         binder.forField(receptionDate)
-                .asRequired("Fecha de Recepcion es requerida")
+                .asRequired("Fecha de Recepción es requerida")
                 .bind(Acquisition::getReceptionDate,Acquisition::setReceptionDate);
 
         binder.addStatusChangeListener(event -> {
@@ -740,7 +759,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         FormLayout.FormItem applicantItem = form.addFormItem(layoutApplicant,"Solicitante");
         UIUtils.setColSpan(1,applicantItem);
 
-        form.addFormItem(areaApplicant,"Area Solicitante");
+        form.addFormItem(areaApplicant,"Área Solicitante");
 //        footer = new DetailsDrawerFooter();
 
         form.addFormItem(typeRequest,"Tipo adquisición");
@@ -777,13 +796,13 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .setKey("code")
                 .setAutoWidth(true)
                 .setFlexGrow(1)
-                .setHeader("Codigo Sucursal");
+                .setHeader("Código Sucursal");
         grid.addColumn(Concept::getCode2)
                 .setSortable(true)
                 .setKey("code2")
                 .setAutoWidth(true)
                 .setFlexGrow(1)
-                .setHeader("Codigo Agencia");
+                .setHeader("Código Agencia");
         grid.addColumn(Concept::getDescription)
                 .setSortable(true)
                 .setKey("description")
@@ -1118,9 +1137,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         VerticalLayout layoutAuthorizerLevel2 = gridSelectedAuthorizerLevel2();
 
-        IntegerField caabsNumber = new IntegerField();
+        TextField caabsNumber = new TextField();
         caabsNumber.setWidthFull();
-        caabsNumber.setMin(0);
+//        caabsNumber.setMin(0);
 
         ComboBox<String> currency = new ComboBox<>();
         currency.setWidthFull();
@@ -1144,7 +1163,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         if(current.getQuotationReceptionDate()!=null){
             binder.forField(caabsNumber)
-                    .asRequired("Numero CAABS es requerido")
+                    .asRequired("Número CAABS es requerido")
                     .bind(Acquisition::getCaabsNumber,Acquisition::setCaabsNumber);
             binder.forField(currency)
                     .asRequired("Moneda es requerida")

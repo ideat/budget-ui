@@ -305,6 +305,12 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         budget.setMin(0.0);
         budget.setRequiredIndicatorVisible(true);
 
+        ComboBox<String> typeAccount = new ComboBox<>();
+        typeAccount.setWidthFull();
+        typeAccount.setItems(utilValues.getValueParameterByCategory("TIPO CUENTA"));
+        typeAccount.setRequired(true);
+        typeAccount.setRequiredIndicatorVisible(true);
+
         binder = new BeanValidationBinder<>(Account.class);
         binder.forField(numberAccount)
                 .asRequired("Número de cuenta es requerido")
@@ -319,6 +325,9 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
                 .asRequired("Presupuesto cuenta es requerido")
                 .withValidator(amount -> amount >0 , "Presupuesto tiene que ser mayor a 0")
                 .bind(Account::getBudget,Account::setBudget);
+        binder.forField(typeAccount)
+                .asRequired("Tipo de cuenta es requerido")
+                .bind(Account::getTypeAccount,Account::setTypeAccount);
 
         binder.addStatusChangeListener(event -> {
            boolean isValid = !event.hasValidationErrors();
@@ -341,6 +350,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         UIUtils.setColSpan(2,nameAccountItem);
         form.addFormItem(currency,"Moneda");
         form.addFormItem(budget,"Presupuesto");
+        form.addFormItem(typeAccount,"Tipo cuenta");
 
         return form;
     }

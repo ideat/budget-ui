@@ -323,12 +323,12 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         account = new ComboBox<>();
         account.setWidthFull();
-        account.setItems(utilValues.getAccounts());
+        account.setItems(utilValues.getNameAccounts());
         account.setRequired(true);
         account.setRequiredIndicatorVisible(true);
         account.addValueChangeListener(e -> {
             subAccount.clear();
-            subAccount.setItems(utilValues.getSubAccounts(e.getValue()));
+            subAccount.setItems(utilValues.getNameSubAccounts(e.getValue()));
         });
 
         subAccount = new ComboBox<>();
