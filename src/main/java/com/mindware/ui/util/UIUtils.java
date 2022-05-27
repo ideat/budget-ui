@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
@@ -25,6 +26,8 @@ import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class UIUtils {
@@ -398,6 +401,42 @@ public class UIUtils {
 
 	public static String formatDate(LocalDate date) {
 		return dateFormat.get().format(date);
+	}
+
+	public static DatePicker.DatePickerI18n spanish(){
+		DatePicker.DatePickerI18n sp = new DatePicker.DatePickerI18n();
+		sp.setCalendar("Calendario");
+		List<String> months = new ArrayList<>();
+		months.add("Enero");
+		months.add("Febrero");
+		months.add("Marzo");
+		months.add("Abril");
+		months.add("Mayo");
+		months.add("Junio");
+		months.add("Julio");
+		months.add("Agosto");
+		months.add("Septiembre");
+		months.add("Octubre");
+		months.add("Noviembre");
+		months.add("Diciembre");
+
+		sp.setMonthNames(months);
+		sp.setToday("Hoy");
+		sp.setWeek("Semana");
+		sp.setCancel("Cancelar");
+		sp.setClear("Limpiar");
+
+		List<String> weekDayShort = new ArrayList<>();
+		weekDayShort.add("Dom");
+		weekDayShort.add("Lun");
+		weekDayShort.add("Mar");
+		weekDayShort.add("Mie");
+		weekDayShort.add("Jue");
+		weekDayShort.add("Vie");
+		weekDayShort.add("Sab");
+		sp.setWeekdaysShort(weekDayShort);
+
+		return sp;
 	}
 
 	/* === NOTIFICATIONS === */

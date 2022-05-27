@@ -381,6 +381,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     UIUtils.showNotificationType("Datos Recepción del Bien o Servicio no se completo", "alert");
                     return;
                 }
+
             }
 
             if(invoiceInformationBinder!=null){
@@ -1949,7 +1950,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         idSupplierInvoiceInformation = new TextField();
         idSupplierInvoiceInformation.setWidthFull();
 
-        TextField nit = new TextField();
+        IntegerField nit = new IntegerField();
         nit.setWidthFull();
         nit.setErrorMessage("Ingrese NIT");
 
@@ -2044,15 +2045,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     }
 
-    private VerticalLayout createDialogLayout(Dialog dialog,String nitValue) {
+    private VerticalLayout createDialogLayout(Dialog dialog,Integer nitValue) {
         H2 headline = new H2("Crear Nuevo Proveedor");
         headline.getStyle().set("margin", "var(--lumo-space-m) 0 0 0")
                 .set("font-size", "1.5em").set("font-weight", "bold");
 
-        TextField nit = new TextField("Número NIT");
+        IntegerField nit = new IntegerField("Número NIT");
         nit.setWidthFull();
         nit.setRequiredIndicatorVisible(true);
-        nit.setRequired(true);
         nit.setReadOnly(true);
         nit.setValue(nitValue);
 

@@ -29,10 +29,12 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.router.*;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,9 +114,9 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
 
     private DetailsDrawer createSupplierForm(Supplier suppplier){
 
-        TextField nit = new TextField();
+        IntegerField nit = new IntegerField();
         nit.setWidthFull();
-        nit.setRequired(true);
+        nit.setRequiredIndicatorVisible(true);
 
         TextField name = new TextField();
         name.setWidthFull();
@@ -139,6 +141,9 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         primaryActivity.setRequired(true);
 
         EmailField email = new EmailField();
+        email.setClearButtonVisible(true);
+        email.setErrorMessage("Correo Invalido");
+        email.getElement().setAttribute("name", "email");
         email.setWidthFull();
 
         TextField address = new TextField();
@@ -161,7 +166,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
                 .asRequired("NIT es requerido")
                 .bind(Supplier::getNit,Supplier::setNit);
         binder.forField(name)
-                .asRequired("Nombre o Razon Social es requerido")
+                .asRequired("Nombre o Razón Social es requerido")
                 .bind(Supplier::getName, Supplier::setName);
         binder.forField(legalRepresentative)
                 .asRequired("Nombre Representante Legal es requerido")
@@ -170,12 +175,13 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
                 .asRequired("Rubro es requerido")
                 .bind(Supplier::getAreaWork,Supplier::setAreaWork);
         binder.forField(typeBusinessCompany)
-                .asRequired("Tipo empresa es requerido")
+                .asRequired("Tipo Sociedad es requerido")
                 .bind(Supplier::getTypeBusinessCompany,Supplier::setTypeBusinessCompany);
         binder.forField(primaryActivity)
                 .asRequired("Actividad Principal es requerida")
                 .bind(Supplier::getPrimaryActivity,Supplier::setPrimaryActivity);
         binder.forField(email)
+
                 .bind(Supplier::getEmail,Supplier::setEmail);
         binder.forField(address)
                 .bind(Supplier::getAddress,Supplier::setAddress);
@@ -210,19 +216,33 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         );
 
         form.addFormItem(nit,"Nro. de NIT");
-        form.addFormItem(name,"Nombre o Razon Social");
+        form.addFormItem(name,"Nombre o Razón Social");
         form.addFormItem(legalRepresentative,"Representante Legal");
-        form.addFormItem(typeBusinessCompany,"Tipo sociedad");
+        form.addFormItem(typeBusinessCompany,"Tipo Sociedad");
         form.addFormItem(areaWork,"Rubro");
-        form.addFormItem(primaryActivity,"Actividad principal");
-        form.addFormItem(email,"Correo");
-        form.addFormItem(address,"Direccion negocio");
-        form.addFormItem(phoneNumber,"Telefonos");
+        form.addFormItem(primaryActivity,"Actividad Principal");
+        form.addFormItem(email,"Correo Electrónico");
+        form.addFormItem(address,"Dirección Negocio");
+        form.addFormItem(phoneNumber,"Teléfonos");
         form.addFormItem(location,"Oficina");
-        form.addFormItem(pendingCompleting,"Informacion completa?");
+        form.addFormItem(pendingCompleting,"Información completa?");
 
         footerShareHolder = new DetailsDrawerFooter();
         footerShareHolder.addSaveListener(event -> {
+
+            if(!email.isEmpty()){
+                binder.forField(email)
+                        .withValidator(new EmailValidator("Correo Electrónico Inválido"))
+                        .bind(Supplier::getEmail,Supplier::setEmail);
+//                if(email.isInvalid()){
+//                    email.setInvalid(true);
+//                    return;
+//                }
+            }else{
+                binder.removeBinding(email);
+                binder.forField(email)
+                        .bind(Supplier::getEmail,Supplier::setEmail);
+            }
             if(binder.writeBeanIfValid(suppplier)){
                 try {
                     String jsonShareHolders = mapper.writeValueAsString(shareHolderList);
@@ -235,6 +255,10 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
                 UIUtils.showNotificationType("Proveedor registrado","success");
                 UI.getCurrent().navigate(SupplierView.class);
             }
+        });
+
+        footerShareHolder.addCancelListener(e -> {
+            UI.getCurrent().navigate("supplier");
         });
 
         DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
@@ -264,12 +288,12 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
                 .setFlexGrow(1)
                 .setAutoWidth(true)
                 .setSortable(true)
-                .setHeader("Carnet");
+                .setHeader("Número de documento de identidad");
         gridShareHolder.addColumn(ShareHolder::getFullName)
                 .setFlexGrow(1)
                 .setAutoWidth(true)
                 .setSortable(true)
-                .setHeader("Nombre completo");
+                .setHeader("Nombre Completo");
 
         Button btnNewShareHolder = new Button("Nuevo Accionista");
         btnNewShareHolder.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -322,6 +346,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         footerShareHolder.addCancelListener(e ->{
             footerShareHolder.saveState(false);
             detailsDrawer.hide();
+
         });
 
         detailsDrawer.setFooter(footerShareHolder);
@@ -340,10 +365,10 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
 
         shareHolderBinder = new BeanValidationBinder<>(ShareHolder.class);
         shareHolderBinder.forField(idCard)
-                .asRequired("Carnet es requerido")
+                .asRequired("Número de documento de identidad es requerido")
                 .bind(ShareHolder::getIdCard,ShareHolder::setIdCard);
         shareHolderBinder.forField(fullName)
-                .asRequired("Nombre completo es requerido")
+                .asRequired("Nombre Completo es requerido")
                 .bind(ShareHolder::getFullName,ShareHolder::setFullName);
 
         FormLayout formLayout = new FormLayout();
@@ -356,8 +381,8 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
                 new FormLayout.ResponsiveStep("21em", 2,
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
 
-        FormLayout.FormItem idCardItem = formLayout.addFormItem(idCard,"Carnet");
-        FormLayout.FormItem fullNameItem = formLayout.addFormItem(fullName,"Nombre completo");
+        FormLayout.FormItem idCardItem = formLayout.addFormItem(idCard,"Número de documento de identidad");
+        FormLayout.FormItem fullNameItem = formLayout.addFormItem(fullName,"Nombre Completo");
         UIUtils.setColSpan(2,idCardItem);
         UIUtils.setColSpan(2,fullNameItem);
 

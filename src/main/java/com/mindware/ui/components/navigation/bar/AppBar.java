@@ -102,7 +102,7 @@ public class AppBar extends FlexBoxLayout {
 
 	private void initSearch() {
 		search = new TextField();
-		search.setPlaceholder("Search");
+		search.setPlaceholder("Buscar");
 		search.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
 		search.setVisible(false);
 	}

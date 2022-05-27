@@ -177,7 +177,7 @@ public class TypeChangeCurrencyView extends SplitViewFrame implements RouterLayo
                 .setFlexGrow(1)
                 .setResizable(true)
                 .setAutoWidth(true)
-                .setHeader("Fecha vigencia");
+                .setHeader("Fecha Vigencia");
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
                 .setAutoWidth(true)
                 .setFlexGrow(0);
@@ -222,17 +222,17 @@ public class TypeChangeCurrencyView extends SplitViewFrame implements RouterLayo
 
         binder = new BeanValidationBinder<>(TypeChangeCurrency.class);
         binder.forField(name)
-                .asRequired("Nombre tipo cambio es requerido")
+                .asRequired("Nombre Tipo Cambio es requerido")
                 .bind(TypeChangeCurrency::getName,TypeChangeCurrency::setName);
         binder.forField(currency)
                 .asRequired("Moneda es requerida")
                 .bind(TypeChangeCurrency::getCurrency,TypeChangeCurrency::setCurrency);
         binder.forField(amountChange)
                 .asRequired("Valor tipo de cambio es requerido")
-                .withValidator(a -> a.doubleValue()>0.0,"Valor tipo cambio debe ser mayor a 0")
+                .withValidator(a -> a.doubleValue()>0.0,"Tipo Cambio debe ser mayor a 0")
                 .bind(TypeChangeCurrency::getAmountChange,TypeChangeCurrency::setAmountChange);
         binder.forField(validityStart)
-                .asRequired("Fecha de vigencia es requerida")
+                .asRequired("Fecha Vigencia es requerida")
                 .bind(TypeChangeCurrency::getValidityStart,TypeChangeCurrency::setValidityStart);
 
         binder.addStatusChangeListener(event -> {
@@ -251,11 +251,11 @@ public class TypeChangeCurrencyView extends SplitViewFrame implements RouterLayo
                 new FormLayout.ResponsiveStep("21em", 2,
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
 
-        FormLayout.FormItem nameItem = form.addFormItem(name,"Nomber tipo Cambio");
+        FormLayout.FormItem nameItem = form.addFormItem(name,"Nombre Tipo Cambio");
         UIUtils.setColSpan(2,nameItem);
         form.addFormItem(currency,"Moneda");
-        form.addFormItem(amountChange,"Tipo cambio");
-        form.addFormItem(validityStart,"Fecha vigencia");
+        form.addFormItem(amountChange,"Tipo Cambio");
+        form.addFormItem(validityStart,"Fecha Vigencia");
 
         return form;
     }

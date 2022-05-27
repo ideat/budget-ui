@@ -16,6 +16,7 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Route(value = "supplier", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
@@ -46,7 +48,7 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
     private ListDataProvider<Supplier> dataProvider;
 
     private TextField nameFilter;
-    private TextField nitFilter;
+    private IntegerField nitFilter;
     private TextField locationFilter;
     private TextField areaWorkFilter;
     private TextField primaryActivityFilter;
@@ -150,7 +152,7 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
         });
         hr.getCell(grid.getColumnByKey("name")).setComponent(nameFilter);
 
-        nitFilter = new TextField();
+        nitFilter = new IntegerField();
         nitFilter.setValueChangeMode(ValueChangeMode.EAGER);
         nitFilter.setWidthFull();
         nitFilter.addValueChangeListener(e -> appplyFilter(dataProvider));
@@ -193,8 +195,8 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
         if(!nameFilter.getValue().trim().equals("")){
             dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getName(), nameFilter.getValue()));
         }
-        if(!nitFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getNit(), nitFilter.getValue()));
+        if(nitFilter.getValue()!=null){
+            dataProvider.addFilter(supplier -> Objects.equals(supplier.getNit(), nitFilter.getValue()));
         }
         if(!locationFilter.getValue().trim().equals("")){
             dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getLocation(), locationFilter.getValue()));

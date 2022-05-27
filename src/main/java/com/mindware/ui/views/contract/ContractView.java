@@ -161,13 +161,13 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         grid.addColumn(new LocalDateRenderer<>(ContractDto::getDateSubscription
                 , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                 .setKey("dateSubscription")
-                .setHeader("Fecha subscripcion")
+                .setHeader("Fecha Subscripción")
                 .setFlexGrow(1)
                 .setAutoWidth(true)
                 .setSortable(true);
         grid.addColumn(ContractDto::getObjectContract)
                 .setKey("objectContract")
-                .setHeader("Objeto del contrato")
+                .setHeader("Objeto del Contrato")
                 .setFlexGrow(1)
                 .setAutoWidth(true)
                 .setSortable(true);
@@ -186,6 +186,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         dateSubscriptionInitFilter.setWidth("30%");
         dateSubscriptionInitFilter.setLocale(new Locale("es","BO"));
         dateSubscriptionInitFilter.setClearButtonVisible(true);
+        dateSubscriptionInitFilter.setI18n(UIUtils.spanish());
         dateSubscriptionInitFilter.addValueChangeListener(e -> {
            applyFilter(dataProviderContractDto);
         });
@@ -194,6 +195,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         dateSubscriptionEndFilter.setWidth("30%");
         dateSubscriptionEndFilter.setLocale(new Locale("es","BO"));
         dateSubscriptionEndFilter.setClearButtonVisible(true);
+        dateSubscriptionEndFilter.setI18n(UIUtils.spanish());
         dateSubscriptionEndFilter.addValueChangeListener(e -> {
             applyFilter(dataProviderContractDto);
         });
@@ -238,6 +240,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         DatePicker dateSubscription = new DatePicker();
         dateSubscription.setLocale(new Locale("es","BO"));
         dateSubscription.setRequired(true);
+        dateSubscription.setI18n(UIUtils.spanish());
         dateSubscription.setWidth("90%");
 
         ComboBox<String> currency = new ComboBox<>();
@@ -262,16 +265,20 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         startDate.setLocale(new Locale("es","BO"));
         startDate.setRequired(true);
         startDate.setWidthFull();
+        startDate.setI18n(UIUtils.spanish());
+        startDate.addValueChangeListener(event -> binder.validate());
 
         DatePicker finishDate = new DatePicker();
         finishDate.setLocale(new Locale("es","BO"));
         finishDate.setWidthFull();
+        finishDate.setI18n(UIUtils.spanish());
+        finishDate.addValueChangeListener(event -> binder.validate());
 
-        Checkbox tacitReductionClause = new Checkbox("Clausula Tacita Reduccion");
+        Checkbox tacitReductionClause = new Checkbox("Clausula Tácita Reducción");
         tacitReductionClause.setWidthFull();
         tacitReductionClause.setValue(false);
 
-        Checkbox physical = new Checkbox("Fisico");
+        Checkbox physical = new Checkbox("Físico");
         physical.setWidthFull();
         physical.setValue(false);
 
@@ -292,34 +299,42 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         typeChangeCurrency.setWidthFull();
         typeChangeCurrency.setItems(utilValues.getValueParameterByCategory("CATEGORIA TIPO CAMBIO"));
         typeChangeCurrency.setAllowCustomValue(false);
-        typeChangeCurrency.setErrorMessage("Categoria Tipo Cambio es requerida");
+        typeChangeCurrency.setErrorMessage("Categoría Tipo Cambio es requerida");
         typeChangeCurrency.setRequired(true);
 
 
         binder = new BeanValidationBinder<>(Contract.class);
 
 
-        binder.forField(dateSubscription).asRequired("Fecha de subscripcion es requerida")
+        binder.forField(dateSubscription)
+                .asRequired("Fecha de Subscripción es requerida")
+//                .withValidator(d -> (startDate.getValue()!=null && d.isBefore(startDate.getValue())),"Fecha de subscripción no puede ser posterior a la fecha de inicio")
                 .bind(Contract::getDateSubscription,Contract::setDateSubscription);
         binder.forField(currency).asRequired("Moneda es requerida")
                 .bind(Contract::getCurrency,Contract::setCurrency);
         binder.forField(amount).asRequired("Monto es requerido")
                 .withValidator(mnt -> mnt.doubleValue()>0, "Monto debe ser mayor a 0")
                 .bind(Contract::getAmount,Contract::setAmount);
-        binder.forField(objectContract).asRequired("Objeto del contrato es requerido")
+        binder.forField(objectContract).asRequired("Objeto del Contrato es requerido")
                 .bind(Contract::getObjectContract,Contract::setObjectContract);
         binder.forField(observation).bind(Contract::getObservation,Contract::setObservation);
-        binder.forField(startDate).asRequired("Fecha de inicio es requerida")
+        binder.forField(startDate).asRequired("Fecha de Inicio es requerida")
+                .withValidator(d ->  finishDate.getValue()!=null && d.isBefore(finishDate.getValue()),"Fecha de Inicio no puede ser posterior a la Fecha de Finalización")
+                .withValidator(d -> d.isAfter(dateSubscription.getValue()),"Fecha Inicio no puede ser anterior a la Fecha de Subscripción")
                 .bind(Contract::getStartDate,Contract::setStartDate);
-        binder.forField(finishDate).bind(Contract::getFinishDate,Contract::setFinishDate);
+        binder.forField(finishDate)
+                .withValidator(d -> startDate.getValue()!=null && d.isAfter(startDate.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Inicio")
+                .withValidator(d -> dateSubscription.getValue()!=null && d.isAfter(dateSubscription.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Subscripción")
+                .bind(Contract::getFinishDate,Contract::setFinishDate);
+
         binder.forField(physical).bind(Contract::getPhysical,Contract::setPhysical);
         binder.forField(original).bind(Contract::getOriginal,Contract::setOriginal);
         binder.forField(undefinedTime).bind(Contract::getUndefinedTime,Contract::setUndefinedTime);
         binder.forField(tacitReductionClause).bind(Contract::getTacitReductionClause,Contract::setTacitReductionClause);
-        binder.forField(paymentFrecuency).asRequired("Frecuencia de pago es requerida")
+        binder.forField(paymentFrecuency).asRequired("Frecuencia de Pago es requerida")
                 .bind(Contract::getPaymentFrecuency,Contract::setPaymentFrecuency);
         binder.forField(typeChangeCurrency)
-//                .asRequired("Categoria Tipo Cambio es requerida")
+//                .asRequired("Categoría Tipo Cambio es requerida")
                 .bind(Contract::getTypeChangeCurrency, Contract::setTypeChangeCurrency);
         binder.addStatusChangeListener(event ->{
             boolean isValid = !event.hasValidationErrors();
@@ -338,17 +353,17 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
         FormLayout.FormItem supplierItem = form.addFormItem(supplier,"Proveedor");
         UIUtils.setColSpan(2,supplierItem);
-        form.addFormItem(dateSubscription,"Fecha de subscripcion");
+        form.addFormItem(dateSubscription,"Fecha de Subscripción");
         HorizontalLayout layoutAmount = new HorizontalLayout();
         layoutAmount.add(currency,amount);
         layoutAmount.setSpacing(true);
         form.addFormItem(layoutAmount,"Monto");
-        FormLayout.FormItem objectContractItem = form.addFormItem(objectContract,"Objeto contrato");
+        FormLayout.FormItem objectContractItem = form.addFormItem(objectContract,"Objeto Contrato");
         UIUtils.setColSpan(2,objectContractItem);
         FormLayout.FormItem observationItem = form.addFormItem(observation,"Observaciones");
         UIUtils.setColSpan(2,observationItem);
-        form.addFormItem(startDate,"Fecha de inicio");
-        form.addFormItem(finishDate,"Fecha de finalización");
+        form.addFormItem(startDate,"Fecha de Inicio");
+        form.addFormItem(finishDate,"Fecha de Finalización");
         VerticalLayout layoutChecks = new VerticalLayout();
         layoutChecks.add(tacitReductionClause,physical,original,undefinedTime);
         layoutChecks.setSpacing(false);
@@ -356,7 +371,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         UIUtils.setColSpan(2,layoutChecksItem);
         form.addFormItem(paymentFrecuency,"Frecuencia Pago");
 
-        form.addFormItem(typeChangeCurrency,"Categoria Tipo Cambio");
+        form.addFormItem(typeChangeCurrency,"Categoría Tipo Cambio");
 
         return form;
     }
@@ -423,10 +438,12 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
             dataProvider.addFilter(contractDto -> StringUtils.containsIgnoreCase(contractDto.getSupplierName(),supplierFilter.getValue()));
         }
         if(dateSubscriptionInitFilter.getValue()!=null){
-            dataProvider.addFilter(contractDto -> contractDto.getDateSubscription().isAfter(dateSubscriptionInitFilter.getValue()));
+            dataProvider.addFilter(contractDto -> contractDto.getDateSubscription().isAfter(dateSubscriptionInitFilter.getValue())
+                    || contractDto.getDateSubscription().isEqual(dateSubscriptionInitFilter.getValue()));
         }
         if(dateSubscriptionEndFilter.getValue()!=null){
-            dataProvider.addFilter(contractDto -> contractDto.getDateSubscription().isBefore(dateSubscriptionEndFilter.getValue()));
+            dataProvider.addFilter(contractDto -> contractDto.getDateSubscription().isBefore(dateSubscriptionEndFilter.getValue())
+                    || contractDto.getDateSubscription().isEqual(dateSubscriptionEndFilter.getValue()));
         }
         if(!objectContractFilter.getValue().trim().equals("")){
             dataProvider.addFilter(contractDto -> StringUtils.containsIgnoreCase(contractDto.getObjectContract(),objectContractFilter.getValue()));

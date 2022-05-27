@@ -85,7 +85,7 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
     }
 
     private HorizontalLayout createTopBar(){
-        btnNew = new Button("Nuevo parametro");
+        btnNew = new Button("Nuevo Parámetro");
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
@@ -116,7 +116,7 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
 
     private void showDetails(Parameter parameter){
         current = parameter;
-        detailsDrawerHeader.setTitle("Parametro: ".concat(parameter.getValue()==null?"Nuevo":parameter.getValue()));
+        detailsDrawerHeader.setTitle("Parámetro: ".concat(parameter.getValue()==null?"Nuevo":parameter.getValue()));
         detailsDrawer.setContent(createDetails(parameter));
         detailsDrawer.show();
         binder.readBean(parameter);
@@ -170,7 +170,7 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
 
         grid.addColumn(Parameter::getCategory)
                 .setFlexGrow(0).setFrozen(false)
-                .setHeader("Categoria").setSortable(true).setKey("category").setResizable(true)
+                .setHeader("Categoría").setSortable(true).setKey("category").setResizable(true)
                 .setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
         grid.addColumn(Parameter::getValue)
                 .setFlexGrow(1).setKey("value")
@@ -178,7 +178,7 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
                 .setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
         grid.addColumn(Parameter::getDetails)
                 .setFlexGrow(1).setKey("details")
-                .setHeader("Detalle").setAutoWidth(true).setResizable(true)
+                .setHeader("Descripción").setAutoWidth(true).setResizable(true)
                 .setTextAlign(ColumnTextAlign.START);
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
                 .setAutoWidth(true)
@@ -244,9 +244,9 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
 
         binder = new BeanValidationBinder<>(Parameter.class);
 
-        binder.forField(cmbCategory).asRequired("Categoria es requerida").bind(Parameter::getCategory,Parameter::setCategory);
+        binder.forField(cmbCategory).asRequired("Categoría es requerida").bind(Parameter::getCategory,Parameter::setCategory);
         binder.forField(txtValue).asRequired("Valor es requerido").bind(Parameter::getValue,Parameter::setValue);
-        binder.forField(txtDescription).asRequired("Descripcion es requerida").bind(Parameter::getDetails,Parameter::setDetails);
+        binder.forField(txtDescription).asRequired("Descripción es requerida").bind(Parameter::getDetails,Parameter::setDetails);
 
 
         binder.addStatusChangeListener(event ->{
@@ -264,9 +264,9 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
                         FormLayout.ResponsiveStep.LabelsPosition.TOP),
                 new FormLayout.ResponsiveStep("21em", 2,
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
-        form.addFormItem(cmbCategory,"Categoria");
+        form.addFormItem(cmbCategory,"Categoría");
         form.addFormItem(txtValue,"Valor");
-        FormLayout.FormItem descriptionItem = form.addFormItem(txtDescription,"Descripcion");
+        FormLayout.FormItem descriptionItem = form.addFormItem(txtDescription,"Descripción");
         UIUtils.setColSpan(2,descriptionItem);
         return form;
 

@@ -122,7 +122,7 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
     private void showDetails(SubAccount subAccount){
         current = subAccount;
         initial = subAccount;
-        detailsDrawerHeader.setTitle(subAccount.getId()==null?"Nuevo":subAccount.getNumberSubAccount());
+        detailsDrawerHeader.setTitle(subAccount.getId()==null?"Subcuenta: Nueva":"Subcuenta: "+ subAccount.getNumberSubAccount());
         detailsDrawer.setContent(createDetails(current));
         detailsDrawer.show();
         binder.readBean(current);
@@ -132,6 +132,7 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
         detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.RIGHT);
         detailsDrawerHeader = new DetailsDrawerHeader("");
         detailsDrawer.setHeader(detailsDrawerHeader);
+        detailsDrawerHeader.addCloseListener(event -> detailsDrawer.hide());
 
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
@@ -143,11 +144,11 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
                         .filter(s -> s.getNumberSubAccount().equals(current.getNumberSubAccount()))
                         .findFirst();
                 if(searchNumberSubAccount.isPresent() && !searchNumberSubAccount.get().getId().equals(current.getId())){
-                    UIUtils.showNotificationType("Número subcuenta ya se ecuentra registrada ","alert");
+                    UIUtils.showNotificationType("Número Subcuenta ya se ecuentra registrada ","alert");
                     return;
                 }
                 if(searchNameSubAccount.isPresent() && !searchNameSubAccount.get().getId().equals(current.getId())){
-                    UIUtils.showNotificationType("Nombre subcuenta ya se ecuentra registrada ","alert");
+                    UIUtils.showNotificationType("Nombre Subcuenta ya se ecuentra registrada ","alert");
                     return;
                 }
 
@@ -191,10 +192,10 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
 
         binder = new BeanValidationBinder<>(SubAccount.class);
         binder.forField(numberSubAccount)
-                .asRequired("Número subcuenta es requerido")
+                .asRequired("Número Subcuenta es requerido")
                 .bind(SubAccount::getNumberSubAccount,SubAccount::setNumberSubAccount);
         binder.forField(nameSubAccount)
-                .asRequired("Nombre subcuenta es requerido")
+                .asRequired("Nombre Subcuenta es requerido")
                 .bind(SubAccount::getNameSubAccount,SubAccount::setNameSubAccount);
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();

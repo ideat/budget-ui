@@ -7,6 +7,8 @@ import lombok.Setter;
 @Setter
 public class ExpenseDistribuite {
 
+    private Integer codeFatherBusinessUnit;
+
     private Integer codeBusinessUnit;
 
     private String nameBusinessUnit;

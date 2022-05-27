@@ -117,7 +117,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private TextField supplierName;
     private ComboBox<String> account;
     private ComboBox<String> subAccount;
-    private TextField nitSupplier;
+    private IntegerField nitSupplier;
     private IntegerField contract;
     private  TextField paymentFrecuency;
 
@@ -296,7 +296,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
             }
         });
 
-        nitSupplier = new TextField();
+        nitSupplier = new IntegerField();
         nitSupplier.setWidthFull();
         nitSupplier.setReadOnly(true);
 
@@ -671,8 +671,8 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         if(!supplierNameFilter.getValue().trim().equals("")){
             dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getName(),supplierNameFilter.getValue()));
         }
-        if(!nitSupplierFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getNit(),nitSupplierFilter.getValue()));
+        if(nitSupplierFilter.getValue()!=null){
+            dataProvider.addFilter(supplier -> Objects.equals(supplier.getNit(),nitSupplierFilter.getValue()));
         }
         if(!locationSupplierFilter.getValue().trim().equals("")){
             dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getLocation(),locationSupplierFilter.getValue()));
@@ -696,6 +696,10 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
     private FormLayout layoutExpenseDistribuite(ExpenseDistribuite expenseDistribuite){
 
+        IntegerField codeFatherBusinessUnit = new IntegerField();
+        codeFatherBusinessUnit.setWidth("20%");
+        codeFatherBusinessUnit.setReadOnly(true);
+
         IntegerField codeBusinessUnit = new IntegerField();
         codeBusinessUnit.setWidth("20%");
         codeBusinessUnit.setReadOnly(true);
@@ -718,21 +722,26 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         unitBusiness.addValueChangeListener(event -> {
             if(event.getValue() != null) {
                 Optional<ExpenseDistribuite> opt = expenseDistribuiteList.stream()
-                        .filter(exp -> exp.getCodeBusinessUnit().equals(Integer.parseInt(event.getValue().getCode())))
+                        .filter(exp -> exp.getCodeBusinessUnit().equals(Integer.parseInt(event.getValue().getCode2())))
                         .findFirst();
                 if (!opt.isPresent()) {
-                    codeBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode()));
+                    codeBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode2()));
                     nameBusinessUnit.setValue(event.getValue().getDescription());
+                    codeFatherBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode()));
                 } else {
                     UIUtils.showNotificationType("Unidad de Negocio ya fue agregada", "alert");
                     unitBusiness.clear();
                     codeBusinessUnit.clear();
                     nameBusinessUnit.clear();
+                    codeFatherBusinessUnit.clear();
                 }
             }
         });
 
         expenseDistribuiteBinder = new BeanValidationBinder<>(ExpenseDistribuite.class);
+        expenseDistribuiteBinder.forField(codeFatherBusinessUnit)
+                .asRequired("Codigo Unidad de Sucursal es requerido")
+                .bind(ExpenseDistribuite::getCodeFatherBusinessUnit,ExpenseDistribuite::setCodeFatherBusinessUnit);
         expenseDistribuiteBinder.forField(codeBusinessUnit)
                 .asRequired("Codigo Unidad negocio es requerido")
                 .bind(ExpenseDistribuite::getCodeBusinessUnit,ExpenseDistribuite::setCodeBusinessUnit);

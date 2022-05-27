@@ -151,7 +151,16 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
                 if(current.getPeriod()==null) {
                     current.setPeriod(cmbPeriod.getValue());
                 }
-                Account result = restTemplate.add(current);
+                Account result = new Account();
+                try {
+                    result = restTemplate.add(current);
+                }catch(Exception excep){
+                    String[] re = excep.getMessage().split(",");
+                    String[] msg = re[1].split(":");
+                    UIUtils.showNotificationType(msg[1],"alert");
+
+                    return;
+                }
                 if (current.getId()==null){
 
                     accountList.add(result);
@@ -265,7 +274,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
     private Component createButtonSubAccount(Account account){
         Button btn = new Button();
-        Tooltips.getCurrent().setTooltip(btn,"SUB-CUENTA");
+        Tooltips.getCurrent().setTooltip(btn,"Subcuenta");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btn.setIcon(VaadinIcon.TASKS.create());
         btn.addClickListener(e -> {
@@ -313,20 +322,20 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
         binder = new BeanValidationBinder<>(Account.class);
         binder.forField(numberAccount)
-                .asRequired("Número de cuenta es requerido")
+                .asRequired("Número de Cuenta es requerido")
                 .bind(Account::getNumberAccount,Account::setNumberAccount);
         binder.forField(nameAccount)
-                .asRequired("Nombre cuenta es requerido")
+                .asRequired("Nombre Cuenta es requerido")
                 .bind(Account::getNameAccount,Account::setNameAccount);
         binder.forField(currency)
                 .asRequired("Moneda es requerida")
                 .bind(Account::getCurrency,Account::setCurrency);
         binder.forField(budget)
-                .asRequired("Presupuesto cuenta es requerido")
+                .asRequired("Presupuesto Cuenta es requerido")
                 .withValidator(amount -> amount >0 , "Presupuesto tiene que ser mayor a 0")
                 .bind(Account::getBudget,Account::setBudget);
         binder.forField(typeAccount)
-                .asRequired("Tipo de cuenta es requerido")
+                .asRequired("Tipo de Cuenta es requerido")
                 .bind(Account::getTypeAccount,Account::setTypeAccount);
 
         binder.addStatusChangeListener(event -> {
@@ -344,13 +353,13 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
                 new FormLayout.ResponsiveStep("21em", 2,
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
 
-        FormLayout.FormItem numberAccountItem = form.addFormItem(numberAccount,"Nro. cuenta");
+        FormLayout.FormItem numberAccountItem = form.addFormItem(numberAccount,"Nro. Cuenta");
         UIUtils.setColSpan(2,numberAccountItem);
-        FormLayout.FormItem nameAccountItem = form.addFormItem(nameAccount,"Nombre de cuenta");
+        FormLayout.FormItem nameAccountItem = form.addFormItem(nameAccount,"Nombre de Cuenta");
         UIUtils.setColSpan(2,nameAccountItem);
         form.addFormItem(currency,"Moneda");
-        form.addFormItem(budget,"Presupuesto");
-        form.addFormItem(typeAccount,"Tipo cuenta");
+        form.addFormItem(budget,"Presupuesto Cuenta");
+        form.addFormItem(typeAccount,"Tipo de Cuenta");
 
         return form;
     }
@@ -371,10 +380,13 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
         ComboBox<String> cmbPosting = new ComboBox<>("Periodo Destino");
         cmbPosting.setAutoOpen(true);
+        cmbPosting.setErrorMessage("Seleccione Periodo Destino");
         cmbPosting.setWidthFull();
+        cmbPosting.addValueChangeListener(event -> cmbPosting.setInvalid(false));
 
         ComboBox<String> cmbOriginal = new ComboBox<>("Periodo Origen");
         cmbOriginal.setAutoOpen(true);
+        cmbOriginal.setErrorMessage("Seleccione Periodo Origen");
         cmbOriginal.setWidthFull();
         cmbOriginal.setItems(utilValues.getValueParameterByCategory("PERIODO"));
         cmbOriginal.addValueChangeListener(event ->{
@@ -382,13 +394,32 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
            listPosting.remove(event.getValue());
            cmbPosting.clear();
            cmbPosting.setItems(listPosting);
+           cmbOriginal.setInvalid(false);
         });
 
         Button btnCopy = new Button("Copiar");
         btnCopy.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnCopy.addClickListener(event -> {
+
+            if(cmbOriginal.isEmpty()){
+                cmbOriginal.setInvalid(true);
+                return;
+            }
+
+            if(cmbPosting.isEmpty()){
+                cmbPosting.setInvalid(true);
+                return;
+            }
+
+            List<Account> existDestiny = restTemplate.getAllByPeriod(Integer.parseInt(cmbPosting.getValue()));
+            if(existDestiny.size() > 0){
+                UIUtils.showNotificationType( String.format("Periodo Destino '%s' ya tiene cuentas creadas, seleccione otro periodo",cmbPosting.getValue()),"alert");
+                return;
+            }
+
             try {
-                List<Account> list = restTemplate.cloneAccount(Integer.parseInt(cmbOriginal.getValue()), Integer.parseInt(cmbPosting.getValue()));
+                List<Account> list = restTemplate.cloneAccount(Integer.parseInt(cmbOriginal.getValue()),
+                        Integer.parseInt(cmbPosting.getValue()));
                 accountList.addAll(list);
                 dataProvider.refreshAll();
                 detailsDrawerCloneAccount.hide();

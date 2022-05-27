@@ -31,6 +31,7 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
@@ -74,7 +75,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
     private Button btnNew;
     private ComboBox<String> typeServiceFilter;
     private TextField providerFilter;
-    private TextField nitFilter;
+    private IntegerField nitFilter;
     private TextField descriptionFilter;
 
     private BasicServiceProvider current;
@@ -142,7 +143,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         grid.addColumn(BasicServiceProvider::getDescription)
                 .setFlexGrow(1)
                 .setKey("description")
-                .setHeader("Detalle Proveedor")
+                .setHeader("Descripción Proveedor")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
@@ -183,9 +184,10 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         });
         hr.getCell(grid.getColumnByKey("description")).setComponent(descriptionFilter);
 
-        nitFilter = new TextField();
+        nitFilter = new IntegerField();
         nitFilter.setValueChangeMode(ValueChangeMode.EAGER);
         nitFilter.setWidthFull();
+        nitFilter.setMin(0);
         nitFilter.addValueChangeListener(e -> {
             applyFilter(dataProvider);
         });
@@ -261,7 +263,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         description.setWidthFull();
         description.setRequired(true);
 
-        TextField nit = new TextField();
+        IntegerField nit = new IntegerField();
         nit.setWidthFull();
 
         RadioButtonGroup<String> state = new RadioButtonGroup<>();
@@ -270,11 +272,11 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         state.setRequired(true);
 
         binder = new BeanValidationBinder<>(BasicServiceProvider.class);
-        binder.forField(typeService).asRequired("Tipo de servicio es requerido")
+        binder.forField(typeService).asRequired("Tipo de Servicio es requerido")
                 .bind(BasicServiceProvider::getTypeService,BasicServiceProvider::setTypeService);
         binder.forField(provider).asRequired("Proveedor es requerido")
                 .bind(BasicServiceProvider::getProvider,BasicServiceProvider::setProvider);
-        binder.forField(description).asRequired("Descripcion del proveedor es requerida")
+        binder.forField(description).asRequired("Descripción del proveedor es requerida")
                 .bind(BasicServiceProvider::getDescription,BasicServiceProvider::setDescription);
         binder.forField(nit)
                 .bind(BasicServiceProvider::getNit,BasicServiceProvider::setNit);
@@ -297,7 +299,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
         form.addFormItem(typeService,"Tipo de Servicio");
         form.addFormItem(provider,"Proveedor");
-        FormLayout.FormItem descriptionItem = form.addFormItem(description,"Descripcion");
+        FormLayout.FormItem descriptionItem = form.addFormItem(description,"Descripción");
         UIUtils.setColSpan(2,descriptionItem);
         form.addFormItem(nit,"NIT");
         form.addFormItem(state,"Estado");
@@ -317,8 +319,8 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         if(!descriptionFilter.getValue().trim().equals("")){
             dataProvider.addFilter(basicServiceProvider -> StringUtils.containsIgnoreCase(basicServiceProvider.getDescription(),descriptionFilter.getValue()));
         }
-        if(!nitFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(basicServiceProvider -> StringUtils.containsIgnoreCase(basicServiceProvider.getNit(),nitFilter.getValue()));
+        if(nitFilter.getValue()!=null){
+            dataProvider.addFilter(basicServiceProvider ->Objects.equals(basicServiceProvider.getNit(),nitFilter.getValue()));
         }
 
     }

@@ -2,6 +2,7 @@ package com.mindware.backend.rest.supplier;
 
 import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.util.HeaderJwt;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -11,10 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class SupplierRestTemplate {
@@ -60,13 +58,15 @@ public class SupplierRestTemplate {
 
     }
 
-    public Supplier getByNit(String nit){
+    public Supplier getByNit(Integer nit){
         final String uri = url + "/v1/supplier/getByNit/{nit}";
-        Map<String,String> params = new HashMap<>();
+        Map<String,Integer> params = new HashMap<>();
         params.put("nit",nit);
         HttpEntity<Supplier> entity = new HttpEntity<>( HeaderJwt.getHeader());
         ResponseEntity<Supplier> response = restTemplate.exchange(uri,HttpMethod.GET,entity,Supplier.class,params);
         return response.getBody();
 
     }
+
+
 }

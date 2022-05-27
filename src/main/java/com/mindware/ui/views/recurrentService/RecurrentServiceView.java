@@ -110,7 +110,7 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
         grid.addColumn(RecurrentServiceDto::getSupplierLocation)
                 .setFlexGrow(1)
                 .setKey("supplierLocation")
-                .setHeader("Ubicacion Proveedor")
+                .setHeader("Ubicación Proveedor")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);

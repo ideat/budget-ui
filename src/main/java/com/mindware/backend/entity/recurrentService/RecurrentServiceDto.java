@@ -1,5 +1,6 @@
 package com.mindware.backend.entity.recurrentService;
 
+import com.vaadin.flow.component.textfield.IntegerField;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,7 +19,7 @@ public class RecurrentServiceDto {
 
     private String supplierName;
 
-    private String supplierNit;
+    private Integer supplierNit;
 
     private String supplierLocation;
 

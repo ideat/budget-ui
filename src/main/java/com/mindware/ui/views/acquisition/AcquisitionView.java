@@ -131,7 +131,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         grid.addColumn(new LocalDateRenderer<>(AcquisitionDto::getReceptionDate
                 , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                 .setKey("receptionDate")
-                .setHeader("Fecha recepcion")
+                .setHeader("Fecha Recepción")
                 .setFlexGrow(1)
                 .setAutoWidth(true)
                 .setSortable(true)
@@ -140,7 +140,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         grid.addColumn(new ComponentRenderer<>(this::createItem))
                 .setFlexGrow(1)
                 .setKey("item")
-                .setHeader("Items")
+                .setHeader("Ítems")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
@@ -251,10 +251,12 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
                     acquisitionDto.getSupplier(),supplierFilter.getValue()));
         }
         if(receptionDateInitFilter.getValue()!=null){
-            dataProvider.addFilter(contractDto -> contractDto.getReceptionDate().isAfter(receptionDateInitFilter.getValue()));
+            dataProvider.addFilter(contractDto -> contractDto.getReceptionDate().isAfter(receptionDateInitFilter.getValue()) ||
+                    contractDto.getReceptionDate().isEqual(receptionDateInitFilter.getValue()));
         }
         if(receptionDateEndFilter.getValue()!=null){
-            dataProvider.addFilter(contractDto -> contractDto.getReceptionDate().isBefore(receptionDateEndFilter.getValue()));
+            dataProvider.addFilter(contractDto -> contractDto.getReceptionDate().isBefore(receptionDateEndFilter.getValue()) ||
+                    contractDto.getReceptionDate().isEqual(receptionDateEndFilter.getValue()));
         }
         if(!itemFilter.getValue().trim().equals("")){
             dataProvider.addFilter(acquisitionDto -> StringUtils.containsIgnoreCase(

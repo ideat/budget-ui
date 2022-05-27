@@ -84,7 +84,7 @@ public class NaviDrawer extends Div
 		search = new TextField();
 		search.addValueChangeListener(e -> menu.filter(search.getValue()));
 		search.setClearButtonVisible(true);
-		search.setPlaceholder("Search");
+		search.setPlaceholder("Buscar");
 		search.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
 		mainContent.add(search);
 	}
@@ -101,7 +101,7 @@ public class NaviDrawer extends Div
 	}
 
 	private void initFooter() {
-		railButton = UIUtils.createSmallButton("Collapse", VaadinIcon.CHEVRON_LEFT_SMALL);
+		railButton = UIUtils.createSmallButton("Colapsar", VaadinIcon.CHEVRON_LEFT_SMALL);
 		railButton.addClassName(CLASS_NAME + "__footer");
 		railButton.addClickListener(event -> toggleRailMode());
 		railButton.getElement().setAttribute("aria-label", "Collapse menu");
@@ -112,13 +112,13 @@ public class NaviDrawer extends Div
 		if (getElement().hasAttribute(RAIL)) {
 			getElement().setAttribute(RAIL, false);
 			railButton.setIcon(new Icon(VaadinIcon.CHEVRON_LEFT_SMALL));
-			railButton.setText("Collapse");
+			railButton.setText("Colapsar");
 			UIUtils.setAriaLabel("Collapse menu", railButton);
 
 		} else {
 			getElement().setAttribute(RAIL, true);
 			railButton.setIcon(new Icon(VaadinIcon.CHEVRON_RIGHT_SMALL));
-			railButton.setText("Expand");
+			railButton.setText("Expandir");
 			UIUtils.setAriaLabel("Expand menu", railButton);
 			getUI().get().getPage().executeJavaScript(
 					"var originalStyle = getComputedStyle($0).pointerEvents;" //

@@ -149,13 +149,13 @@ public class MainLayout extends FlexBoxLayout
 		menu.addNaviItem(VaadinIcon.FILE_TEXT, "Contratos", ContractView.class);
 		menu.addNaviItem(VaadinIcon.GLOBE_WIRE, "Servicios Recurrentes", RecurrentServiceView.class);
 		menu.addNaviItem(VaadinIcon.BUILDING, "Servicios Básicos", BasicServicesView.class);
-		menu.addNaviItem(VaadinIcon.STORAGE,"Adquiciones", AcquisitionView.class);
-		NaviItem configuration = menu.addNaviItem(VaadinIcon.COGS, "Configuracion",null);
-		menu.addNaviItem(configuration,"Parametros", ParameterView.class);
-		menu.addNaviItem(configuration,"Niveles Autorización Adquisición", AcquisitionAuthorizerView.class);
+		menu.addNaviItem(VaadinIcon.STORAGE,"Adquisiciones", AcquisitionView.class);
+		NaviItem configuration = menu.addNaviItem(VaadinIcon.COGS, "Configuración",null);
+		menu.addNaviItem(configuration,"Parámetros", ParameterView.class);
+		menu.addNaviItem(configuration,"Niveles A. Adquisición", AcquisitionAuthorizerView.class);
 		menu.addNaviItem(configuration,"Autorizadores de Facturas", InvoiceAuthorizerView.class);
 		menu.addNaviItem(configuration, "Cuentas", AccountView.class);
-		menu.addNaviItem(configuration, "Servicios Basicos", BasicServiceProviderView.class);
+		menu.addNaviItem(configuration, "Servicios Básicos", BasicServiceProviderView.class);
 		menu.addNaviItem(configuration, "Periodos", PeriodView.class);
 		menu.addNaviItem(configuration,"Tipo Cambio", TypeChangeCurrencyView.class);
 	}

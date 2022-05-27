@@ -15,7 +15,7 @@ public class BasicServiceProvider {
 
     private String provider;
 
-    private String nit;
+    private Integer nit;
 
     private String description;
 

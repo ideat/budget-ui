@@ -56,7 +56,7 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
     }
 
     private HorizontalLayout createTopBar(){
-        btnNew = new Button("Nuevo Pago Servicio Basico");
+        btnNew = new Button("Nuevo Pago Servicio Básico");
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
@@ -128,7 +128,7 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
                 .setResizable(true);
         grid.addColumn(BasicServicesDto::getNumberDocumentReceived)
                 .setFlexGrow(1)
-                .setHeader("Nro Factura/Recibo")
+                .setHeader("Nro. Factura/Recibo")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);

@@ -198,7 +198,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
             }
         });
 
-        footer.addCancelListener(event -> UI.getCurrent().navigate(RecurrentServiceView.class));
+        footer.addCancelListener(event -> UI.getCurrent().navigate(BasicServicesView.class));
         setViewFooter(footer);
 
     }
@@ -526,6 +526,10 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
     private FormLayout layoutExpenseDistribuite(ExpenseDistribuite expenseDistribuite){
 
+        IntegerField codeFatherBusinessUnit = new IntegerField();
+        codeFatherBusinessUnit.setWidth("20%");
+        codeFatherBusinessUnit.setReadOnly(true);
+
         IntegerField codeBusinessUnit = new IntegerField();
         codeBusinessUnit.setWidth("20%");
         codeBusinessUnit.setReadOnly(true);
@@ -548,21 +552,26 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         unitBusiness.addValueChangeListener(event -> {
             if(event.getValue() != null) {
                 Optional<ExpenseDistribuite> opt = expenseDistribuiteList.stream()
-                        .filter(exp -> exp.getCodeBusinessUnit().equals(Integer.parseInt(event.getValue().getCode())))
+                        .filter(exp -> exp.getCodeBusinessUnit().equals(Integer.parseInt(event.getValue().getCode2())))
                         .findFirst();
                 if (!opt.isPresent()) {
-                    codeBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode()));
+                    codeBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode2()));
                     nameBusinessUnit.setValue(event.getValue().getDescription());
+                    codeFatherBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode()));
                 } else {
                     UIUtils.showNotificationType("Unidad de Negocio ya fue agregada", "alert");
                     unitBusiness.clear();
                     codeBusinessUnit.clear();
                     nameBusinessUnit.clear();
+                    codeFatherBusinessUnit.clear();
                 }
             }
         });
 
         expenseDistribuiteBinder = new BeanValidationBinder<>(ExpenseDistribuite.class);
+        expenseDistribuiteBinder.forField(codeFatherBusinessUnit)
+                .asRequired("Codigo Unidad de Sucursal es requerido")
+                .bind(ExpenseDistribuite::getCodeFatherBusinessUnit,ExpenseDistribuite::setCodeFatherBusinessUnit);
         expenseDistribuiteBinder.forField(codeBusinessUnit)
                 .asRequired("Codigo Unidad negocio es requerido")
                 .bind(ExpenseDistribuite::getCodeBusinessUnit,ExpenseDistribuite::setCodeBusinessUnit);
