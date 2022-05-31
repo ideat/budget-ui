@@ -11,7 +11,7 @@ public class InvoiceAuthorizer {
 
     private UUID id;
 
-    private Integer codeEmployee;
+    private String email;
 
     private Integer codeBranchOffice;
 
@@ -25,4 +25,5 @@ public class InvoiceAuthorizer {
 
     private String state;
 
+    private String priorityLevel;
 }

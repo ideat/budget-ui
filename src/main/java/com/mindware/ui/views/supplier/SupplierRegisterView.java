@@ -114,7 +114,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
 
     private DetailsDrawer createSupplierForm(Supplier suppplier){
 
-        IntegerField nit = new IntegerField();
+        TextField nit = new TextField();
         nit.setWidthFull();
         nit.setRequiredIndicatorVisible(true);
 

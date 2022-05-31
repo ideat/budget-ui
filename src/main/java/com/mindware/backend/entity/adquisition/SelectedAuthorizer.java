@@ -23,6 +23,8 @@ public class SelectedAuthorizer {
 
     private String nameBranchOffice;
 
+    private String priorityLevel;
+
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonFormat(pattern = "dd/MM/yyyy")

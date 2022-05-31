@@ -1241,6 +1241,11 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         codePosition.setRequired(true);
         codePosition.setReadOnly(true);
 
+        TextField priorityLevel = new TextField();
+        priorityLevel.setRequired(true);
+        priorityLevel.setReadOnly(true);
+        priorityLevel.setWidthFull();
+
         TextField nameBranchOffice = new TextField();
         nameBranchOffice.setWidthFull();
         nameBranchOffice.setRequired(true);
@@ -1259,6 +1264,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     .findFirst().get();
             codePosition.setValue(acquisitionAuthorizer.getCodePosition());
             nameBranchOffice.setValue(acquisitionAuthorizer.getNameBranchOffice());
+            priorityLevel.setValue(acquisitionAuthorizer.getPriorityLevel());
         });
 
         DatePicker deliverDate = new DatePicker();
@@ -1286,6 +1292,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .bind(SelectedAuthorizer::getDeliverDate,SelectedAuthorizer::setDeliverDate);
         selectedAuthorizerBinder.forField(receptionDate)
                 .bind(SelectedAuthorizer::getReceptionDate,SelectedAuthorizer::setReceptionDate);
+        selectedAuthorizerBinder.forField(priorityLevel)
+                .asRequired("Nivel Autorización es requerido")
+                .bind(SelectedAuthorizer::getPriorityLevel,SelectedAuthorizer::setPriorityLevel);
 
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
@@ -1299,6 +1308,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         FormLayout.FormItem fullNameItem = form.addFormItem(fullName,"Autorizador");
         UIUtils.setColSpan(2,fullNameItem);
         form.addFormItem(codePosition,"Código Cargo");
+        form.addFormItem(priorityLevel,"Nivel Autorización");
         FormLayout.FormItem nameBranchOfficeItem = form.addFormItem(nameBranchOffice,"Unidad Negocio");
         UIUtils.setColSpan(2,nameBranchOfficeItem);
         form.addFormItem(deliverDate,"Fecha Entrega");
@@ -1330,6 +1340,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
                selectedAuthorizerList.removeIf(sa -> sa.getId().equals(currentSelectedAuthorizer.getId()));
                currentSelectedAuthorizer.setId(UUID.randomUUID());
+
                selectedAuthorizerList.add(currentSelectedAuthorizer);
                detailsDrawerSelectedAuthorizer.hide();
                selectedAuthorizerGrid.getDataProvider().refreshAll();
@@ -1950,7 +1961,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         idSupplierInvoiceInformation = new TextField();
         idSupplierInvoiceInformation.setWidthFull();
 
-        IntegerField nit = new IntegerField();
+        TextField nit = new TextField();
         nit.setWidthFull();
         nit.setErrorMessage("Ingrese NIT");
 
@@ -2045,12 +2056,12 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     }
 
-    private VerticalLayout createDialogLayout(Dialog dialog,Integer nitValue) {
+    private VerticalLayout createDialogLayout(Dialog dialog,String nitValue) {
         H2 headline = new H2("Crear Nuevo Proveedor");
         headline.getStyle().set("margin", "var(--lumo-space-m) 0 0 0")
                 .set("font-size", "1.5em").set("font-weight", "bold");
 
-        IntegerField nit = new IntegerField("Número NIT");
+        TextField nit = new TextField("Número NIT");
         nit.setWidthFull();
         nit.setRequiredIndicatorVisible(true);
         nit.setReadOnly(true);

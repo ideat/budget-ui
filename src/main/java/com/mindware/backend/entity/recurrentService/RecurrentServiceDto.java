@@ -19,7 +19,7 @@ public class RecurrentServiceDto {
 
     private String supplierName;
 
-    private Integer supplierNit;
+    private String supplierNit;
 
     private String supplierLocation;
 

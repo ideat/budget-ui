@@ -61,6 +61,7 @@ import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -748,6 +749,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
            if(currentSelectedInvoiceAuthorizer != null && selectedInvoiceAuthorizerBinder.writeBeanIfValid(currentSelectedInvoiceAuthorizer)){
                selectedInvoiceAuthorizerList.removeIf(sa -> sa.getId().equals(currentSelectedInvoiceAuthorizer.getId()));
                currentSelectedInvoiceAuthorizer.setId(UUID.randomUUID());
+               currentSelectedInvoiceAuthorizer.setRegisterDate(LocalDate.now());
                selectedInvoiceAuthorizerList.add(currentSelectedInvoiceAuthorizer);
                detailsDrawerSelectedInvoiceAuthorizer.hide();
                selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
@@ -776,6 +778,11 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         codePosition.setRequired(true);
         codePosition.setReadOnly(true);
 
+        TextField priorityLevel = new TextField();
+        priorityLevel.setRequired(true);
+        priorityLevel.setReadOnly(true);
+        priorityLevel.setWidthFull();
+
         TextField nameBranchOffice = new TextField();
         nameBranchOffice.setWidthFull();
         nameBranchOffice.setRequired(true);
@@ -794,6 +801,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                     .findFirst().get();
             codePosition.setValue(invoiceAuthorizer.getCodePosition());
             nameBranchOffice.setValue(invoiceAuthorizer.getNameBranchOffice());
+            priorityLevel.setValue(invoiceAuthorizer.getPriorityLevel());
         });
 
         selectedInvoiceAuthorizerBinder = new BeanValidationBinder<>(SelectedInvoiceAuthorizer.class);
@@ -806,6 +814,9 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         selectedInvoiceAuthorizerBinder.forField(nameBranchOffice)
                 .asRequired("Unidad Negocio es requerida")
                 .bind(SelectedInvoiceAuthorizer::getNameBranchOffice,SelectedInvoiceAuthorizer::setNameBranchOffice);
+        selectedInvoiceAuthorizerBinder.forField(priorityLevel)
+                .asRequired("Nivel Autorización es requerido")
+                .bind(SelectedInvoiceAuthorizer::getPriorityLevel,SelectedInvoiceAuthorizer::setPriorityLevel);
 
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
@@ -819,6 +830,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         FormLayout.FormItem fullNameItem = form.addFormItem(fullName,"Autorizador");
         UIUtils.setColSpan(2,fullNameItem);
         form.addFormItem(codePosition,"Código Cargo");
+        form.addFormItem(priorityLevel,"Nivel Autorización");
         FormLayout.FormItem nameBranchOfficeItem = form.addFormItem(nameBranchOffice,"Unidad Negocio");
         UIUtils.setColSpan(2,nameBranchOfficeItem);
 

@@ -135,6 +135,24 @@ public class UtilValues {
         return periods;
     }
 
+    public List<String> getAllPeriods(){
+        List<Period> periodList = periodRestTemplate.getAll();
+        List<Integer> yearPeriods = periodList.stream()
+                .filter(p ->p.getIsOpen().equals(true))
+                .map(Period::getYear)
+                .collect(Collectors.toList());
+
+        List<String> periods = new ArrayList<>();
+
+        for(Integer year:yearPeriods) {
+            for (String s : months) {
+                String period = s.concat("/").concat(year.toString());
+                periods.add(period);
+            }
+        }
+        return periods;
+    }
+
     public List<String> getNameUserLdapByCriteria(String criteria, String value){
         List<UserLdapDto> userLdapDtoList = dataLdapRestTemplate.getUserByCriteria(criteria,value);
         List<String> nameUsers = userLdapDtoList.stream()

@@ -7,6 +7,7 @@ import com.mindware.backend.entity.user.UserLdapDto;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
 import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
+import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -64,6 +65,9 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
 
     @Autowired
     private DataLdapRestTemplate dataLdapRestTemplate;
+
+    @Autowired
+    private UtilValues utilValues;
 
     private ListDataProvider<InvoiceAuthorizer> dataProvider;
     private Binder<InvoiceAuthorizer> binder;
@@ -196,9 +200,8 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
         position.setWidthFull();
         position.setRequired(true);
 
-        IntegerField codeEmployee = new IntegerField();
-        codeEmployee.setMin(0);
-        codeEmployee.setReadOnly(true);
+        EmailField email = new EmailField();
+        email.setReadOnly(true);
 
         ComboBox<String> fullName = new ComboBox<>();
         fullName.setWidthFull();
@@ -209,7 +212,7 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
                     .filter(c -> c.getCn().equals(event.getValue()))
                     .findFirst().get();
             codePosition.setValue(userLdapDto.getTitle());
-            codeEmployee.setValue(Integer.valueOf(userLdapDto.getEmployeeNumber()));
+            email.setValue(userLdapDto.getEmail());
 
         });
 
@@ -237,6 +240,11 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
         state.setItems("ACTIVO","BAJA");
         state.setRequired(true);
 
+        ComboBox<String> priorityLevel = new ComboBox<>();
+        priorityLevel.setWidthFull();
+        priorityLevel.setAllowCustomValue(false);
+        priorityLevel.setItems(utilValues.getValueParameterByCategory("NIVELES AUTORIZACION"));
+
         binder = new BeanValidationBinder<>(InvoiceAuthorizer.class);
         binder.forField(codeBranchOffice)
                 .asRequired("Codigo Unidad Negocio es requerido")
@@ -256,9 +264,13 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
         binder.forField(state)
                 .asRequired("Estado del Autorizador es requerido")
                 .bind(InvoiceAuthorizer::getState,InvoiceAuthorizer::setState);
-        binder.forField(codeEmployee)
+        binder.forField(email)
                 .asRequired("Correo Autorizador es requerido")
-                .bind(InvoiceAuthorizer::getCodeEmployee,InvoiceAuthorizer::setCodeEmployee);
+                .bind(InvoiceAuthorizer::getEmail,InvoiceAuthorizer::setEmail);
+        binder.forField(priorityLevel)
+                .asRequired("Nivel Autorización es requerido")
+                .bind(InvoiceAuthorizer::getPriorityLevel, InvoiceAuthorizer::setPriorityLevel);
+
         binder.addStatusChangeListener(event ->{
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
@@ -282,8 +294,9 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
         form.addFormItem(codePosition,"Codigo Cargo");
         FormLayout.FormItem positionItem =  form.addFormItem(position,"Nombre Cargo");
         UIUtils.setColSpan(2,positionItem);
-        form.addFormItem(codeEmployee,"Codigo Empleado");
+        form.addFormItem(email,"Correo Empleado");
         form.addFormItem(state,"Estado Autorizador");
+        form.addFormItem(priorityLevel,"Nivel Autorización");
 
         return form;
     }

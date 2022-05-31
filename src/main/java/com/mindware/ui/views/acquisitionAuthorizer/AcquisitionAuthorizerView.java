@@ -6,6 +6,7 @@ import com.mindware.backend.entity.user.UserLdapDto;
 import com.mindware.backend.rest.acquisitionAuthorizer.AcquisitionAuthorizerRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
+import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -66,6 +67,9 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
 
     @Autowired
     private DataLdapRestTemplate dataLdapRestTemplate;
+
+    @Autowired
+    private UtilValues utilValues;
 
     private ListDataProvider<AcquisitionAuthorizer> dataProvider;
     private Binder<AcquisitionAuthorizer> binder;
@@ -254,6 +258,11 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
         state.setItems("ACTIVO","BAJA");
         state.setRequired(true);
 
+        ComboBox<String> priorityLevel = new ComboBox<>();
+        priorityLevel.setWidthFull();
+        priorityLevel.setAllowCustomValue(false);
+        priorityLevel.setItems(utilValues.getValueParameterByCategory("NIVELES AUTORIZACION"));
+
         binder = new BeanValidationBinder<>(AcquisitionAuthorizer.class);
         binder.forField(codeBranchOffice)
                 .asRequired("Codigo Unidad Negocio es requerido")
@@ -280,6 +289,9 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
         binder.forField(email)
                 .asRequired("Correo Autorizador es requerido")
                 .bind(AcquisitionAuthorizer::getEmail,AcquisitionAuthorizer::setEmail);
+        binder.forField(priorityLevel)
+                .asRequired("Nivel Autorización es requerido")
+                .bind(AcquisitionAuthorizer::getPriorityLevel, AcquisitionAuthorizer::setPriorityLevel);
         binder.addStatusChangeListener(event ->{
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
@@ -307,6 +319,7 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
         UIUtils.setColSpan(2,emailItem);
         form.addFormItem(maxAmount,"Monto $us");
         form.addFormItem(state,"Estado Autorizador");
+        form.addFormItem(priorityLevel,"Nivel Autorización");
 
         return form;
 

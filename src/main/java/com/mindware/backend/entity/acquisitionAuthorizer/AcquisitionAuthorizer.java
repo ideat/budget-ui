@@ -27,4 +27,5 @@ public class AcquisitionAuthorizer {
 
     private String email;
 
+    private String priorityLevel;
 }

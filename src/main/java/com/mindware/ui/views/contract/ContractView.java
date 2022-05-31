@@ -302,9 +302,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         typeChangeCurrency.setErrorMessage("Categoría Tipo Cambio es requerida");
         typeChangeCurrency.setRequired(true);
 
-
         binder = new BeanValidationBinder<>(Contract.class);
-
 
         binder.forField(dateSubscription)
                 .asRequired("Fecha de Subscripción es requerida")

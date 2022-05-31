@@ -11,7 +11,7 @@ public class Supplier {
 
     private UUID id;
 
-    private Integer nit;
+    private String nit;
 
     private String name;
 

@@ -40,10 +40,10 @@ public class InvoiceAuthorizerRestTemplate {
         return response.getBody();
     }
 
-    public InvoiceAuthorizer getByCodeEmployee(Integer code){
-        final String uri = url + "/v1/invoice-authorizer/getByCodeEmployee/{code}";
-        Map<String,Integer> params = new HashMap<>();
-        params.put("code",code);
+    public InvoiceAuthorizer getByEmail(String email){
+        final String uri = url + "/v1/invoice-authorizer/getByEmail/{email}";
+        Map<String,String> params = new HashMap<>();
+        params.put("email",email);
         HttpEntity<InvoiceAuthorizer> entity = new HttpEntity<>(HeaderJwt.getHeader());
         ResponseEntity<InvoiceAuthorizer> response = restTemplate.exchange(uri, HttpMethod.GET,entity,InvoiceAuthorizer.class,params);
         return response.getBody();

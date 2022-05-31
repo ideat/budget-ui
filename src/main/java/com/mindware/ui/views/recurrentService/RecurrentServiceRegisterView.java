@@ -63,6 +63,7 @@ import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -117,7 +118,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private TextField supplierName;
     private ComboBox<String> account;
     private ComboBox<String> subAccount;
-    private IntegerField nitSupplier;
+    private TextField nitSupplier;
     private IntegerField contract;
     private  TextField paymentFrecuency;
 
@@ -296,7 +297,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
             }
         });
 
-        nitSupplier = new IntegerField();
+        nitSupplier = new TextField();
         nitSupplier.setWidthFull();
         nitSupplier.setReadOnly(true);
 
@@ -920,7 +921,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
             if(currentSelectedInvoiceAuthorizer != null && selectedInvoiceAuthorizerBinder.writeBeanIfValid(currentSelectedInvoiceAuthorizer)){
                 selectedInvoiceAuthorizerList.removeIf(sa -> sa.getId().equals(currentSelectedInvoiceAuthorizer.getId()));
                 currentSelectedInvoiceAuthorizer.setId(UUID.randomUUID());
-
+                currentSelectedInvoiceAuthorizer.setRegisterDate(LocalDate.now());
                 selectedInvoiceAuthorizerList.add(currentSelectedInvoiceAuthorizer);
                 detailsDrawerSelectedInvoiceAuthorizer.hide();
                 selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
@@ -954,6 +955,11 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         nameBranchOffice.setRequired(true);
         nameBranchOffice.setReadOnly(true);
 
+        TextField priorityLevel = new TextField();
+        priorityLevel.setRequired(true);
+        priorityLevel.setReadOnly(true);
+        priorityLevel.setWidthFull();
+
         ComboBox<String> fullName = new ComboBox<>();
         fullName.setRequired(true);
         fullName.setWidthFull();
@@ -967,6 +973,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                     .findFirst().get();
             codePosition.setValue(invoiceAuthorizer.getCodePosition());
             nameBranchOffice.setValue(invoiceAuthorizer.getNameBranchOffice());
+            priorityLevel.setValue(invoiceAuthorizer.getPriorityLevel());
         });
 
         selectedInvoiceAuthorizerBinder = new BeanValidationBinder<>(SelectedInvoiceAuthorizer.class);
@@ -979,6 +986,9 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         selectedInvoiceAuthorizerBinder.forField(nameBranchOffice)
                 .asRequired("Unidad Negocio es requerida")
                 .bind(SelectedInvoiceAuthorizer::getNameBranchOffice,SelectedInvoiceAuthorizer::setNameBranchOffice);
+        selectedInvoiceAuthorizerBinder.forField(priorityLevel)
+                .asRequired("Nivel Autorización es requerido")
+                .bind(SelectedInvoiceAuthorizer::getPriorityLevel,SelectedInvoiceAuthorizer::setPriorityLevel);
 
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
@@ -992,6 +1002,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         FormLayout.FormItem fullNameItem = form.addFormItem(fullName,"Autorizador");
         UIUtils.setColSpan(2,fullNameItem);
         form.addFormItem(codePosition,"Código Cargo");
+        form.addFormItem(priorityLevel,"Nivel Autorización");
         FormLayout.FormItem nameBranchOfficeItem = form.addFormItem(nameBranchOffice,"Unidad Negocio");
         UIUtils.setColSpan(2,nameBranchOfficeItem);
 

@@ -58,9 +58,9 @@ public class SupplierRestTemplate {
 
     }
 
-    public Supplier getByNit(Integer nit){
+    public Supplier getByNit(String nit){
         final String uri = url + "/v1/supplier/getByNit/{nit}";
-        Map<String,Integer> params = new HashMap<>();
+        Map<String,String> params = new HashMap<>();
         params.put("nit",nit);
         HttpEntity<Supplier> entity = new HttpEntity<>( HeaderJwt.getHeader());
         ResponseEntity<Supplier> response = restTemplate.exchange(uri,HttpMethod.GET,entity,Supplier.class,params);
