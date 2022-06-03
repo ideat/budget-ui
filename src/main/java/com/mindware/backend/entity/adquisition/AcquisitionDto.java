@@ -12,7 +12,7 @@ public class AcquisitionDto {
 
     private UUID id;
 
-    private Integer acquisitionNumber;
+    private String acquisitionNumber;
 
     private String applicant;
 

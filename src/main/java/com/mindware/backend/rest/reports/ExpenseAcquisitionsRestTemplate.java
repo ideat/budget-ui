@@ -19,7 +19,7 @@ public class ExpenseAcquisitionsRestTemplate {
     @Value("${url_budget}")
     private String url;
 
-    public byte[] report(String period){
+    public byte[] reportExpenseAcquisition(String period){
         final String uri = url + "/v1/report/executivereport/expenseAcquisition";
         HttpHeaders headers = HeaderJwt.getHeader();
         headers.set("period",period);
@@ -29,4 +29,13 @@ public class ExpenseAcquisitionsRestTemplate {
         return reponse.getBody();
     }
 
+    public byte[] reportAcquisitionDetail(String period){
+        final String uri = url + "/v1/report/acquisitionreport/acquisitionDetailReport";
+        HttpHeaders headers = HeaderJwt.getHeader();
+        headers.set("period",period);
+
+        HttpEntity<byte[]> entity = new HttpEntity<>(headers);
+        ResponseEntity<byte[]> reponse = restTemplate.exchange(uri, HttpMethod.GET,entity,byte[].class);
+        return reponse.getBody();
+    }
 }

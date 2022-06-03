@@ -59,6 +59,7 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
@@ -110,6 +111,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private TextField areaApplicant;
     private ComboBox<String> typeRequest;
     private DatePicker receptionDate;
+    private DatePicker dateReception;
+    private DatePicker dateDeliveryAccounting;
+    private ComboBox<String> accountingPerson;
+    private  DatePicker dateDeliveryAaaf;
 
     private Acquisition current;
 
@@ -120,6 +125,12 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private DetailsDrawerFooter footer;
     private DetailsDrawer detailsDrawer;
     private DetailsDrawerHeader detailsDrawerHeader;
+
+    private DatePicker quotationRequestDate;
+    private DatePicker quotationReceptionDate;
+
+    private  TextField caabsNumber;
+    private ComboBox<String> currency;
 
 //   Expense Distribuite
     private DetailsDrawerFooter footerExpenseDistribuite;
@@ -271,6 +282,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     contentExpenseDistribuite,contentDeliveyAccounting);
 
         }else{
+
             current = new Acquisition();
             current.setAuthorizersLevel1("[]");
             current.setAuthorizersLevel2("[]");
@@ -279,6 +291,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             current.setAdjudicationInformation("{}");
             current.setReceptionInformation("{}");
             current.setInvoiceInformation("[]");
+
             title = "Adquición";
 
             itemList = mapper.readValue(current.getItems(), new TypeReference<List<Item>>() {});
@@ -328,7 +341,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 UIUtils.showNotificationType("Registre Items para su adquisición","alert");
                 return;
             }
-            if(adjudicationInfomationBinder!=null){
+            if(current.getCaabsNumber()!=null && !current.getCaabsNumber().isEmpty()){
                 if(adjudicationInfomationBinder.writeBeanIfValid(currentAdjudicationInformation)){
                     if(currentAdjudicationInformation.getRequiresAdvance()==true){
                         boolean isValid=true;
@@ -369,7 +382,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 }
             }
 
-            if(receptionInformationBinder!=null){
+//            if(receptionInformationBinder!=null){
+            if(current.getAdjudicationInformation()!=null && !current.getAdjudicationInformation().equals("{}")){
                 if(receptionInformationBinder.writeBeanIfValid(currentReceptionInformation)){
                     try {
                         String jsonReceptionInformation = mapper.writeValueAsString(currentReceptionInformation);
@@ -386,12 +400,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
             if(invoiceInformationBinder!=null){
                 try {
-                    TypeChangeCurrency typeChangeCurrency = utilValues
-                            .getCurrentTypeChangeCurrencyByValidityStart("COMERCIAL",current.getReceptionDate().toString(),current.getCurrency());
 
-                    Double summaryAmountInvoice = (invoiceInformationList.stream()
-                            .mapToDouble(InvoiceInformation::getAmount)
-                            .sum()) / typeChangeCurrency.getAmountChange();
+
+                    Double summaryAmountInvoice = calculateInvoice(invoiceInformationList,current.getCurrency());
                     if(summaryAmountInvoice.doubleValue() > current.getAmount().doubleValue()){
                         UIUtils.showNotificationType("Monto de facturas supera el monto de la solicitud, Revise los datos","alert");
                         return;
@@ -416,19 +427,98 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         UIUtils.showNotificationType("Total facturas no coincide con el monto distrituido","alert");
                         return;
                     }
+
+                    String resultVerify = verifyQuantityItems();
+                    if(!resultVerify.equals("")){
+                        UIUtils.showNotificationType(resultVerify,"alert");
+                        return;
+                    }
+
                     String jsonExpenseDistribuite = mapper.writeValueAsString(expenseDistribuiteList);
                     current.setExpenseDistribuite(jsonExpenseDistribuite);
-
 
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
+            }
+            if(current.getAcquisitionNumber()!=null){
+
+                binder.forField(quotationRequestDate)
+                        .asRequired("Fecha solicitud cotización es requerida")
+                        .bind(Acquisition::getQuotationRequestDate, Acquisition::setQuotationRequestDate);
+                binder.forField(quotationReceptionDate)
+                        .asRequired(("Fecha de recepción de contizaciones es requerida"))
+                        .withValidator(f -> f.isAfter(quotationRequestDate.getValue()),"Fecha recepcion no puede ser anterior a la fechade solicitud")
+                        .bind(Acquisition::getQuotationReceptionDate, Acquisition::setQuotationReceptionDate);
+            }
+
+            if(current.getQuotationReceptionDate()!=null){
+                binder.forField(caabsNumber)
+                        .asRequired("Número CAABS es requerido")
+                        .bind(Acquisition::getCaabsNumber,Acquisition::setCaabsNumber);
+                binder.forField(currency)
+                        .asRequired("Moneda es requerida")
+                        .bind(Acquisition::getCurrency,Acquisition::setCurrency);
+                binder.forField(amountCaabs)
+                        .asRequired("Monto es requerido")
+                        .withValidator(a -> a.doubleValue()>0.0,"Monto tiene que se mayor a 0")
+                        .bind(Acquisition::getAmount,Acquisition::setAmount);
+            }
+
+            if(current.getCaabsNumber()!=null && !current.getCaabsNumber().isEmpty()){
+                adjudicationInfomationBinder.forField(purchaseOrder)
+                        .asRequired("Fecha de envio de la orden de compra es requerido")
+                        .bind(AdjudicationInfomation::getPurchaseOrder,AdjudicationInfomation::setPurchaseOrder);
+                adjudicationInfomationBinder.forField(deliverTime)
+                        .asRequired("Tiempo de entrega es requerido")
+                        .withValidator(d -> d.intValue()>0,"Tiempo entrega debe ser positivo")
+                        .bind(AdjudicationInfomation::getDeliveryTime,AdjudicationInfomation::setDeliveryTime);
+                adjudicationInfomationBinder.forField(requiresAdvance)
+                        .bind(AdjudicationInfomation::getRequiresAdvance,AdjudicationInfomation::setRequiresAdvance);
+                adjudicationInfomationBinder.forField(correspondsContract)
+                        .bind(AdjudicationInfomation::getCorrespondsContract,AdjudicationInfomation::setCorrespondsContract);
+                adjudicationInfomationBinder.forField(requireUpdateDoc)
+                        .bind(AdjudicationInfomation::getRequireUpdateDoc,AdjudicationInfomation::setRequireUpdateDoc);
+                adjudicationInfomationBinder.forField(contractRequestDateToLegal)
+                        .bind(AdjudicationInfomation::getContractRequestDateToLegal,AdjudicationInfomation::setContractRequestDateToLegal);
+                adjudicationInfomationBinder.forField(contractDeliverContractFromLegal)
+                        .bind(AdjudicationInfomation::getContractDeliverContractFromLegal,AdjudicationInfomation::setContractDeliverContractFromLegal);
+                adjudicationInfomationBinder.forField(dateSignature)
+                        .bind(AdjudicationInfomation::getDateSignature,AdjudicationInfomation::setDateSignature);
+            }
+
+            if(current.getAdjudicationInformation()!=null && !current.getAdjudicationInformation().equals("{}")){
+                receptionInformationBinder.forField(dateReception)
+                        .asRequired("Fecha de recepción es requerida")
+                        .bind(ReceptionInformation::getDateReception,ReceptionInformation::setDateReception);
+                receptionInformationBinder.forField(nameBusinessUnitReceptionInformation)
+                        .asRequired("Unidad Negocio es requerido")
+                        .bind(ReceptionInformation::getNameBusinessUnit,ReceptionInformation::setNameBusinessUnit);
+                receptionInformationBinder.forField(codeBusinessUnitReceptionInformation)
+                        .asRequired("Codigo Unidad de Negocio es requerido")
+                        .bind(ReceptionInformation::getCodeBusinessUnit,ReceptionInformation::setCodeBusinessUnit);
+                receptionInformationBinder.forField(receiveBy)
+                        .asRequired("Persona que firma la conformidad de recepción es requerida")
+                        .bind(ReceptionInformation::getReceivedBy,ReceptionInformation::setReceivedBy);
+            }
+            if(current.getExpenseDistribuite()!=null && !current.getExpenseDistribuite().equals("[]")) {
+                binder.forField(dateDeliveryAccounting)
+                        .asRequired("Fecha entrega a contabilidad es requerida")
+                        .bind(Acquisition::getDateDeliveryAccounting, Acquisition::setDateDeliveryAccounting);
+                binder.forField(accountingPerson)
+                        .asRequired("Responsable de contabilidad es requerido")
+                        .bind(Acquisition::getAccountingPerson, Acquisition::setAccountingPerson);
+                binder.forField(dateDeliveryAaaf)
+                        .asRequired("Fecha de entrega a AAAF es requerida")
+                        .bind(Acquisition::getDateDeliveryAaaf, Acquisition::setDateDeliveryAaaf);
             }
 
             if(binder.writeBeanIfValid(current)){
                 try {
                     if(current.getId()==null){
                         current.setState("INICIADO");
+//                        contentInformationQuote = (FlexBoxLayout) createContent(createInformationQuote(current));
+//                        setViewContent(contentInformationQuote);
                     }
                     String jsonItems = mapper.writeValueAsString(itemList);
                     current.setItems(jsonItems);
@@ -516,7 +606,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         }else{
             contentInformationCaabs.setEnabled(true);
         }
-        if(current.getCaabsNumber()==null){
+        if(current.getCaabsNumber()==null || current.getCaabsNumber().isEmpty()) {
             contentAdjudicationInformation.setEnabled(false);
         }else{
             contentAdjudicationInformation.setEnabled(true);
@@ -526,7 +616,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         }else{
             contentReceptionInformation.setEnabled(true);
         }
-        if(current.getReceptionInformation()==null || current.getReceptionInformation().equals("[]")){
+        if(current.getReceptionInformation()==null || current.getReceptionInformation().equals("{}")){
             contentInvoiceInformation.setEnabled(false);
         }else{
             contentInvoiceInformation.setEnabled(true);
@@ -1089,31 +1179,33 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 //      INFORMATION QUOTE
     private DetailsDrawer createInformationQuote(Acquisition acquisition){
 
-        DatePicker quotationRequestDate = new DatePicker("Fecha de solicitud de cotizaciones");
+        quotationRequestDate = new DatePicker("Fecha de solicitud de cotizaciones");
         quotationRequestDate.setWidth("30%");
         quotationRequestDate.setRequired(true);
         quotationRequestDate.setLocale(new Locale("es","BO"));
+        quotationRequestDate.setI18n(UIUtils.spanish());
 
-        DatePicker quotationReceptionDate = new DatePicker("Fecha de recepción de cotizaciones");
+        quotationReceptionDate = new DatePicker("Fecha de recepción de cotizaciones");
         quotationReceptionDate.setWidth("30%");
         quotationReceptionDate.setRequired(true);
         quotationReceptionDate.setLocale(new Locale("es","BO"));
+        quotationReceptionDate.setI18n(UIUtils.spanish());
 
 //        binderQuoationRequest = new BeanValidationBinder<>(Acquisition.class);
-        if(current.getAcquisitionNumber()!=null) {
+//        if(current.getAcquisitionNumber()!=null) {
             binder.forField(quotationRequestDate)
-                    .asRequired("Fecha solicitud cotización es requerida")
+//                    .asRequired("Fecha solicitud cotización es requerida")
                     .bind(Acquisition::getQuotationRequestDate, Acquisition::setQuotationRequestDate);
             binder.forField(quotationReceptionDate)
-                    .asRequired(("Fecha de recepción de contizaciones es requerida"))
-                    .withValidator(f -> f.isAfter(quotationRequestDate.getValue()),"Fecha recepcion no puede ser anterior a la fechade solicitud")
+//                    .asRequired(("Fecha de recepción de contizaciones es requerida"))
+//                    .withValidator(f -> f.isAfter(quotationRequestDate.getValue()),"Fecha recepcion no puede ser anterior a la fechade solicitud")
                     .bind(Acquisition::getQuotationReceptionDate, Acquisition::setQuotationReceptionDate);
             binder.addStatusChangeListener(event ->{
                 boolean isValid = !event.hasValidationErrors();
                 boolean hasChanges = binder.hasChanges();
                 footer.saveState(isValid && hasChanges);
             });
-        }
+//        }
         VerticalLayout layout = new VerticalLayout();
         layout.setWidthFull();
         layout.add(quotationRequestDate,quotationReceptionDate);
@@ -1138,11 +1230,11 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         VerticalLayout layoutAuthorizerLevel2 = gridSelectedAuthorizerLevel2();
 
-        TextField caabsNumber = new TextField();
+        caabsNumber = new TextField();
         caabsNumber.setWidthFull();
 //        caabsNumber.setMin(0);
 
-        ComboBox<String> currency = new ComboBox<>();
+        currency = new ComboBox<>();
         currency.setWidthFull();
         currency.setAllowCustomValue(false);
         currency.setAutoOpen(true);
@@ -1162,16 +1254,16 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
            }
         });
 
-        if(current.getQuotationReceptionDate()!=null){
+//        if(current.getQuotationReceptionDate()!=null){
             binder.forField(caabsNumber)
-                    .asRequired("Número CAABS es requerido")
+//                    .asRequired("Número CAABS es requerido")
                     .bind(Acquisition::getCaabsNumber,Acquisition::setCaabsNumber);
             binder.forField(currency)
-                    .asRequired("Moneda es requerida")
+//                    .asRequired("Moneda es requerida")
                     .bind(Acquisition::getCurrency,Acquisition::setCurrency);
             binder.forField(amountCaabs)
-                    .asRequired("Monto es requerido")
-                    .withValidator(a -> a.doubleValue()>0.0,"Monto tiene que se mayor a 0")
+//                    .asRequired("Monto es requerido")
+//                    .withValidator(a -> a.doubleValue()>0.0,"Monto tiene que se mayor a 0")
                     .bind(Acquisition::getAmount,Acquisition::setAmount);
             binder.addStatusChangeListener(event ->{
                 boolean isValid = !event.hasValidationErrors();
@@ -1179,7 +1271,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 footer.saveState(isValid && hasChanges);
             });
 
-        }
+//        }
 
         FormLayout form = new FormLayout();
         form.setWidthFull();
@@ -1646,15 +1738,36 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         });
 
-        if(current.getCaabsNumber()!=null){
+        if(requiresAdvance.getValue()==true){
+            correspondsContract.setValue(true);
+            correspondsContract.setReadOnly(true);
+            requireUpdateDoc.setReadOnly(false);
+            contractRequestDateToLegal.setReadOnly(false);
+            contractDeliverContractFromLegal.setReadOnly(false);
+            dateSignature.setReadOnly(false);
+        }else{
+            correspondsContract.setReadOnly(true);
+            requireUpdateDoc.setReadOnly(true);
+            contractRequestDateToLegal.setReadOnly(true);
+            contractDeliverContractFromLegal.setReadOnly(true);
+            dateSignature.setReadOnly(true);
+
+            correspondsContract.clear();
+            requireUpdateDoc.clear();
+            contractRequestDateToLegal.clear();
+            contractDeliverContractFromLegal.clear();
+            dateSignature.clear();
+        }
+
+//        if(current.getCaabsNumber()!=null){
             adjudicationInfomationBinder = new BeanValidationBinder<>(AdjudicationInfomation.class);
 
             adjudicationInfomationBinder.forField(purchaseOrder)
-                    .asRequired("Fecha de envio de la orden de compra es requerido")
+//                    .asRequired("Fecha de envio de la orden de compra es requerido")
                     .bind(AdjudicationInfomation::getPurchaseOrder,AdjudicationInfomation::setPurchaseOrder);
             adjudicationInfomationBinder.forField(deliverTime)
-                    .asRequired("Tiempo de entrega es requerido")
-                    .withValidator(d -> d.intValue()>0,"Tiempo entrega debe ser positivo")
+//                    .asRequired("Tiempo de entrega es requerido")
+//                    .withValidator(d -> d.intValue()>0,"Tiempo entrega debe ser positivo")
                     .bind(AdjudicationInfomation::getDeliveryTime,AdjudicationInfomation::setDeliveryTime);
             adjudicationInfomationBinder.forField(requiresAdvance)
                     .bind(AdjudicationInfomation::getRequiresAdvance,AdjudicationInfomation::setRequiresAdvance);
@@ -1675,7 +1788,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             });
 
             adjudicationInfomationBinder.readBean(currentAdjudicationInformation);
-        }
+//        }
 
         FormLayout form = new FormLayout();
         form.setWidth("30%");
@@ -1720,7 +1833,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     private DetailsDrawer createReceptionInformation(){
 
-        DatePicker dateReception = new DatePicker();
+        dateReception = new DatePicker();
         dateReception.setWidthFull();
         dateReception.setRequired(true);
         dateReception.setLocale(new Locale("es","BO"));
@@ -1740,20 +1853,20 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         receiveBy.setRequired(true);
         receiveBy.setReadOnly(true);
 
-        if(current.getAdjudicationInformation()!=null && !current.getAdjudicationInformation().equals("{}")){
+//        if(current.getAdjudicationInformation()!=null && !current.getAdjudicationInformation().equals("{}")){
             receptionInformationBinder = new BeanValidationBinder<>(ReceptionInformation.class);
 
             receptionInformationBinder.forField(dateReception)
-                    .asRequired("Fecha de recepción es requerida")
+//                    .asRequired("Fecha de recepción es requerida")
                     .bind(ReceptionInformation::getDateReception,ReceptionInformation::setDateReception);
             receptionInformationBinder.forField(nameBusinessUnitReceptionInformation)
-                    .asRequired("Unidad Negocio es requerido")
+//                    .asRequired("Unidad Negocio es requerido")
                     .bind(ReceptionInformation::getNameBusinessUnit,ReceptionInformation::setNameBusinessUnit);
             receptionInformationBinder.forField(codeBusinessUnitReceptionInformation)
-                    .asRequired("Codigo Unidad de Negocio es requerido")
+//                    .asRequired("Codigo Unidad de Negocio es requerido")
                     .bind(ReceptionInformation::getCodeBusinessUnit,ReceptionInformation::setCodeBusinessUnit);
             receptionInformationBinder.forField(receiveBy)
-                    .asRequired("Persona que firma la conformidad de recepción es requerida")
+//                    .asRequired("Persona que firma la conformidad de recepción es requerida")
                     .bind(ReceptionInformation::getReceivedBy,ReceptionInformation::setReceivedBy);
             receptionInformationBinder.addStatusChangeListener(event -> {
                 boolean isValid = !event.hasValidationErrors();
@@ -1762,7 +1875,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             });
 
             receptionInformationBinder.readBean(currentReceptionInformation);
-        }
+//        }
 
         FormLayout form = new FormLayout();
         form.setWidth("40%");
@@ -1986,6 +2099,11 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         invoiceNumber.setWidthFull();
         invoiceNumber.setClearButtonVisible(true);
 
+        ComboBox<String> typeCurrencyChange = new ComboBox<>();
+        typeCurrencyChange.setWidthFull();
+        typeCurrencyChange.setItems(utilValues.getValueParameterByCategory("CATEGORIA TIPO CAMBIO"));
+        typeCurrencyChange.setAllowCustomValue(false);
+        typeCurrencyChange.setRequired(true);
 
         invoiceInformationBinder = new BeanValidationBinder<>(InvoiceInformation.class);
         invoiceInformationBinder.forField(idSupplierInvoiceInformation)
@@ -2004,6 +2122,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .asRequired("Número factura es requerido")
                 .withValidator(n -> n.intValue()>0,"Número factura debe ser mayor a cero")
                 .bind(InvoiceInformation::getInvoiceNumber,InvoiceInformation::setInvoiceNumber);
+        invoiceInformationBinder.forField(typeCurrencyChange)
+                .asRequired("Tipo Cambio es requerido")
+                .bind(InvoiceInformation::getTypeCurrencyChange,InvoiceInformation::setTypeCurrencyChange);
 
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
@@ -2027,6 +2148,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         UIUtils.setColSpan(2,nameSupplierItem);
         form.addFormItem(dateInvoice,"Fecha factura");
         form.addFormItem(amount,"Monto factura");
+        form.addFormItem(typeCurrencyChange,"Tipo Cambio");
         form.addFormItem(invoiceNumber,"Número factura");
 
         btnNit.addClickListener(event -> {
@@ -2432,14 +2554,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     private DetailsDrawer createDeliverAccounting(){
 
-        DatePicker dateDeliveryAccounting = new DatePicker("Fecha de entrega a contabilidad");
+        dateDeliveryAccounting = new DatePicker("Fecha de entrega a contabilidad");
         dateDeliveryAccounting.setWidth("30%");
         dateDeliveryAccounting.setRequired(true);
         dateDeliveryAccounting.setClearButtonVisible(true);
         dateDeliveryAccounting.setRequiredIndicatorVisible(true);
         dateDeliveryAccounting.setLocale(new Locale("es","BO"));
 
-        ComboBox<String> accountingPerson = new ComboBox<>("Entregado a");
+        accountingPerson = new ComboBox<>("Entregado a");
         accountingPerson.setWidth("30%");
         accountingPerson.setRequired(true);
         accountingPerson.setRequiredIndicatorVisible(true);
@@ -2452,29 +2574,29 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         List<String> nameUsersPosition =  utilValues.getNameUserLdapByCriteria("title",position);
         accountingPerson.setItems(nameUsersPosition);
 
-        DatePicker dateDeliveryAaaf = new DatePicker("Fecha de entrega AAAF");
+        dateDeliveryAaaf = new DatePicker("Fecha de entrega AAAF");
         dateDeliveryAaaf.setWidth("30%");
         dateDeliveryAaaf.setRequired(true);
         dateDeliveryAaaf.setClearButtonVisible(true);
         dateDeliveryAaaf.setRequiredIndicatorVisible(true);
         dateDeliveryAaaf.setLocale(new Locale("es","BO"));
 
-        if(current.getExpenseDistribuite()!=null && !current.getExpenseDistribuite().equals("[]")) {
+//        if(current.getExpenseDistribuite()!=null && !current.getExpenseDistribuite().equals("[]")) {
             binder.forField(dateDeliveryAccounting)
-                    .asRequired("Fecha entrega a contabilidad es requerida")
+//                    .asRequired("Fecha entrega a contabilidad es requerida")
                     .bind(Acquisition::getDateDeliveryAccounting, Acquisition::setDateDeliveryAccounting);
             binder.forField(accountingPerson)
-                    .asRequired("Responsable de contabilidad es requerido")
+//                    .asRequired("Responsable de contabilidad es requerido")
                     .bind(Acquisition::getAccountingPerson, Acquisition::setAccountingPerson);
             binder.forField(dateDeliveryAaaf)
-                    .asRequired("Fecha de entrega a AAAF es requerida")
+//                    .asRequired("Fecha de entrega a AAAF es requerida")
                     .bind(Acquisition::getDateDeliveryAaaf, Acquisition::setDateDeliveryAaaf);
             binder.addStatusChangeListener(event -> {
                 boolean isValid = !event.hasValidationErrors();
                 boolean hasChanges = binder.hasChanges();
                 footer.saveState(isValid && hasChanges);
             });
-        }
+//        }
             VerticalLayout layout = new VerticalLayout();
             layout.setWidthFull();
             layout.add(dateDeliveryAccounting,accountingPerson,dateDeliveryAaaf);
@@ -2493,7 +2615,39 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
             return detailsDrawer;
         }
-
-
 //    END DELIVER ACCOUNTING
+
+    private Double calculateInvoice(List<InvoiceInformation> invoiceInformationList, String currency){
+        Double result = 0.0;
+        List<TypeChangeCurrency> typeChangeCurrencyList = new ArrayList<>(utilValues.getAllTypeChangeCurrency());
+        typeChangeCurrencyList = typeChangeCurrencyList.stream()
+                .filter(c -> c.getCurrency().equals(currency))
+                .collect(Collectors.toList());
+        typeChangeCurrencyList.sort(Comparator.comparing(TypeChangeCurrency::getValidityStart).reversed());
+        for(InvoiceInformation invoiceInformation:invoiceInformationList){
+            Double valueTypeChange = typeChangeCurrencyList.stream()
+                    .filter(c -> c.getValidityStart().isBefore(invoiceInformation.getDateInvoice()) ||
+                            c.getValidityStart().isEqual(invoiceInformation.getDateInvoice()))
+                    .filter(c -> c.getName().equals(invoiceInformation.getTypeCurrencyChange()))
+                    .map(TypeChangeCurrency::getAmountChange)
+                    .findFirst().get();
+
+            result = result + (invoiceInformation.getAmount() / valueTypeChange);
+        }
+
+        return Math.round(result * 100.0) / 100.0;
+    }
+
+    private String verifyQuantityItems(){
+        String result = "";
+        for(Item item:itemList){
+            Integer quantity = expenseDistribuiteList.stream()
+                    .filter(e -> e.getNameItem().equals(item.getDescription()))
+                    .mapToInt(ExpenseDistribuiteAcquisition::getQuantity).sum();
+            if(item.getQuantity().intValue() != quantity){
+                result = result + String.format("Cantidad de items distribuidos de '%s' no coindice con los items registrados", item.getDescription()) +"\n";
+            }
+        }
+        return result;
+    }
 }

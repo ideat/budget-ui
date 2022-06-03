@@ -34,6 +34,7 @@ import java.util.Map;
 public class ExpenseAcquisitionsReport extends ViewFrame implements RouterLayout {
 
     private static final String EXPECTED_ACQUISITION_RESUME ="RESUMEN EJECUTIVO";
+    private static final String ACQUISITION_DETAIL ="DETALLA ADQUISICIONES";
 
     @Autowired
     UtilValues utilValues;
@@ -47,13 +48,16 @@ public class ExpenseAcquisitionsReport extends ViewFrame implements RouterLayout
     private Accordion createOptionsReport(){
         Accordion optionDetails = new Accordion();
 
-        AccordionPanel resumeExpenseAcquisitionPanel = optionDetails.add(EXPECTED_ACQUISITION_RESUME,layoutResumeExpenseAcquisition());
+        AccordionPanel resumeExpenseAcquisitionPanel = optionDetails
+                .add(EXPECTED_ACQUISITION_RESUME,layoutResumeExpenseAcquisition( "expense-acquisition","expense-acquisition-report"));
+        AccordionPanel acquisitionDetailPanel = optionDetails
+                .add(ACQUISITION_DETAIL,layoutResumeExpenseAcquisition("acquisition-detail","expense-acquisition-report"));
 
 
         return optionDetails;
     }
 
-    private HorizontalLayout layoutResumeExpenseAcquisition(){
+    private HorizontalLayout layoutResumeExpenseAcquisition(String originReport, String pathPage){
 
         ComboBox<String> periods = new ComboBox<>();
         periods.setWidth("200px");
@@ -69,9 +73,9 @@ public class ExpenseAcquisitionsReport extends ViewFrame implements RouterLayout
 
             Map<String, List<String>> paramExpenseAcquisition = new HashMap<>();
             List<String> origin = new ArrayList<>();
-            origin.add("expense-acquisition-report");
+            origin.add(originReport);
             List<String> path = new ArrayList<>();
-            path.add("expense-acquisition-report");
+            path.add(pathPage);
             List<String> period = new ArrayList<>();
             period.add(periods.getValue());
 

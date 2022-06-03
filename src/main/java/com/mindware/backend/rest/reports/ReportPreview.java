@@ -49,10 +49,16 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
         Map<String, List<String>> param = queryParameters.getParameters();
         paramPrev = new HashMap<>();
 
-        if(param.get("origin").get(0).equals("expense-acquisition-report")){
+        if(param.get("origin").get(0).equals("expense-acquisition")){
             String period = param.get("period").get(0);
             previousPage = param.get("path").get(0);
-            file = expenseAcquisitionsRestTemplate.report(period);
+            file = expenseAcquisitionsRestTemplate.reportExpenseAcquisition(period);
+            paramPrev.put("period",param.get("period"));
+
+        }else  if(param.get("origin").get(0).equals("acquisition-detail")){
+            String period = param.get("period").get(0);
+            previousPage = param.get("path").get(0);
+            file = expenseAcquisitionsRestTemplate.reportAcquisitionDetail(period);
             paramPrev.put("period",param.get("period"));
 
         }

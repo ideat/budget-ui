@@ -47,6 +47,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
 
     private Button btnNew;
 
+    private TextField acquisitionNumberFilter;
     private TextField supplierFilter;
     private DatePicker receptionDateInitFilter;
     private DatePicker receptionDateEndFilter;
@@ -160,6 +161,12 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
 
         HeaderRow hr = grid.appendHeaderRow();
 
+        acquisitionNumberFilter = new TextField();
+        acquisitionNumberFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        acquisitionNumberFilter.setWidthFull();
+        acquisitionNumberFilter.addValueChangeListener(e -> applyFilter(dataProvider));
+        hr.getCell(grid.getColumnByKey("acquisitionNumber")).setComponent(acquisitionNumberFilter);
+
         supplierFilter = new TextField();
         supplierFilter.setValueChangeMode(ValueChangeMode.EAGER);
         supplierFilter.setWidthFull();
@@ -246,6 +253,10 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
 
     private void applyFilter(ListDataProvider<AcquisitionDto> dataProvider){
         dataProvider.clearFilters();
+        if(!acquisitionNumberFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(acquisitionDto -> StringUtils.containsIgnoreCase(
+                    acquisitionDto.getAcquisitionNumber(),acquisitionNumberFilter.getValue()));
+        }
         if(!supplierFilter.getValue().trim().equals("")){
             dataProvider.addFilter(acquisitionDto -> StringUtils.containsIgnoreCase(
                     acquisitionDto.getSupplier(),supplierFilter.getValue()));

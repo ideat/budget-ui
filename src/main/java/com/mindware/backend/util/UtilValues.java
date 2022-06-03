@@ -169,4 +169,8 @@ public class UtilValues {
     public TypeChangeCurrency getCurrentTypeChangeCurrencyByValidityStart(String name, String validityStart, String currency){
         return typeChangeCurrencyRestTemplate.getCurrentTypeChangeCurrencyByValidityStart(name,validityStart,currency);
     }
+
+    public List<TypeChangeCurrency> getAllTypeChangeCurrency(){
+        return typeChangeCurrencyRestTemplate.getAll();
+    }
 }
