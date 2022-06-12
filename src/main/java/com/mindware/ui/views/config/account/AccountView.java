@@ -1,7 +1,9 @@
 package com.mindware.ui.views.config.account;
 
 import com.mindware.backend.entity.config.Account;
+import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.rest.account.AccountRestTemplate;
+import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -28,6 +30,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
@@ -51,6 +54,9 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
     private AccountRestTemplate restTemplate;
 
     @Autowired
+    private ConceptRestTemplate conceptRestTemplate;
+
+    @Autowired
     private UtilValues utilValues;
 
     private Button btnNew;
@@ -62,7 +68,11 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
     private TextField nameAccountFilter;
     private ComboBox<String> currencyFilter;
     private ComboBox<Integer> periodFilter;
+    private TextField nameBusinessUnitFilter;
+
     private ComboBox<Integer> cmbPeriod;
+    private IntegerField codeBusinessUnit;
+    private ComboBox<String> nameBusinessUnit;
 
     private ListDataProvider<Account> dataProvider;
     private Binder<Account> binder;
@@ -75,6 +85,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
     private DetailsDrawerHeader detailDrawHeaderCloneAccount;
 
     private Account current;
+    private List<Concept> conceptList;
 
     @Override
     protected void onAttach(AttachEvent attachEvent) {
@@ -91,18 +102,34 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
         btnNew.addClickListener(e -> {
-            if(!cmbPeriod.isEmpty()) {
-                showDetails(new Account());
-            }else{
-                UIUtils.showNotificationType("Seleccione Periodo","alert");
-            }
+            showDetails(new Account());
         });
 
-        cmbPeriod = new ComboBox<>();
-        cmbPeriod.setPlaceholder("Seleccione Periodo");
-        cmbPeriod.setWidth("400px");
-        cmbPeriod.setItems(utilValues.getPeriods());
-        cmbPeriod.setAutoOpen(true);
+//        codeBusinessUnit = new IntegerField();
+//        codeBusinessUnit.setReadOnly(true);
+//
+//        nameBusinessUnit = new ComboBox<>();
+//        nameBusinessUnit.setPlaceholder("Seleccione Unidad de Negocio");
+//        nameBusinessUnit.setWidth("40%");
+//        nameBusinessUnit.setRequired(true);
+//        nameBusinessUnit.setAllowCustomValue(false);
+//        nameBusinessUnit.setRequiredIndicatorVisible(true);
+//        nameBusinessUnit.setItems(conceptList.stream()
+//                .map(Concept::getDescription));
+//
+//        nameBusinessUnit.addValueChangeListener(event -> {
+//            String code = conceptList.stream()
+//                    .filter(e -> e.getDescription().equals(event.getValue()))
+//                    .map(Concept::getCode2)
+//                    .findFirst().get();
+//            codeBusinessUnit.setValue(Integer.valueOf(code));
+//        });
+//
+//        cmbPeriod = new ComboBox<>();
+//        cmbPeriod.setPlaceholder("Seleccione Periodo");
+//        cmbPeriod.setWidth("220px");
+//        cmbPeriod.setItems(utilValues.getPeriods());
+//        cmbPeriod.setAutoOpen(true);
 
         Button btnClone = new Button("Copiar Cuentas");
         btnClone.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
@@ -112,7 +139,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
         HorizontalLayout topLayout = new HorizontalLayout();
         topLayout.setWidth("100%");
-        topLayout.add(cmbPeriod, btnNew, btnClone);
+        topLayout.add(/*cmbPeriod, nameBusinessUnit,codeBusinessUnit,*/ btnNew, btnClone);
         topLayout.setVerticalComponentAlignment(FlexComponent.Alignment.END,btnNew, btnClone);
         topLayout.setSpacing(true);
         topLayout.setPadding(true);
@@ -148,12 +175,15 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
             if (current !=null && binder.writeBeanIfValid(current)){
-                if(current.getPeriod()==null) {
-                    current.setPeriod(cmbPeriod.getValue());
-                }
+//                if(current.getPeriod()==null) {
+//                    current.setPeriod(cmbPeriod.getValue());
+//                    current.setNameBusinessUnit(nameBusinessUnit.getValue());
+//                    current.setCodeBusinessUnit(codeBusinessUnit.getValue());
+//                }
                 Account result = new Account();
                 try {
                     result = restTemplate.add(current);
+                    UIUtils.showNotificationType("Cuenta registrada","success");
                 }catch(Exception excep){
                     String[] re = excep.getMessage().split(",");
                     String[] msg = re[1].split(":");
@@ -192,6 +222,13 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 //            event.getFirstSelectedItem().ifPresent(this::showDetails);
         });
 
+        grid.addColumn(Account::getNameBusinessUnit)
+                .setFlexGrow(1)
+                .setKey("nameBusinessUnit")
+                .setHeader("Unidad de Negocio")
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true);
         grid.addColumn(Account::getNumberAccount)
                 .setFlexGrow(1)
                 .setKey("numberAccount")
@@ -229,6 +266,12 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
 
         HeaderRow hr = grid.appendHeaderRow();
+
+        nameBusinessUnitFilter = new TextField();
+        nameBusinessUnitFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        nameBusinessUnitFilter.setWidthFull();
+        nameBusinessUnitFilter.addValueChangeListener(e -> applyFilter(dataProvider));
+        hr.getCell(grid.getColumnByKey("nameBusinessUnit")).setComponent(nameBusinessUnitFilter);
 
         numberAccountFilter = new TextField();
         numberAccountFilter.setValueChangeMode(ValueChangeMode.EAGER);
@@ -296,6 +339,32 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
     private FormLayout createDetails(Account account){
 
+        codeBusinessUnit = new IntegerField();
+        codeBusinessUnit.setReadOnly(true);
+
+        nameBusinessUnit = new ComboBox<>();
+        nameBusinessUnit.setPlaceholder("Seleccione Unidad de Negocio");
+        nameBusinessUnit.setWidthFull();
+        nameBusinessUnit.setRequired(true);
+        nameBusinessUnit.setAllowCustomValue(false);
+        nameBusinessUnit.setRequiredIndicatorVisible(true);
+        nameBusinessUnit.setItems(conceptList.stream()
+                .map(Concept::getDescription));
+
+        nameBusinessUnit.addValueChangeListener(event -> {
+            String code = conceptList.stream()
+                    .filter(e -> e.getDescription().equals(event.getValue()))
+                    .map(Concept::getCode2)
+                    .findFirst().get();
+            codeBusinessUnit.setValue(Integer.valueOf(code));
+        });
+
+        cmbPeriod = new ComboBox<>();
+        cmbPeriod.setPlaceholder("Seleccione Periodo");
+        cmbPeriod.setWidth("220px");
+        cmbPeriod.setItems(utilValues.getPeriods());
+        cmbPeriod.setAutoOpen(true);
+
         TextField numberAccount = new TextField();
         numberAccount.setWidthFull();
         numberAccount.setRequired(true);
@@ -321,6 +390,16 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         typeAccount.setRequiredIndicatorVisible(true);
 
         binder = new BeanValidationBinder<>(Account.class);
+
+        binder.forField(cmbPeriod)
+                .asRequired("Periodo es requerido")
+                .bind(Account::getPeriod,Account::setPeriod);
+        binder.forField(nameBusinessUnit)
+                .asRequired("Unidad de Negocio es requerida")
+                .bind(Account::getNameBusinessUnit,Account::setNameBusinessUnit);
+        binder.forField(codeBusinessUnit)
+                .asRequired("Codigo Unidad de Negocio es requerido")
+                .bind(Account::getCodeBusinessUnit,Account::setCodeBusinessUnit);
         binder.forField(numberAccount)
                 .asRequired("Número de Cuenta es requerido")
                 .bind(Account::getNumberAccount,Account::setNumberAccount);
@@ -353,8 +432,12 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
                 new FormLayout.ResponsiveStep("21em", 2,
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
 
-        FormLayout.FormItem numberAccountItem = form.addFormItem(numberAccount,"Nro. Cuenta");
-        UIUtils.setColSpan(2,numberAccountItem);
+        FormLayout.FormItem periodItem = form.addFormItem(cmbPeriod,"Periodo");
+        UIUtils.setColSpan(2,periodItem);
+        FormLayout.FormItem nameBusinessUnitItem = form.addFormItem(nameBusinessUnit,"Unidad de Negocio");
+        UIUtils.setColSpan(2,nameBusinessUnitItem);
+        form.addFormItem(codeBusinessUnit,"Cod. Unidad Negocio");
+        form.addFormItem(numberAccount,"Nro. Cuenta");
         FormLayout.FormItem nameAccountItem = form.addFormItem(nameAccount,"Nombre de Cuenta");
         UIUtils.setColSpan(2,nameAccountItem);
         form.addFormItem(currency,"Moneda");
@@ -450,6 +533,9 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
     private void applyFilter(ListDataProvider<Account> dataProvider){
         dataProvider.clearFilters();
+        if(!nameBusinessUnitFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(account -> StringUtils.containsIgnoreCase(account.getNameBusinessUnit(),nameBusinessUnitFilter.getValue().trim()));
+        }
         if(!numberAccountFilter.getValue().trim().equals("")){
             dataProvider.addFilter(account -> StringUtils.containsIgnoreCase(account.getNumberAccount(),numberAccountFilter.getValue().trim()));
         }
@@ -467,5 +553,6 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
     private void getAccounts(){
         accountList = new ArrayList<>(restTemplate.getAll());
         dataProvider = new ListDataProvider<>(accountList);
+        conceptList = conceptRestTemplate.getAgencia();
     }
 }

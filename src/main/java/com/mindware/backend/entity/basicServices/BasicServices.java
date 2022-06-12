@@ -20,6 +20,8 @@ public class BasicServices {
 
     private String description;
 
+    private String instance;
+
     private String period;
 
     private Double amount;

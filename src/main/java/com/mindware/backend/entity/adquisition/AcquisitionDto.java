@@ -29,4 +29,6 @@ public class AcquisitionDto {
     private String state;
 
     private String nameBusinessUnit;
+
+    private Integer codeFatherBusinessUnit;
 }

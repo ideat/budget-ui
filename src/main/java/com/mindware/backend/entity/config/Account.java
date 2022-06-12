@@ -11,6 +11,10 @@ public class Account {
 
     private UUID id;
 
+    private Integer codeBusinessUnit;
+
+    private String nameBusinessUnit;
+
     private String numberAccount;
 
     private String nameAccount;

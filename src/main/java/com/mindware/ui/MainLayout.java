@@ -11,8 +11,10 @@ import com.mindware.ui.views.config.period.PeriodView;
 import com.mindware.ui.views.config.typeChangeCurrency.TypeChangeCurrencyView;
 import com.mindware.ui.views.contract.ContractView;
 import com.mindware.ui.views.invoiceAuthorizer.InvoiceAuthorizerView;
+import com.mindware.ui.views.obligations.ObligationsView;
 import com.mindware.ui.views.recurrentService.RecurrentServiceView;
 import com.mindware.ui.views.reports.expenseAcquisitions.ExpenseAcquisitionsReport;
+import com.mindware.ui.views.reports.investmentBudget.InvestmentBudgetReport;
 import com.mindware.ui.views.supplier.SupplierView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasElement;
@@ -148,11 +150,13 @@ public class MainLayout extends FlexBoxLayout
 
 		menu.addNaviItem(VaadinIcon.GROUP,"Proveedores", SupplierView.class);
 		menu.addNaviItem(VaadinIcon.FILE_TEXT, "Contratos", ContractView.class);
+		menu.addNaviItem(VaadinIcon.INVOICE, "Obligaciones", ObligationsView.class);
 		menu.addNaviItem(VaadinIcon.GLOBE_WIRE, "Servicios Recurrentes", RecurrentServiceView.class);
 		menu.addNaviItem(VaadinIcon.BUILDING, "Servicios Básicos", BasicServicesView.class);
 		menu.addNaviItem(VaadinIcon.STORAGE,"Adquisiciones", AcquisitionView.class);
 		NaviItem reports = menu.addNaviItem(VaadinIcon.RECORDS,"Reportes",null);
 		menu.addNaviItem(reports,"Control Gastos y Adqui.", ExpenseAcquisitionsReport.class);
+		menu.addNaviItem(reports,"Presupuesto Inversiones.", InvestmentBudgetReport.class);
 
 		NaviItem configuration = menu.addNaviItem(VaadinIcon.COGS, "Configuración",null);
 		menu.addNaviItem(configuration,"Parámetros", ParameterView.class);

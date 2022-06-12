@@ -38,4 +38,14 @@ public class ExpenseAcquisitionsRestTemplate {
         ResponseEntity<byte[]> reponse = restTemplate.exchange(uri, HttpMethod.GET,entity,byte[].class);
         return reponse.getBody();
     }
+
+    public byte[] reportBasicRecurrentService(String period){
+        final String uri = url + "/v1/report/basicRecurrentService/basicRecurrentServiceReport";
+        HttpHeaders headers = HeaderJwt.getHeader();
+        headers.set("period",period);
+
+        HttpEntity<byte[]> entity = new HttpEntity<>(headers);
+        ResponseEntity<byte[]> reponse = restTemplate.exchange(uri, HttpMethod.GET,entity,byte[].class);
+        return reponse.getBody();
+    }
 }

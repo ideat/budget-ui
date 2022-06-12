@@ -30,6 +30,9 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
     @Autowired
     private ExpenseAcquisitionsRestTemplate expenseAcquisitionsRestTemplate;
 
+    @Autowired
+    private InvestmentBudgetRestTemplate investmentBudgetRestTemplate;
+
     private byte[] file;
     private String title;
     private String previousPage;
@@ -61,6 +64,16 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
             file = expenseAcquisitionsRestTemplate.reportAcquisitionDetail(period);
             paramPrev.put("period",param.get("period"));
 
+        }else  if(param.get("origin").get(0).equals("basicrecurrent-detail")){
+            String period = param.get("period").get(0);
+            previousPage = param.get("path").get(0);
+            file = expenseAcquisitionsRestTemplate.reportBasicRecurrentService(period);
+            paramPrev.put("period",param.get("period"));
+        }else  if(param.get("origin").get(0).equals("investment-detail")){
+            String year = param.get("year").get(0);
+            previousPage = param.get("path").get(0);
+            file = investmentBudgetRestTemplate.reportInvestmentBudgetDetail(year);
+            paramPrev.put("year",param.get("year"));
         }
 
         if(!error) {

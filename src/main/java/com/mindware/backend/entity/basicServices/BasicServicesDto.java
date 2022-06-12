@@ -22,6 +22,8 @@ public class BasicServicesDto {
 
     private String description;
 
+    private String instance;
+
     private LocalDate paymentDate;
 
     private String period;

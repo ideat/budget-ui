@@ -1,5 +1,4 @@
-package com.mindware.ui.views.reports.expenseAcquisitions;
-
+package com.mindware.ui.views.reports.investmentBudget;
 
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
@@ -26,16 +25,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-@Route(value = "expense-acquisition-report", layout = MainLayout.class)
+@Route(value = "investment-budget-report", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
 @PageTitle("Reportes")
+public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
 
-public class ExpenseAcquisitionsReport extends ViewFrame implements RouterLayout {
-
-    private static final String EXPECTED_ACQUISITION_RESUME ="RESUMEN EJECUTIVO";
-    private static final String ACQUISITION_DETAIL ="DETALLE ADQUISICIONES";
-    private static final String BASICRECURRENT_DETAIL ="DETALLE CONTRATADO";
+    private static final String INVESTMENT_BUDGET_RESUME ="RESUMEN EJECUTIVO";
+    private static final String INVESTMENT_BUSINESS_UNIT ="CONSOLIDADO REGIONALES";
+    private static final String INVESTMENT_BUDGET_DETAIL ="DETALLE INVERSIONES";
 
     @Autowired
     UtilValues utilValues;
@@ -46,53 +43,52 @@ public class ExpenseAcquisitionsReport extends ViewFrame implements RouterLayout
         setViewContent(createContent());
     }
 
-    private Accordion createOptionsReport(){
+    private Accordion createOptionsReport() {
         Accordion optionDetails = new Accordion();
 
-        AccordionPanel resumeExpenseAcquisitionPanel = optionDetails
-                .add(EXPECTED_ACQUISITION_RESUME,layoutResumeExpenseAcquisition( "expense-acquisition","expense-acquisition-report"));
-        AccordionPanel acquisitionDetailPanel = optionDetails
-                .add(ACQUISITION_DETAIL,layoutResumeExpenseAcquisition("acquisition-detail","expense-acquisition-report"));
-        AccordionPanel basicRecurrentDetailPanel = optionDetails
-                .add(BASICRECURRENT_DETAIL,layoutResumeExpenseAcquisition("basicrecurrent-detail","expense-acquisition-report"));
-
+        AccordionPanel resumeInvestmentBudget = optionDetails
+                .add(INVESTMENT_BUDGET_RESUME, layoutInvestmentBusinessUnit( "investment-resume","investment-budget-report"));
+        AccordionPanel investmentBusinessUnit = optionDetails
+                .add(INVESTMENT_BUSINESS_UNIT, layoutInvestmentBusinessUnit("investment-business-unit","investment-budget-report"));
+        AccordionPanel investmentBudgetDetail = optionDetails
+                .add(INVESTMENT_BUDGET_DETAIL, layoutInvestmentBusinessUnit("investment-detail","investment-budget-report"));
 
         return optionDetails;
     }
 
-    private HorizontalLayout layoutResumeExpenseAcquisition(String originReport, String pathPage){
+    private HorizontalLayout layoutInvestmentBusinessUnit(String originReport, String pathPage){
 
-        ComboBox<String> periods = new ComboBox<>();
-        periods.setWidth("200px");
-        periods.setItems(utilValues.getAllPeriods());
-        periods.setAllowCustomValue(false);
-        periods.setClearButtonVisible(true);
-        periods.setPlaceholder("Seleccione Periodo");
+        ComboBox<Integer> years = new ComboBox<>();
+        years.setWidth("200px");
+        years.setItems(utilValues.getAllYears());
+        years.setAllowCustomValue(false);
+        years.setClearButtonVisible(true);
+        years.setPlaceholder("Seleccione Gestión");
 
         Button print = new Button("Imprimir");
         print.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST);
         print.setIcon(VaadinIcon.PRINT.create());
         print.addClickListener(event ->{
 
-            Map<String, List<String>> paramExpenseAcquisition = new HashMap<>();
+            Map<String, List<String>> paramInvestmentBudget = new HashMap<>();
             List<String> origin = new ArrayList<>();
             origin.add(originReport);
             List<String> path = new ArrayList<>();
             path.add(pathPage);
-            List<String> period = new ArrayList<>();
-            period.add(periods.getValue());
+            List<String> year = new ArrayList<>();
+            year.add(years.getValue().toString());
 
-            paramExpenseAcquisition.put("origin",origin);
-            paramExpenseAcquisition.put("path",path);
-            paramExpenseAcquisition.put("period",period);
-            QueryParameters qp = new QueryParameters(paramExpenseAcquisition);
+            paramInvestmentBudget.put("origin",origin);
+            paramInvestmentBudget.put("path",path);
+            paramInvestmentBudget.put("year",year);
+            QueryParameters qp = new QueryParameters(paramInvestmentBudget);
             UI.getCurrent().navigate("report-preview", qp);
 
         });
 
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
-        layout.add(periods,print);
+        layout.add(years,print);
 
         return layout;
     }

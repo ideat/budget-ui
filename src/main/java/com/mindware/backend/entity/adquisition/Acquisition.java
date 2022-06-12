@@ -14,6 +14,8 @@ public class Acquisition {
 
     private Integer acquisitionNumber;
 
+    private Integer codeFatherBusinessUnit;
+
     private Integer codeBusinessUnit;
 
     private String nameBusinessUnit;

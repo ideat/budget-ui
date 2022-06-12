@@ -62,6 +62,18 @@ public class AccountRestTemplate {
         return response.getBody();
     }
 
+    public List<Account> getByCodeBusinessAndPeriod(Integer codeBusinessUnit, Integer period){
+        final String uri = url + "/v1/account/getByCodeBusinessAndPeriod/{codebusinessunit}/{period}";
+        Map<String,Integer> params = new HashMap<>();
+        params.put("period", period);
+        params.put("codebusinessunit",codeBusinessUnit);
+
+        HttpHeaders headers = HeaderJwt.getHeader();
+        HttpEntity<Account[]> entity = new HttpEntity<>(headers);
+        ResponseEntity<Account[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,Account[].class,params);
+        return Arrays.asList(response.getBody());
+    }
+
     public List<Account> cloneAccount(Integer origin, Integer posting){
         final String uri = url + "/v1/account/cloneAccount/{origin}/{destination}";
         Map<String,Integer> params = new HashMap<>();

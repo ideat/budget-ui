@@ -107,6 +107,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private IntegerField numberRequest;
     private TextField businessUnit;
     private IntegerField codeBusinessUnit;
+    private IntegerField codeFatherBusinessUnit;
     private TextField applicant;
     private TextField areaApplicant;
     private ComboBox<String> typeRequest;
@@ -222,6 +223,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private  DatePicker contractRequestDateToLegal;
     private DatePicker contractDeliverContractFromLegal;
     private DatePicker dateSignature;
+
+    private Optional<ExpenseDistribuiteAcquisition> expSearch;
+    private String auxItem;
 
     @SneakyThrows
     @Override
@@ -415,32 +419,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 }
             }
 
-            if(expenseDistribuiteBinder!=null){
-                try {
-                    Double totalDistribuite = expenseDistribuiteList.stream()
-                            .mapToDouble(ExpenseDistribuiteAcquisition::getAmount)
-                            .sum();
-                    Double totalInvoice = invoiceInformationList.stream()
-                            .mapToDouble(InvoiceInformation::getAmount)
-                            .sum();
-                    if(totalDistribuite.doubleValue()!= totalInvoice.doubleValue() ){
-                        UIUtils.showNotificationType("Total facturas no coincide con el monto distrituido","alert");
-                        return;
-                    }
 
-                    String resultVerify = verifyQuantityItems();
-                    if(!resultVerify.equals("")){
-                        UIUtils.showNotificationType(resultVerify,"alert");
-                        return;
-                    }
-
-                    String jsonExpenseDistribuite = mapper.writeValueAsString(expenseDistribuiteList);
-                    current.setExpenseDistribuite(jsonExpenseDistribuite);
-
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
-            }
             if(current.getAcquisitionNumber()!=null){
 
                 binder.forField(quotationRequestDate)
@@ -513,6 +492,33 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         .bind(Acquisition::getDateDeliveryAaaf, Acquisition::setDateDeliveryAaaf);
             }
 
+            if(expenseDistribuiteBinder!=null){
+                try {
+                    Double totalDistribuite = expenseDistribuiteList.stream()
+                            .mapToDouble(ExpenseDistribuiteAcquisition::getAmount)
+                            .sum();
+                    Double totalInvoice = invoiceInformationList.stream()
+                            .mapToDouble(InvoiceInformation::getAmount)
+                            .sum();
+                    if(totalDistribuite.doubleValue()!= totalInvoice.doubleValue() ){
+                        UIUtils.showNotificationType("Total facturas no coincide con el monto distrituido","alert");
+                        return;
+                    }
+
+                    String resultVerify = verifyQuantityItems();
+                    if(!resultVerify.equals("")){
+                        UIUtils.showNotificationType(resultVerify,"alert");
+                        return;
+                    }
+
+                    String jsonExpenseDistribuite = mapper.writeValueAsString(expenseDistribuiteList);
+                    current.setExpenseDistribuite(jsonExpenseDistribuite);
+
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+
             if(binder.writeBeanIfValid(current)){
                 try {
                     if(current.getId()==null){
@@ -543,6 +549,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
+            }else{
+                UIUtils.showNotificationType(binder.getValidationErrorHandler().toString(),"alert");
             }
         });
         footer.addCancelListener(event -> UI.getCurrent().navigate(AcquisitionView.class));
@@ -747,6 +755,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         codeBusinessUnit.setWidth("30%");
         codeBusinessUnit.setReadOnly(true);
 
+        codeFatherBusinessUnit = new IntegerField();
+        codeFatherBusinessUnit.setReadOnly(true);
+
         businessUnit = new TextField();
         businessUnit.setWidth("60%");
         businessUnit.setReadOnly(true);
@@ -781,6 +792,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         binder.forField(codeBusinessUnit)
                 .asRequired("Código Unidad de Negocio es requerido")
                 .bind(Acquisition::getCodeBusinessUnit,Acquisition::setCodeBusinessUnit);
+        binder.forField(codeFatherBusinessUnit)
+                .bind(Acquisition::getCodeFatherBusinessUnit,Acquisition::setCodeFatherBusinessUnit);
         binder.forField(businessUnit)
                 .asRequired("Nombre Unidad de Negocio es requerido")
                         .bind(Acquisition::getNameBusinessUnit,Acquisition::setNameBusinessUnit);
@@ -935,6 +948,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addClickListener(event -> {
             if(currentTab.equals("Solicitud de Compra")) {
                 codeBusinessUnit.setValue(Integer.valueOf(concept.getCode2()));
+                codeFatherBusinessUnit.setValue(Integer.valueOf(concept.getCode()));
                 businessUnit.setValue(concept.getDescription());
                 applicant.clear();
                 areaApplicant.clear();
@@ -942,6 +956,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
                 nameBusinessUnitReceptionInformation.setValue(concept.getDescription());
                 codeBusinessUnitReceptionInformation.setValue(Integer.valueOf(concept.getCode2()));
+
             }
             detailsDrawer.hide();
 
@@ -2266,6 +2281,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     private FormLayout layoutExpenseDistribuite(ExpenseDistribuiteAcquisition expenseDistribuite){
         isFirsLoadExpenseDistribuite = false;
+        expSearch =  Optional.empty();
+        auxItem = "";
+
         List<Item> itemList = new ArrayList<>();
         try {
             itemList = mapper.readValue(current.getItems(), new TypeReference<List<Item>>() {});
@@ -2295,6 +2313,24 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         items.setRequired(true);
         items.setAllowCustomValue(false);
         items.setItems(itemNameList);
+        items.addValueChangeListener(event -> {
+            if(event.getValue()!=null) {
+                if(expenseDistribuite.getNameItem()==null){
+                    auxItem = event.getValue();
+                    if (existBusinessUnitAndItem(expSearch, auxItem)) {
+                        UIUtils.showNotificationType("Unidad de Negocio e Item ya fue agregada", "alert");
+                        items.clear();
+                    }
+                }else
+                if(!expenseDistribuite.getNameItem().equals(event.getValue())) {
+                    auxItem = event.getValue();
+                    if (existBusinessUnitAndItem(expSearch, auxItem)) {
+                        UIUtils.showNotificationType("Unidad de Negocio e Item ya fue agregada", "alert");
+                        items.clear();
+                    }
+                }
+            }
+        });
 
         IntegerField quantity = new IntegerField();
         quantity.setWidthFull();
@@ -2310,15 +2346,15 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         unitBusiness.setErrorMessage("Seleccione la unidad de negocios");
         unitBusiness.addValueChangeListener(event -> {
             if(event.getValue() != null) {
-                Optional<ExpenseDistribuiteAcquisition> opt = expenseDistribuiteList.stream()
+                expSearch = expenseDistribuiteList.stream()
                         .filter(exp -> exp.getCodeBusinessUnit().equals(Integer.parseInt(event.getValue().getCode2())))
                         .findFirst();
                 if(!isFirsLoadExpenseDistribuite) {
-                    if (!opt.isPresent()) {
+                    if(!existBusinessUnitAndItem(expSearch,auxItem)) {
                         codeBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode2()));
                         nameBusinessUnit.setValue(event.getValue().getDescription());
                     } else {
-                        UIUtils.showNotificationType("Unidad de Negocio ya fue agregada", "alert");
+                        UIUtils.showNotificationType("Unidad de Negocio e Item ya fue agregada", "alert");
                         unitBusiness.clear();
                         codeBusinessUnit.clear();
                         nameBusinessUnit.clear();
@@ -2347,10 +2383,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         account.setAutoOpen(true);
         account.setRequired(true);
         account.setAllowCustomValue(false);
-        account.setItems(utilValues.getAccounts());
+        account.setItems(utilValues.getNameAccounts());
         account.addValueChangeListener(event -> {
            subAccount.clear();
-           subAccount.setItems(utilValues.getSubAccounts(event.getValue()));
+           subAccount.setItems(utilValues.getNameSubAccounts(event.getValue()));
         });
 
 
@@ -2447,6 +2483,20 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         return detailsDrawerExpenseDistribuite;
     }
 
+    private boolean existBusinessUnitAndItem(Optional<ExpenseDistribuiteAcquisition> exp, String item){
+        if(!exp.isEmpty() && !item.equals("")){
+            List<ExpenseDistribuiteAcquisition>  res = expenseDistribuiteList.stream()
+                    .filter(i -> i.getCodeBusinessUnit().equals(exp.get().getCodeBusinessUnit()))
+                    .collect(Collectors.toList());
+            return res.stream()
+                    .filter(i -> i.getNameItem().equals(item))
+                    .findFirst().isPresent();
+        }else{
+            return false;
+        }
+
+
+    }
 
     private DetailsDrawer createExpenseDistribuite(){
 

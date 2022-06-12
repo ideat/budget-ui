@@ -86,6 +86,7 @@ public class UtilValues {
         List<Account> accounts = accountRestTemplate.getAllByPeriod(getActivePeriod());
         List<String> accountNumberList = accounts.stream()
                 .map(Account::getNameAccount)
+                .distinct()
                 .collect(Collectors.toList());
         return accountNumberList;
     }
@@ -151,6 +152,16 @@ public class UtilValues {
             }
         }
         return periods;
+    }
+
+    public List<Integer> getAllYears(){
+        List<Period> periodList = periodRestTemplate.getAll();
+        List<Integer> yearPeriods = periodList.stream()
+                .filter(p ->p.getIsOpen().equals(true))
+                .map(Period::getYear)
+                .collect(Collectors.toList());
+
+        return yearPeriods;
     }
 
     public List<String> getNameUserLdapByCriteria(String criteria, String value){
