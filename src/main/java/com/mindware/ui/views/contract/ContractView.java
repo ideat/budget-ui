@@ -1,5 +1,6 @@
 package com.mindware.ui.views.contract;
 
+import com.mindware.backend.entity.config.TypeChangeCurrency;
 import com.mindware.backend.entity.contract.Contract;
 import com.mindware.backend.entity.contract.ContractDto;
 import com.mindware.backend.entity.supplier.Supplier;
@@ -52,6 +53,7 @@ import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,6 +106,10 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
     private DatePicker dateSubscriptionEndFilter;
     private TextField objectContractFilter;
 
+    private DatePicker dateSubscription;
+    private DatePicker finishDate;
+    private DatePicker startDate;
+    private NumberField amountTypeChange;
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
@@ -227,6 +233,11 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
     private FormLayout createDetails(Contract contract){
 
+        amountTypeChange = new NumberField();
+        amountTypeChange.setReadOnly(true);
+        amountTypeChange.setWidthFull();
+        amountTypeChange.setErrorMessage("Tipo Cambio debe ser mayor a 0");
+
         supplier = new ComboBox<>();
         supplier.setWidthFull();
         supplier.setRequired(true);
@@ -237,17 +248,21 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         supplier.setValue(supplierList.stream()
                 .filter(sup -> sup.getId().equals(contract.getIdSupplier())).collect(Collectors.toList()).get(0));
 
-        DatePicker dateSubscription = new DatePicker();
+        dateSubscription = new DatePicker();
         dateSubscription.setLocale(new Locale("es","BO"));
         dateSubscription.setRequired(true);
         dateSubscription.setI18n(UIUtils.spanish());
         dateSubscription.setWidth("90%");
+        dateSubscription.setErrorMessage("Fecha Inicio no puede ser anterior a la Fecha de Subscripción");
 
         ComboBox<String> currency = new ComboBox<>();
         currency.setWidth("40%");
         currency.setItems(utilValues.getValueParameterByCategory("MONEDA"));
         currency.setRequired(true);
-
+        currency.addValueChangeListener(event -> {
+            String type = typeChangeCurrency.getValue()==null?"":typeChangeCurrency.getValue();
+            amountTypeChange.setValue(getAmountTypeChange(type,dateSubscription.getValue().toString(),currency.getValue()));
+        });
 
         NumberField amount = new NumberField();
         amount.setWidth("55%");
@@ -261,17 +276,19 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         TextArea observation = new TextArea();
         observation.setWidthFull();
 
-        DatePicker startDate = new DatePicker();
+        startDate = new DatePicker();
         startDate.setLocale(new Locale("es","BO"));
         startDate.setRequired(true);
         startDate.setWidthFull();
         startDate.setI18n(UIUtils.spanish());
         startDate.addValueChangeListener(event -> binder.validate());
 
-        DatePicker finishDate = new DatePicker();
+        finishDate = new DatePicker();
         finishDate.setLocale(new Locale("es","BO"));
         finishDate.setWidthFull();
         finishDate.setI18n(UIUtils.spanish());
+        finishDate.setClearButtonVisible(true);
+        finishDate.setErrorMessage("Fecha de Inicio no puede ser posterior o igual a la Fecha de Finalización");
         finishDate.addValueChangeListener(event -> binder.validate());
 
         Checkbox tacitReductionClause = new Checkbox("Clausula Tácita Reducción");
@@ -295,12 +312,19 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         paymentFrecuency.setRequired(true);
         paymentFrecuency.setItems(utilValues.getValueParameterByCategory("FRECUENCIA PAGO"));
 
+
+
         typeChangeCurrency = new ComboBox<>();
         typeChangeCurrency.setWidthFull();
         typeChangeCurrency.setItems(utilValues.getValueParameterByCategory("CATEGORIA TIPO CAMBIO"));
         typeChangeCurrency.setAllowCustomValue(false);
         typeChangeCurrency.setErrorMessage("Categoría Tipo Cambio es requerida");
         typeChangeCurrency.setRequired(true);
+        typeChangeCurrency.addValueChangeListener(event ->{
+//            TypeChangeCurrency typeChangeCurrency = typeChangeCurrencyRestTemplate
+//                    .getCurrentTypeChangeCurrencyByValidityStart(event.getValue(),dateSubscription.getValue().toString(),currency.getValue());
+            amountTypeChange.setValue(getAmountTypeChange(event.getValue(),dateSubscription.getValue().toString(),currency.getValue()));
+        });
 
         binder = new BeanValidationBinder<>(Contract.class);
 
@@ -316,13 +340,14 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.forField(objectContract).asRequired("Objeto del Contrato es requerido")
                 .bind(Contract::getObjectContract,Contract::setObjectContract);
         binder.forField(observation).bind(Contract::getObservation,Contract::setObservation);
-        binder.forField(startDate).asRequired("Fecha de Inicio es requerida")
-                .withValidator(d ->  finishDate.getValue()!=null && d.isBefore(finishDate.getValue()),"Fecha de Inicio no puede ser posterior a la Fecha de Finalización")
-                .withValidator(d -> d.isAfter(dateSubscription.getValue()),"Fecha Inicio no puede ser anterior a la Fecha de Subscripción")
+        binder.forField(startDate)
+                .asRequired("Fecha de Inicio es requerida")
+//                .withValidator(d ->  finishDate.getValue()!=null && d.isBefore(finishDate.getValue()),"Fecha de Inicio no puede ser posterior a la Fecha de Finalización")
+                .withValidator(d -> d.isAfter(dateSubscription.getValue()) ||  d.isEqual(dateSubscription.getValue()),"Fecha Inicio no puede ser anterior a la Fecha de Subscripción")
                 .bind(Contract::getStartDate,Contract::setStartDate);
         binder.forField(finishDate)
-                .withValidator(d -> startDate.getValue()!=null && d.isAfter(startDate.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Inicio")
-                .withValidator(d -> dateSubscription.getValue()!=null && d.isAfter(dateSubscription.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Subscripción")
+//                .withValidator(d -> startDate.getValue()!=null && d.isAfter(startDate.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Inicio")
+//                .withValidator(d -> dateSubscription.getValue()!=null && d.isAfter(dateSubscription.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Subscripción")
                 .bind(Contract::getFinishDate,Contract::setFinishDate);
 
         binder.forField(physical).bind(Contract::getPhysical,Contract::setPhysical);
@@ -334,6 +359,11 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.forField(typeChangeCurrency)
 //                .asRequired("Categoría Tipo Cambio es requerida")
                 .bind(Contract::getTypeChangeCurrency, Contract::setTypeChangeCurrency);
+        binder.forField(amountTypeChange)
+                .asRequired("Tipo Cambio es requerido")
+                .withValidator(a -> a.doubleValue()>0.0,"Tipo Cambio debe ser mayor a 0")
+                .bind(Contract::getAmountTypeChange,Contract::setAmountTypeChange);
+
         binder.addStatusChangeListener(event ->{
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
@@ -370,8 +400,18 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         form.addFormItem(paymentFrecuency,"Frecuencia Pago");
 
         form.addFormItem(typeChangeCurrency,"Categoría Tipo Cambio");
-
+        form.addFormItem(amountTypeChange,"Tipo Cambio");
         return form;
+    }
+
+    private Double getAmountTypeChange(String categoryChange, String suscription, String currency){
+        if(!categoryChange.isEmpty() && !suscription.isEmpty() && !currency.isEmpty() ) {
+            TypeChangeCurrency typeChangeCurrency = typeChangeCurrencyRestTemplate
+                    .getCurrentTypeChangeCurrencyByValidityStart(categoryChange, suscription, currency);
+            return typeChangeCurrency.getAmountChange();
+        }
+        return 0.0;
+
     }
 
     private void showDetails(Contract contract){
@@ -393,11 +433,31 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
+
             if (current !=null && binder.writeBeanIfValid(current)){
                 if(current.getCurrency().equals("$us") && (current.getTypeChangeCurrency()==null || current.getTypeChangeCurrency().isEmpty())){
                     typeChangeCurrency.setInvalid(true);
 
                     return;
+                }
+//                if(amountTypeChange.getValue().doubleValue()<= 0.0){
+//                    UIUtils.showNotificationType("Tipo Cambio debe ser mayor a 0","alert");
+//                    amountTypeChange.setInvalid(true);
+//                    return;
+//                }
+                if(!finishDate.isEmpty()){
+                    if(startDate.getValue().isAfter( finishDate.getValue())){
+                        UIUtils.showNotificationType("Fecha de Inicio no puede ser posterior o igual a la Fecha de Finalización","alert");
+                        finishDate.setInvalid(true);
+                        return;
+                    }
+                    if(startDate.getValue().isBefore(dateSubscription.getValue())){
+                        UIUtils.showNotificationType("Fecha Inicio no puede ser anterior a la Fecha de Subscripción","alert");
+                        dateSubscription.setInvalid(true);
+                        return;
+                    }
+
+
                 }
                 current.setIdSupplier(supplier.getValue().getId());
                 Contract result = restTemplate.add(current);
@@ -410,7 +470,9 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
                     grid.getDataProvider().refreshItem(dto);
                 }
                 detailsDrawer.hide();
+                UIUtils.showNotificationType("Datos guardados","success");
             }else{
+
                 UIUtils.dialog("Datos incorrectos, verifique nuevamente","alert").open();
             }
         });

@@ -1097,7 +1097,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         UIUtils.setColSpan(2,quantityItem);
         FormLayout.FormItem descriptionItem = form.addFormItem(description,"Descripción");
         UIUtils.setColSpan(2,descriptionItem);
-
+        itemBinder.readBean(item);
         return form;
     }
 
@@ -1167,6 +1167,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         itemGrid.addColumn(new ComponentRenderer<>(this::createButtonDeleteItem))
                 .setFlexGrow(0)
                 .setAutoWidth(true);
+        itemGrid.addColumn(new ComponentRenderer<>(this::createButtonEditItem))
+                .setFlexGrow(0)
+                .setAutoWidth(true);
 
         layout.add(btnAdd,itemGrid);
         layout.setHorizontalComponentAlignment(FlexComponent.Alignment.END,btnAdd);
@@ -1183,6 +1186,20 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             itemList.remove(item);
             itemGrid.getDataProvider().refreshAll();
             footer.saveState(true); //TODO HABILITAR SI TIENE EL ROL
+        });
+
+        return btn;
+    }
+
+    private Component createButtonEditItem(Item item){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Tooltips.getCurrent().setTooltip(btn,"Editar");
+        btn.addClickListener(event -> {
+            setViewDetailsPosition(Position.RIGHT);
+            setViewDetails(createDetailsDrawerItem());
+            showDetailsItem(item);
         });
 
         return btn;
@@ -2590,7 +2607,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         Button btn = new Button();
         btn.setIcon(VaadinIcon.EDIT.create());
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
-        Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        Tooltips.getCurrent().setTooltip(btn,"Editar");
         btn.addClickListener(event ->{
             setViewDetailsPosition(Position.RIGHT);
             setViewDetails(createDetailsDrawerExpenseDistribuite());

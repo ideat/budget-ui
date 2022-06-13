@@ -1,5 +1,7 @@
 package com.mindware.ui.views.reports.investmentBudget;
 
+import com.mindware.backend.entity.corebank.Concept;
+import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -37,9 +39,15 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
     @Autowired
     UtilValues utilValues;
 
+    @Autowired
+    ConceptRestTemplate conceptRestTemplate;
+
+    private List<Concept> conceptList;
+
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
+        conceptList = conceptRestTemplate.getAgencia();
         setViewContent(createContent());
     }
 
@@ -65,6 +73,11 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
         years.setClearButtonVisible(true);
         years.setPlaceholder("Seleccione Gestión");
 
+        ComboBox<Concept> businessUnit = new ComboBox<>();
+        businessUnit.setWidth("400px");
+        businessUnit.setItems(conceptList);
+        businessUnit.setItemLabelGenerator(Concept::getDescription);
+
         Button print = new Button("Imprimir");
         print.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST);
         print.setIcon(VaadinIcon.PRINT.create());
@@ -78,6 +91,11 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
             List<String> year = new ArrayList<>();
             year.add(years.getValue().toString());
 
+            if(originReport.equals("investment-detail")){
+                List<String> codebusiness = new ArrayList<>();
+                codebusiness.add(businessUnit.getValue().getCode());
+                paramInvestmentBudget.put("codefatherbusinessunit",codebusiness);
+            }
             paramInvestmentBudget.put("origin",origin);
             paramInvestmentBudget.put("path",path);
             paramInvestmentBudget.put("year",year);
@@ -88,8 +106,11 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
 
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
-        layout.add(years,print);
-
+        if(originReport.equals("investment-detail")){
+            layout.add(years,businessUnit,print);
+        }else {
+            layout.add(years, print);
+        }
         return layout;
     }
 

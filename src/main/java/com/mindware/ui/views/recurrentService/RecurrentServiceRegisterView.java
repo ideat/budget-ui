@@ -397,10 +397,10 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 .asRequired("Tipo de documento es requerido")
                 .bind(RecurrentServiceDto::getTypeDocumentReceived,RecurrentServiceDto::setTypeDocumentReceived);
         binder.forField(numberDocumentReceived)
-                .asRequired("Numero Factura/Recibo es requerido")
+                .asRequired("N° Factura/Recibo/CAABS es requerido")
                 .bind(RecurrentServiceDto::getNumberDocumentReceived,RecurrentServiceDto::setNumberDocumentReceived);
         binder.forField(contract)
-                .asRequired("Numero contrato es requerido")
+                .asRequired("N° contrato es requerido")
                 .bind(RecurrentServiceDto::getNumberContract,RecurrentServiceDto::setNumberContract);
         binder.forField(finishDate)
                 .asRequired("Fecha vigencia contrato es requerido")
@@ -453,7 +453,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         form.addFormItem(account,"Cuenta");
         form.addFormItem(subAccount,"Subcuenta");
         form.addFormItem(typeDocumentReceived,"Tipo documento");
-        form.addFormItem(numberDocumentReceived,"Número Factura/Recibo");
+        form.addFormItem(numberDocumentReceived,"N° Factura/Recibo/CAABS");
 
         HorizontalLayout layoutContract = new HorizontalLayout();
         Button btnSearchContract = new Button();
@@ -467,7 +467,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 showSearchContract();
             }
         });
-        FormLayout.FormItem contractItem = form.addFormItem(layoutContract,"Número contrato");
+        FormLayout.FormItem contractItem = form.addFormItem(layoutContract,"N° contrato");
         UIUtils.setColSpan(1,contractItem);
         layoutContract.add(contract,btnSearchContract);
 
@@ -720,6 +720,13 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         unitBusiness.setItemLabelGenerator(Concept::getDescription);
         unitBusiness.setRequiredIndicatorVisible(true);
         unitBusiness.setErrorMessage("Seleccione la unidad de negocios");
+        if(expenseDistribuite.getCodeBusinessUnit()!=null){
+
+            unitBusiness.setValue(conceptList.stream()
+                    .filter(c -> c.getCode2()!=null && c.getCode2().equals(expenseDistribuite.getCodeBusinessUnit().toString()))
+                    .findFirst().get());
+        }
+
         unitBusiness.addValueChangeListener(event -> {
             if(event.getValue() != null) {
                 Optional<ExpenseDistribuite> opt = expenseDistribuiteList.stream()
@@ -776,7 +783,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         FormLayout.FormItem amountItem = form.addFormItem(amount,"Monto");
         UIUtils.setColSpan(2,amountItem);
-
+        expenseDistribuiteBinder.readBean(expenseDistribuite);
         return form;
     }
 
@@ -848,7 +855,9 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         expenseDistribuiteGrid.addColumn(new ComponentRenderer<>(this::createButtonDelete))
                 .setFlexGrow(0)
                 .setAutoWidth(true);
-
+        expenseDistribuiteGrid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
+                .setFlexGrow(0)
+                .setAutoWidth(true);
         layout.add(btnAdd,expenseDistribuiteGrid);
         layout.setHorizontalComponentAlignment(FlexComponent.Alignment.END,btnAdd);
 
@@ -865,9 +874,21 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
             expenseDistribuiteGrid.getDataProvider().refreshAll();
             footer.saveState(true); //TODO HABILITAR SI TIENE EL ROL
         });
+        return btn;
+    }
+
+    private Component createButtonEdit(ExpenseDistribuite expenseDistribuite){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Tooltips.getCurrent().setTooltip(btn,"Editar");
+        btn.addClickListener(event -> {
+            setViewDetailsPosition(Position.RIGHT);
+            setViewDetails(createDetailsDrawerExpenseDistribuite());
+            showDetailsExpenseDistribuite(expenseDistribuite);
+        });
 
         return btn;
-
     }
 
     private RecurrentService fillRecurrentService() throws JsonProcessingException {

@@ -43,4 +43,6 @@ public class Contract {
     private String paymentFrecuency;
 
     private String typeChangeCurrency;
+
+    private Double amountTypeChange;
 }

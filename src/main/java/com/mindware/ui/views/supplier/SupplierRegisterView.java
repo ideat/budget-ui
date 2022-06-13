@@ -31,6 +31,7 @@ import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
@@ -118,6 +119,12 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         nit.setWidthFull();
         nit.setRequiredIndicatorVisible(true);
 
+        TextField idCardLegalRepresentative = new TextField();
+        idCardLegalRepresentative.setWidthFull();
+        idCardLegalRepresentative.setRequired(true);
+        idCardLegalRepresentative.setRequiredIndicatorVisible(true);
+        idCardLegalRepresentative.getElement().getThemeList().add("upper-textfield");
+
         TextField name = new TextField();
         name.setWidthFull();
         name.setRequired(true);
@@ -130,6 +137,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         areaWork.setWidthFull();
         areaWork.setRequired(true);
         areaWork.setItems(utilValues.getValueParameterByCategory("RUBRO"));
+        areaWork.setAllowCustomValue(true);
 
         ComboBox<String> typeBusinessCompany = new ComboBox<>();
         typeBusinessCompany.setWidthFull();
@@ -168,6 +176,9 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         binder.forField(name)
                 .asRequired("Nombre o Razón Social es requerido")
                 .bind(Supplier::getName, Supplier::setName);
+        binder.forField(idCardLegalRepresentative)
+                .asRequired("Carnet Identidad Representante Legal es requerido")
+                .bind(Supplier::getIdCardLegalRepresentative,Supplier::setIdCardLegalRepresentative);
         binder.forField(legalRepresentative)
                 .asRequired("Nombre Representante Legal es requerido")
                 .bind(Supplier::getLegalRepresentative,Supplier::setLegalRepresentative);
@@ -217,6 +228,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
 
         form.addFormItem(nit,"Nro. de NIT");
         form.addFormItem(name,"Nombre o Razón Social");
+        form.addFormItem(idCardLegalRepresentative,"Carnet Identidad");
         form.addFormItem(legalRepresentative,"Representante Legal");
         form.addFormItem(typeBusinessCompany,"Tipo Sociedad");
         form.addFormItem(areaWork,"Rubro");
@@ -247,6 +259,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
                 try {
                     String jsonShareHolders = mapper.writeValueAsString(shareHolderList);
                     suppplier.setShareHolders(jsonShareHolders);
+                    supplier.setIdCardLegalRepresentative(idCardLegalRepresentative.getValue().toUpperCase());
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }

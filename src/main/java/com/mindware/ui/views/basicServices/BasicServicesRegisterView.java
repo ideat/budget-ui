@@ -557,6 +557,12 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         unitBusiness.setItemLabelGenerator(Concept::getDescription);
         unitBusiness.setRequiredIndicatorVisible(true);
         unitBusiness.setErrorMessage("Seleccione la unidad de negocios");
+        if(expenseDistribuite.getCodeBusinessUnit()!=null){
+
+            unitBusiness.setValue(conceptList.stream()
+                    .filter(c -> c.getCode2()!=null && c.getCode2().equals(expenseDistribuite.getCodeBusinessUnit().toString()))
+                    .findFirst().get());
+        }
         unitBusiness.addValueChangeListener(event -> {
             if(event.getValue() != null) {
                 Optional<ExpenseDistribuite> opt = expenseDistribuiteList.stream()
@@ -598,6 +604,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
             footerExpenseDistribuite.saveState(hasChanges && isValid);
         });
 
+        expenseDistribuiteBinder.readBean(expenseDistribuite);
 
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
@@ -685,6 +692,9 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         expenseDistribuiteGrid.addColumn(new ComponentRenderer<>(this::createButtonDelete))
                 .setFlexGrow(0)
                 .setAutoWidth(true);
+        expenseDistribuiteGrid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
+                .setFlexGrow(0)
+                .setAutoWidth(true);
 
         layout.add(btnAdd,expenseDistribuiteGrid);
         layout.setHorizontalComponentAlignment(FlexComponent.Alignment.END,btnAdd);
@@ -703,6 +713,19 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
             footer.saveState(true); //TODO HABILITAR SI TIENE EL ROL
         });
 
+        return btn;
+    }
+
+    private Component createButtonEdit(ExpenseDistribuite expenseDistribuite){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.EDIT.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Tooltips.getCurrent().setTooltip(btn,"Editar");
+        btn.addClickListener(event -> {
+            setViewDetailsPosition(Position.RIGHT);
+            setViewDetails(createDetailsDrawerExpenseDistribuite());
+            showDetailsExpenseDistribuite(expenseDistribuite);
+        });
         return btn;
     }
 

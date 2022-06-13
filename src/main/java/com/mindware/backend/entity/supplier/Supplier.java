@@ -17,6 +17,8 @@ public class Supplier {
 
     private String legalRepresentative;
 
+    private String idCardLegalRepresentative;
+
     private String areaWork; //rubro
 
     private String typeBusinessCompany;//srl, sa, unipersonal

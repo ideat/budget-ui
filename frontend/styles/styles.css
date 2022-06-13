@@ -63,3 +63,7 @@ vaadin-grid-cell-content {
 vaadin-text-field {
   align-self: auto;
 }
+
+input.upper-textfield {
+  text-transform:uppercase;
+}

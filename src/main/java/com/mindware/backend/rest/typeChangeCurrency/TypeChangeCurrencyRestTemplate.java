@@ -5,6 +5,7 @@ import com.mindware.backend.util.HeaderJwt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -48,16 +49,15 @@ public class TypeChangeCurrencyRestTemplate {
         return response.getBody();
     }
 
-    public TypeChangeCurrency getCurrentTypeChangeCurrencyByValidityStart(String name, String validityStarat, String currency){
-        final String uri = url + "/v1/typechangecurrency/getCurrentTypeChangeCurrency/{name}";
-        Map<String,String> params = new HashMap<>();
-        params.put("name",name);
-        params.put("validitystart",validityStarat);
-        params.put("currency",currency);
+    public TypeChangeCurrency getCurrentTypeChangeCurrencyByValidityStart(String name, String validityStart, String currency){
+        final String uri = url + "/v1/typechangecurrency/getCurrentTypeChangeCurrencyByValidityStart";
+        HttpHeaders headers = HeaderJwt.getHeader();
+        headers.set("name",name);
+        headers.set("validitystart",validityStart);
+        headers.set("currency",currency);
 
-
-        HttpEntity<TypeChangeCurrency> entity = new HttpEntity<>(HeaderJwt.getHeader());
-        ResponseEntity<TypeChangeCurrency> response = restTemplate.exchange(uri, HttpMethod.GET,entity,TypeChangeCurrency.class,params);
+        HttpEntity<TypeChangeCurrency> entity = new HttpEntity<>(headers);
+        ResponseEntity<TypeChangeCurrency> response = restTemplate.exchange(uri, HttpMethod.GET,entity,TypeChangeCurrency.class);
         return response.getBody();
     }
 }
