@@ -1,11 +1,14 @@
 package com.mindware.ui.views.acquisition;
 
+import com.mindware.backend.entity.adquisition.Acquisition;
 import com.mindware.backend.entity.adquisition.AcquisitionDto;
 import com.mindware.backend.rest.acquisition.AcquisitionDtoRestTemplate;
+import com.mindware.backend.rest.acquisition.AcquisitionRestTemplate;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
 import com.mindware.ui.layout.size.Top;
+import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.util.css.BoxSizing;
 import com.mindware.ui.views.ViewFrame;
 import com.vaadin.flow.component.*;
@@ -40,6 +43,9 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
 
     @Autowired
     private AcquisitionDtoRestTemplate restTemplate;
+
+    @Autowired
+    private AcquisitionRestTemplate acquisitionRestTemplate;
 
     private ListDataProvider<AcquisitionDto> dataProvider;
 
@@ -158,7 +164,9 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         grid.addColumn(new ComponentRenderer<>(this::createButtonSend))
                 .setFlexGrow(1)
                 .setAutoWidth(true);
-
+        grid.addColumn(new ComponentRenderer<>(this::createButtonRegard))
+                .setFlexGrow(1)
+                .setAutoWidth(true);
         HeaderRow hr = grid.appendHeaderRow();
 
         acquisitionNumberFilter = new TextField();
@@ -243,10 +251,33 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     private Component createButtonSend(AcquisitionDto acquisitionDto){
         Button btn = new Button();
         Tooltips.getCurrent().setTooltip(btn,"Enviar");
-        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
-        btn.setIcon(VaadinIcon.OUTBOX.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        btn.setIcon(VaadinIcon.THUMBS_UP.create());
         btn.addClickListener(event -> {
+            if(acquisitionDto.getDateDeliveryAccounting()==null){
+                UIUtils.showNotificationType("Registre fecha de envio a contabilidad","alert");
+                return;
+            }
+            Acquisition acquisition = new Acquisition();
+            acquisition.setId(acquisitionDto.getId());
+            acquisition.setState("ENVIADO");
+            acquisitionRestTemplate.udpateState(acquisition);
+            UIUtils.showNotificationType("Enviado a Contabilidad","success");
+        });
+        return btn;
+    }
 
+    private Component createButtonRegard(AcquisitionDto acquisitionDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Observado");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
+        btn.addClickListener(event -> {
+            Acquisition acquisition = new Acquisition();
+            acquisition.setId(acquisitionDto.getId());
+            acquisition.setState("OBSERVADO");
+            acquisitionRestTemplate.udpateState(acquisition);
+            UIUtils.showNotificationType("Adquisición Observada","alert");
         });
         return btn;
     }

@@ -52,4 +52,10 @@ public class RecurrentServiceDto {
     private String paymentFrecuency;
 
     private String invoiceAuthorizer;
+
+    private LocalDate dateDeliveryAccounting;
+
+    private String accountingPerson;
+
+    private String state;
 }

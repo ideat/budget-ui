@@ -37,4 +37,10 @@ public class AcquisitionRestTemplate {
         ResponseEntity<Acquisition> response = restTemplate.exchange(uri, HttpMethod.GET,entity,Acquisition.class,params);
         return response.getBody();
     }
+
+    public void udpateState(Acquisition acquisition){
+        final String uri = url + "/v1/acquisition/updateState";
+        HttpEntity<Acquisition> entity = new HttpEntity<>(acquisition,HeaderJwt.getHeader());
+        restTemplate.exchange(uri, HttpMethod.PUT,entity,Acquisition.class);
+    }
 }

@@ -39,4 +39,10 @@ public class RecurrentService {
     private Integer numberContract;//***
 
     private String invoiceAuthorizer;
+
+    private LocalDate dateDeliveryAccounting;
+
+    private String accountingPerson;
+
+    private String state;
 }

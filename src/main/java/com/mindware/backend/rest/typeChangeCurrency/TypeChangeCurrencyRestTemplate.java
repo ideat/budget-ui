@@ -39,10 +39,11 @@ public class TypeChangeCurrencyRestTemplate {
         return Arrays.asList(response.getBody());
     }
 
-    public TypeChangeCurrency getCurrentTypeChangeCurrency(String name){
+    public TypeChangeCurrency getCurrentTypeChangeCurrency(String name, String currency){
         final String uri = url + "/v1/typechangecurrency/getCurrentTypeChangeCurrency/{name}";
         Map<String,String> params = new HashMap<>();
         params.put("name",name);
+        params.put("currency",currency);
 
         HttpEntity<TypeChangeCurrency> entity = new HttpEntity<>(HeaderJwt.getHeader());
         ResponseEntity<TypeChangeCurrency> response = restTemplate.exchange(uri, HttpMethod.GET,entity,TypeChangeCurrency.class,params);

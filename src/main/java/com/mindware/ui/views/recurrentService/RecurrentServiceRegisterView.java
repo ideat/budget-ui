@@ -3,6 +3,8 @@ package com.mindware.ui.views.recurrentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mindware.backend.entity.basicServices.BasicServicesDto;
+import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.contract.Contract;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
@@ -14,6 +16,7 @@ import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.rest.contract.ContractRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
+import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.rest.recurrentService.RecurrentServiceDtoRestTemplate;
 import com.mindware.backend.rest.recurrentService.RecurrentServiceRestTemplate;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
@@ -94,6 +97,9 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     @Autowired
     private InvoiceAuthorizerRestTemplate invoiceAuthorizerTemplate;
 
+    @Autowired
+    private ParameterRestTemplate parameterRestTemplate;
+
     private Supplier supplierSelected;
 
     private ListDataProvider<ExpenseDistribuite> expenseDistribuiteDataProvider;
@@ -132,6 +138,9 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private TextField numberContractFilter;
     private TextField objectContractFilter;
 
+    private DatePicker dateDeliveryAccounting;
+    private ComboBox<String> accountingPerson;
+
     private DatePicker finishDate;
     private  Checkbox tacitReductionClause;
 
@@ -141,6 +150,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
     private FlexBoxLayout contentCreateRecurrentService;
     private FlexBoxLayout contentInvoiceAuthorizer;
+    private FlexBoxLayout contentDeliveyAccounting;
 
     private String currentTab;
 
@@ -153,12 +163,14 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private List<SelectedInvoiceAuthorizer> selectedInvoiceAuthorizerList;
     private ListDataProvider<SelectedInvoiceAuthorizer> selectedInvoiceAuthorizerDataProvider;
 
+
     @Override
     public void setParameter(BeforeEvent beforeEvent, @OptionalParameter String s) {
         mapper = new ObjectMapper();
         Location location = beforeEvent.getLocation();
         QueryParameters queryParameters = location.getQueryParameters();
         param = queryParameters.getParameters();
+        footer = new DetailsDrawerFooter();
 
         if(!param.get("id").get(0).equals("NUEVO")){
             recurrentServiceDto = recurrentServiceDtoRestTemplate.getById(param.get("id").get(0));
@@ -190,21 +202,28 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         contentCreateRecurrentService = (FlexBoxLayout) createContent(createRecurrentServiceDtoForm(recurrentServiceDto));
         contentInvoiceAuthorizer = (FlexBoxLayout) createContent(createGridSelectedInvoiceAuthorizer());
+        contentDeliveyAccounting = (FlexBoxLayout) createContent(createDeliverAccounting());
 
         setViewDetails(createDetailDrawer());
         setViewDetailsPosition(Position.BOTTOM);
 
-        footer = new DetailsDrawerFooter();
+
         footer.addSaveListener(event ->{
             if(binder.writeBeanIfValid(recurrentServiceDto)){
                 if(validateAmountExpenseDistribuite()) {
                     recurrentServiceDto.setIdSupplier(supplierSelected.getId());
                     try {
-                        recurrentServiceRestTemplate.add(fillRecurrentService());
+                        if(recurrentServiceDto.getId()==null){
+                            recurrentServiceDto.setState("INICIADO");
+                        }
+                        RecurrentService recurrentService = recurrentServiceRestTemplate.add(fillRecurrentService());
+                        recurrentServiceDto.setId(recurrentService.getId());
+                        recurrentServiceDto.setInvoiceAuthorizer(recurrentService.getInvoiceAuthorizer());
+
                     } catch (JsonProcessingException e) {
                         e.printStackTrace();
                     }
-                    UI.getCurrent().navigate(RecurrentServiceView.class);
+//                    UI.getCurrent().navigate(RecurrentServiceView.class);
                     UIUtils.showNotificationType("Datos registratos", "success");
                 }else{
                     UIUtils.showNotificationType("Monto distribuido no cuadra con el monto del contrato","alert");
@@ -219,7 +238,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     protected void onAttach(AttachEvent attachEvent){
         super.onAttach(attachEvent);
         initBar();
-        setViewContent(contentCreateRecurrentService,contentInvoiceAuthorizer);
+        setViewContent(contentCreateRecurrentService,contentInvoiceAuthorizer,contentDeliveyAccounting);
         binder.readBean(recurrentServiceDto);
     }
 
@@ -229,6 +248,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         appBar.addTab("Registro Factura Servicio Recurrente");
         appBar.addTab("Autorización Factura");
+        appBar.addTab("Entrega a Contabilidad");
         appBar.centerTabs();
 
         currentTab = "Registro Factura Servicio Recurrente";
@@ -255,17 +275,29 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         }else{
             contentInvoiceAuthorizer.setEnabled(true);
         }
+        if(recurrentServiceDto.getInvoiceAuthorizer()==null || recurrentServiceDto.getInvoiceAuthorizer().equals("[]")){
+            contentDeliveyAccounting.setEnabled(false);
+        }else{
+            contentDeliveyAccounting.setEnabled(true);
+        }
     }
 
     private void hideContent(){
         contentCreateRecurrentService.setVisible(true);
         contentInvoiceAuthorizer.setVisible(false);
+        contentDeliveyAccounting.setVisible(false);
         if(currentTab.equals("Registro Factura Servicio Recurrente")){
             contentCreateRecurrentService.setVisible(true);
             contentInvoiceAuthorizer.setVisible(false);
+            contentDeliveyAccounting.setVisible(false);
         }else if(currentTab.equals("Autorización Factura")){
             contentCreateRecurrentService.setVisible(false);
             contentInvoiceAuthorizer.setVisible(true);
+            contentDeliveyAccounting.setVisible(false);
+        }else if(currentTab.equals("Entrega a Contabilidad")){
+            contentCreateRecurrentService.setVisible(false);
+            contentInvoiceAuthorizer.setVisible(false);
+            contentDeliveyAccounting.setVisible(true);
         }
     }
 
@@ -403,7 +435,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 .asRequired("N° contrato es requerido")
                 .bind(RecurrentServiceDto::getNumberContract,RecurrentServiceDto::setNumberContract);
         binder.forField(finishDate)
-                .asRequired("Fecha vigencia contrato es requerido")
+//                .asRequired("Fecha vigencia contrato es requerido")
                 .bind(RecurrentServiceDto::getFinishDate,RecurrentServiceDto::setFinishDate);
         binder.forField(tacitReductionClause)
                 .bind(RecurrentServiceDto::getTacitReductionClause,RecurrentServiceDto::setTacitReductionClause);
@@ -910,6 +942,9 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         recurrentService.setNumberContract(recurrentServiceDto.getNumberContract());
         String jsonInvoiceAuthorizer = mapper.writeValueAsString(selectedInvoiceAuthorizerList);
         recurrentService.setInvoiceAuthorizer(jsonInvoiceAuthorizer);
+        recurrentService.setState(recurrentServiceDto.getState());
+        recurrentService.setAccountingPerson(recurrentServiceDto.getAccountingPerson());
+        recurrentService.setDateDeliveryAccounting(recurrentServiceDto.getDateDeliveryAccounting());
         return  recurrentService;
     }
 
@@ -1094,5 +1129,63 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         });
 
         return btn;
+    }
+
+    //  DELIVER ACCOUNTING
+
+    private DetailsDrawer createDeliverAccounting(){
+
+        dateDeliveryAccounting = new DatePicker("Fecha de entrega a contabilidad");
+        dateDeliveryAccounting.setWidth("30%");
+        dateDeliveryAccounting.setRequired(true);
+        dateDeliveryAccounting.setClearButtonVisible(true);
+        dateDeliveryAccounting.setRequiredIndicatorVisible(true);
+        dateDeliveryAccounting.setLocale(new Locale("es","BO"));
+
+        accountingPerson = new ComboBox<>("Entregado a");
+        accountingPerson.setWidth("30%");
+        accountingPerson.setRequired(true);
+        accountingPerson.setRequiredIndicatorVisible(true);
+        List<Parameter> parameterList = parameterRestTemplate.getByCategory("CODIGO CARGOS");
+
+        String position = parameterList.stream()
+                .filter(p -> p.getValue().equals("CONTABILIDAD"))
+                .map(Parameter::getDetails)
+                .findFirst().get();
+        List<String> nameUsersPosition =  utilValues.getNameUserLdapByCriteria("title",position);
+        accountingPerson.setItems(nameUsersPosition);
+
+
+//        if(current.getExpenseDistribuite()!=null && !current.getExpenseDistribuite().equals("[]")) {
+        binder.forField(dateDeliveryAccounting)
+//                    .asRequired("Fecha entrega a contabilidad es requerida")
+                .bind(RecurrentServiceDto::getDateDeliveryAccounting, RecurrentServiceDto::setDateDeliveryAccounting);
+        binder.forField(accountingPerson)
+//                    .asRequired("Responsable de contabilidad es requerido")
+                .bind(RecurrentServiceDto::getAccountingPerson, RecurrentServiceDto::setAccountingPerson);
+
+        binder.addStatusChangeListener(event -> {
+            boolean isValid = !event.hasValidationErrors();
+            boolean hasChanges = binder.hasChanges();
+            footer.saveState(isValid && hasChanges);
+        });
+//        }
+        VerticalLayout layout = new VerticalLayout();
+        layout.setWidthFull();
+        layout.add(dateDeliveryAccounting,accountingPerson);
+        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER,dateDeliveryAccounting,
+                accountingPerson);
+
+        DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+        detailsDrawer.setWidthFull();
+        detailsDrawer.setHeight("90%");
+
+        detailsDrawer.setPadding(Left.S, Right.S, Top.S);
+        detailsDrawer.setContent(layout);
+//        detailsDrawer.setFooter(footer);
+        detailsDrawer.show();
+
+
+        return detailsDrawer;
     }
 }

@@ -41,4 +41,12 @@ public class BasicServicesDto {
     private String expenseDistribuite; //json
 
     private String invoiceAuthorizer;
+
+    private LocalDate dateDeliveryAccounting;
+
+    private String accountingPerson;
+
+    private String state;
+
+    private String categoryTypeDocumentReceived;
 }

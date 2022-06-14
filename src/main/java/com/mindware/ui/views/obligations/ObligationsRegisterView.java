@@ -134,8 +134,14 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     private List<SelectedInvoiceAuthorizer> selectedInvoiceAuthorizerList;
     private ListDataProvider<SelectedInvoiceAuthorizer> selectedInvoiceAuthorizerDataProvider;
 
+    private List<String> typeObligationList = new ArrayList<>();
+
     @Override
     public void setParameter(BeforeEvent beforeEvent,  @OptionalParameter String s) {
+        typeObligationList.add("PATENTES");
+        typeObligationList.add("IMPUESTOS");
+        typeObligationList.add("OTRAS TASAS");
+
         mapper = new ObjectMapper();
         Location location = beforeEvent.getLocation();
         QueryParameters queryParameters = location.getQueryParameters();
@@ -264,9 +270,24 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     }
 
     private DetailsDrawer createObligationDtoForm(ObligationsDto obligationsDto){
+        ComboBox<String> period = new ComboBox<>();
+        period.setWidthFull();
+        period.setRequired(true);
+        period.setAllowCustomValue(true);
+
         ComboBox<String> typeObligation = new ComboBox<>();
         typeObligation.setWidthFull();
         typeObligation.setItems(utilValues.getValueParameterByCategory("TIPO OBLIGACION"));
+        typeObligation.addValueChangeListener(event -> {
+            if(typeObligationList.contains(event.getValue()) ){
+                period.clear();
+                period.setItems(utilValues.getAllYearsString());
+            }else{
+                period.clear();
+                period.setItems(utilValues.generatePeriods());
+
+            }
+        });
 
         nameSupplier = new TextField();
         nameSupplier.setWidthFull();
@@ -277,11 +298,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         description.setWidthFull();
         description.setRequired(true);
 
-        ComboBox<String> period = new ComboBox<>();
-        period.setWidthFull();
-        period.setItems(utilValues.generatePeriods());
-        period.setRequired(true);
-        period.setAllowCustomValue(true);
+
 
         DatePicker paymentDate = new DatePicker();
         paymentDate.setWidthFull();

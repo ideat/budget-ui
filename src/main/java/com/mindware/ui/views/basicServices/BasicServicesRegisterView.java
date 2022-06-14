@@ -3,10 +3,12 @@ package com.mindware.ui.views.basicServices;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mindware.backend.entity.adquisition.Acquisition;
 import com.mindware.backend.entity.basicServices.BasicServices;
 import com.mindware.backend.entity.basicServices.BasicServicesDto;
 import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
 import com.mindware.backend.entity.config.BasicServiceProvider;
+import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.invoiceAuthorizer.InvoiceAuthorizer;
 import com.mindware.backend.entity.invoiceAuthorizer.SelectedInvoiceAuthorizer;
@@ -15,6 +17,7 @@ import com.mindware.backend.rest.basicServices.BasicServicesDtoRestTemplate;
 import com.mindware.backend.rest.basicServices.BasicServicesRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
+import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -88,6 +91,9 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
     @Autowired
     private InvoiceAuthorizerRestTemplate invoiceAuthorizerTemplate;
 
+    @Autowired
+    private ParameterRestTemplate parameterRestTemplate;
+
     private BasicServicesDto basicServicesDto;
     private BasicServiceProvider basicServiceProviderSelected;
     private List<ExpenseDistribuite> expenseDistribuiteList;
@@ -120,10 +126,14 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
     private TextField typeServiceProviderFilter;
     private TextField descriptionServiceProviderFilter;
 
+    private DatePicker dateDeliveryAccounting;
+    private ComboBox<String> accountingPerson;
+
     private List<Concept> conceptList;
 
     private FlexBoxLayout contentCreateBasicService;
     private FlexBoxLayout contentInvoiceAuthorizer;
+    private FlexBoxLayout contentDeliveyAccounting;
 
     private String currentTab;
 
@@ -171,6 +181,8 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
         contentCreateBasicService = (FlexBoxLayout) createContent(createBasicServicesDtoForm(basicServicesDto));
         contentInvoiceAuthorizer = (FlexBoxLayout) createContent(createGridSelectedInvoiceAuthorizer());
+        contentDeliveyAccounting = (FlexBoxLayout) createContent(createDeliverAccounting());
+
         setViewDetails(createDetailDrawer());
         setViewDetailsPosition(Position.BOTTOM);
 
@@ -182,12 +194,17 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
                     if(validateAmountExpenseDistribuite()) {
                         try {
-                            basicServicesRestTemplate.add(fillBasicServices());
+                            if(basicServicesDto.getId()==null){
+                                basicServicesDto.setState("INICIADO");
+                            }
+                            BasicServices basicServices  = basicServicesRestTemplate.add(fillBasicServices());
+                            basicServicesDto.setId(basicServices.getId());
+                            basicServicesDto.setInvoiceAuthorizer(basicServices.getInvoiceAuthorizer());
                         } catch (JsonProcessingException e) {
                             e.printStackTrace();
                         }
 
-                        UI.getCurrent().navigate(BasicServicesView.class);
+//                        UI.getCurrent().navigate(BasicServicesView.class);
                         UIUtils.showNotificationType("Datos registratos", "success");
                     }else{
                         UIUtils.showNotificationType("Monto distribuido no cuadra con el monto del contrato","alert");
@@ -209,7 +226,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
     protected void onAttach(AttachEvent attachEvent){
         super.onAttach(attachEvent);
         initBar();
-        setViewContent(contentCreateBasicService, contentInvoiceAuthorizer);
+        setViewContent(contentCreateBasicService, contentInvoiceAuthorizer,contentDeliveyAccounting);
         binder.readBean(basicServicesDto);
 
     }
@@ -220,6 +237,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
         appBar.addTab("Registro Factura Servicio Basico");
         appBar.addTab("Autorización Factura");
+        appBar.addTab("Entrega a Contabilidad");
 
         appBar.centerTabs();
         currentTab = "Registro Factura Servicio Basico";
@@ -244,17 +262,29 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         }else{
             contentInvoiceAuthorizer.setEnabled(true);
         }
+        if(basicServicesDto.getInvoiceAuthorizer()==null || basicServicesDto.getInvoiceAuthorizer().equals("[]")){
+            contentDeliveyAccounting.setEnabled(false);
+        }else{
+            contentDeliveyAccounting.setEnabled(true);
+        }
     }
 
     private void hideContent(){
         contentCreateBasicService.setVisible(true);
         contentInvoiceAuthorizer.setVisible(false);
+        contentDeliveyAccounting.setVisible(false);
         if(currentTab.equals("Registro Factura Servicio Basico")){
             contentCreateBasicService.setVisible(true);
             contentInvoiceAuthorizer.setVisible(false);
+            contentDeliveyAccounting.setVisible(false);
         }else if(currentTab.equals("Autorización Factura")){
             contentCreateBasicService.setVisible(false);
             contentInvoiceAuthorizer.setVisible(true);
+            contentDeliveyAccounting.setVisible(false);
+        }else if(currentTab.equals("Entrega a Contabilidad")){
+            contentCreateBasicService.setVisible(false);
+            contentInvoiceAuthorizer.setVisible(false);
+            contentDeliveyAccounting.setVisible(true);
         }
     }
 
@@ -322,6 +352,11 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         typeDocumentReceived.setItems("FACTURA","RECIBO");
         typeDocumentReceived.setRequired(true);
 
+        ComboBox<String> categoryTypeDocumentReceived = new ComboBox<>();
+        categoryTypeDocumentReceived.setWidthFull();
+        categoryTypeDocumentReceived.setItems("ORIGINAL","FOTOCOPIA");
+        categoryTypeDocumentReceived.setAllowCustomValue(false);
+
         IntegerField numberDocumentReceived = new IntegerField();
         numberDocumentReceived.setWidthFull();
         numberDocumentReceived.setRequiredIndicatorVisible(true);
@@ -358,6 +393,9 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         binder.forField(typeDocumentReceived)
                 .asRequired("Tipo documento es requerido")
                 .bind(BasicServicesDto::getTypeDocumentReceived, BasicServicesDto::setTypeDocumentReceived);
+        binder.forField(categoryTypeDocumentReceived)
+                .asRequired("Categoria Tipo Documento es requerido")
+                .bind(BasicServicesDto::getCategoryTypeDocumentReceived, BasicServicesDto::setCategoryTypeDocumentReceived);
         binder.forField(numberDocumentReceived)
                 .asRequired("Numero de Factura/Recibo es requerido")
                 .bind(BasicServicesDto::getNumberDocumentReceived, BasicServicesDto::setNumberDocumentReceived);
@@ -747,6 +785,10 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         basicServices.setExpenseDistribuite(json);
         String jsonInvoiceAuthorizer = mapper.writeValueAsString(selectedInvoiceAuthorizerList);
         basicServices.setInvoiceAuthorizer(jsonInvoiceAuthorizer);
+        basicServices.setAccountingPerson(basicServicesDto.getAccountingPerson());
+        basicServices.setDateDeliveryAccounting(basicServicesDto.getDateDeliveryAccounting());
+        basicServices.setCategoryTypeDocumentReceived(basicServicesDto.getCategoryTypeDocumentReceived());
+        basicServices.setState(basicServicesDto.getState());
         return basicServices;
     }
 
@@ -932,5 +974,63 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         });
 
         return btn;
+    }
+
+    //  DELIVER ACCOUNTING
+
+    private DetailsDrawer createDeliverAccounting(){
+
+        dateDeliveryAccounting = new DatePicker("Fecha de entrega a contabilidad");
+        dateDeliveryAccounting.setWidth("30%");
+        dateDeliveryAccounting.setRequired(true);
+        dateDeliveryAccounting.setClearButtonVisible(true);
+        dateDeliveryAccounting.setRequiredIndicatorVisible(true);
+        dateDeliveryAccounting.setLocale(new Locale("es","BO"));
+
+        accountingPerson = new ComboBox<>("Entregado a");
+        accountingPerson.setWidth("30%");
+        accountingPerson.setRequired(true);
+        accountingPerson.setRequiredIndicatorVisible(true);
+        List<Parameter> parameterList = parameterRestTemplate.getByCategory("CODIGO CARGOS");
+
+        String position = parameterList.stream()
+                .filter(p -> p.getValue().equals("CONTABILIDAD"))
+                .map(Parameter::getDetails)
+                .findFirst().get();
+        List<String> nameUsersPosition =  utilValues.getNameUserLdapByCriteria("title",position);
+        accountingPerson.setItems(nameUsersPosition);
+
+
+//        if(current.getExpenseDistribuite()!=null && !current.getExpenseDistribuite().equals("[]")) {
+        binder.forField(dateDeliveryAccounting)
+//                    .asRequired("Fecha entrega a contabilidad es requerida")
+                .bind(BasicServicesDto::getDateDeliveryAccounting, BasicServicesDto::setDateDeliveryAccounting);
+        binder.forField(accountingPerson)
+//                    .asRequired("Responsable de contabilidad es requerido")
+                .bind(BasicServicesDto::getAccountingPerson, BasicServicesDto::setAccountingPerson);
+
+        binder.addStatusChangeListener(event -> {
+            boolean isValid = !event.hasValidationErrors();
+            boolean hasChanges = binder.hasChanges();
+            footer.saveState(isValid && hasChanges);
+        });
+//        }
+        VerticalLayout layout = new VerticalLayout();
+        layout.setWidthFull();
+        layout.add(dateDeliveryAccounting,accountingPerson);
+        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER,dateDeliveryAccounting,
+                accountingPerson);
+
+        DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+        detailsDrawer.setWidthFull();
+        detailsDrawer.setHeight("90%");
+
+        detailsDrawer.setPadding(Left.S, Right.S, Top.S);
+        detailsDrawer.setContent(layout);
+//        detailsDrawer.setFooter(footer);
+        detailsDrawer.show();
+
+
+        return detailsDrawer;
     }
 }

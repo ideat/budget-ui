@@ -32,9 +32,17 @@ public class BasicServices {
 
     private String typeDocumentReceived;
 
+    private String categoryTypeDocumentReceived;
+
     private Integer numberDocumentReceived;
 
     private String expenseDistribuite; //json
 
     private String invoiceAuthorizer;
+
+    private LocalDate dateDeliveryAccounting;
+
+    private String accountingPerson;
+
+    private String state;
 }

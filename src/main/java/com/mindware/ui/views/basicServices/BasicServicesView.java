@@ -1,11 +1,14 @@
 package com.mindware.ui.views.basicServices;
 
+import com.mindware.backend.entity.basicServices.BasicServices;
 import com.mindware.backend.entity.basicServices.BasicServicesDto;
 import com.mindware.backend.rest.basicServices.BasicServicesDtoRestTemplate;
+import com.mindware.backend.rest.basicServices.BasicServicesRestTemplate;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
 import com.mindware.ui.layout.size.Top;
+import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.util.css.BoxSizing;
 import com.mindware.ui.views.ViewFrame;
 import com.vaadin.flow.component.*;
@@ -35,6 +38,9 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
 
     @Autowired
     private BasicServicesDtoRestTemplate restTemplate;
+
+    @Autowired
+    private BasicServicesRestTemplate basicServicesRestTemplate;
 
     private ListDataProvider<BasicServicesDto> dataProvider;
 
@@ -143,6 +149,12 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
                 .setFlexGrow(0)
                 .setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonSend))
+                .setFlexGrow(0)
+                .setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonRegard))
+                .setFlexGrow(0)
+                .setAutoWidth(true);
 
         HeaderRow hr = grid.appendHeaderRow();
 
@@ -198,6 +210,39 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
         return btn;
     }
 
+    private Component createButtonSend(BasicServicesDto basicServicesDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Enviar Contabilidad");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        btn.setIcon(VaadinIcon.THUMBS_UP.create());
+        btn.addClickListener(event -> {
+            if(basicServicesDto.getDateDeliveryAccounting()==null){
+                UIUtils.showNotificationType("Registre fecha de envio a contabilidad","alert");
+                return;
+            }
+            BasicServices basicServices = new BasicServices();
+            basicServices.setId(basicServicesDto.getId());
+            basicServices.setState("ENVIADO");
+            basicServicesRestTemplate.updateState(basicServices);
+            UIUtils.showNotificationType("Enviado a Contabilidad","success");
+        });
+        return btn;
+    }
+
+    private Component createButtonRegard(BasicServicesDto basicServicesDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Observado");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
+        btn.addClickListener(event -> {
+            BasicServices basicServices = new BasicServices();
+            basicServices.setId(basicServicesDto.getId());
+            basicServices.setState("OBSERVADO");
+            basicServicesRestTemplate.updateState(basicServices);
+            UIUtils.showNotificationType("Servicio Observado","success");
+        });
+        return btn;
+    }
 
     private void applyFilter(ListDataProvider<BasicServicesDto> dataProvider){
         dataProvider.clearFilters();

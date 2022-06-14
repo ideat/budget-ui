@@ -1,12 +1,15 @@
 package com.mindware.ui.views.recurrentService;
 
 import com.mindware.backend.entity.contract.Contract;
+import com.mindware.backend.entity.recurrentService.RecurrentService;
 import com.mindware.backend.entity.recurrentService.RecurrentServiceDto;
 import com.mindware.backend.rest.recurrentService.RecurrentServiceDtoRestTemplate;
+import com.mindware.backend.rest.recurrentService.RecurrentServiceRestTemplate;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
 import com.mindware.ui.layout.size.Top;
+import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.util.css.BoxSizing;
 import com.mindware.ui.views.ViewFrame;
 import com.vaadin.flow.component.*;
@@ -37,6 +40,9 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
 
     @Autowired
     RecurrentServiceDtoRestTemplate restTemplate;
+
+    @Autowired
+    private RecurrentServiceRestTemplate recurrentServiceRestTemplate;
 
     private ListDataProvider<RecurrentServiceDto> dataProvider;
 
@@ -145,6 +151,12 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
                 .setFlexGrow(1)
                 .setTextAlign(ColumnTextAlign.START);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonSend))
+                .setFlexGrow(1)
+                .setTextAlign(ColumnTextAlign.START);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonRegard))
+                .setFlexGrow(1)
+                .setTextAlign(ColumnTextAlign.START);
 
         HeaderRow hr = grid.appendHeaderRow();
 
@@ -191,6 +203,40 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
             UI.getCurrent().navigate("recurrent-service-register",qp);
         });
 
+        return btn;
+    }
+
+    private Component createButtonSend(RecurrentServiceDto recurrentServiceDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Enviar Contabilidad");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        btn.setIcon(VaadinIcon.THUMBS_UP.create());
+        btn.addClickListener(event -> {
+            if(recurrentServiceDto.getDateDeliveryAccounting()==null){
+                UIUtils.showNotificationType("Registre fecha de envio a contabilidad","alert");
+                return;
+            }
+            RecurrentService recurrentService = new RecurrentService();
+            recurrentService.setId(recurrentServiceDto.getId());
+            recurrentService.setState("ENVIADO");
+            recurrentServiceRestTemplate.updateState(recurrentService);
+            UIUtils.showNotificationType("Enviado a Contabilidad","success");
+        });
+        return btn;
+    }
+
+    private Component createButtonRegard(RecurrentServiceDto recurrentServiceDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Observado");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
+        btn.addClickListener(event -> {
+            RecurrentService recurrentService = new RecurrentService();
+            recurrentService.setId(recurrentServiceDto.getId());
+            recurrentService.setState("OBSERVADO");
+            recurrentServiceRestTemplate.updateState(recurrentService);
+            UIUtils.showNotificationType("Servicio Observado","success");
+        });
         return btn;
     }
 

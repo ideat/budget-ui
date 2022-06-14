@@ -17,15 +17,13 @@ import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Route(value = "investment-budget-report", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
@@ -73,10 +71,17 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
         years.setClearButtonVisible(true);
         years.setPlaceholder("Seleccione Gestión");
 
+        DatePicker cutOffDate = new DatePicker();
+        cutOffDate.setWidth("300px");
+        cutOffDate.setLocale(new Locale("es","BO"));
+        cutOffDate.setClearButtonVisible(true);
+        cutOffDate.setPlaceholder("Fecha corte");
+
         ComboBox<Concept> businessUnit = new ComboBox<>();
         businessUnit.setWidth("400px");
         businessUnit.setItems(conceptList);
         businessUnit.setItemLabelGenerator(Concept::getDescription);
+        businessUnit.setPlaceholder("Seleccione Unidad de Negocio");
 
         Button print = new Button("Imprimir");
         print.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST);
@@ -90,11 +95,16 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
             path.add(pathPage);
             List<String> year = new ArrayList<>();
             year.add(years.getValue().toString());
+            List<String> cutOffDateParam = new ArrayList<>();
+            cutOffDateParam.add(cutOffDate.getValue().toString());
+            paramInvestmentBudget.put("cutoffdate",cutOffDateParam);
 
             if(originReport.equals("investment-detail")){
                 List<String> codebusiness = new ArrayList<>();
                 codebusiness.add(businessUnit.getValue().getCode());
+
                 paramInvestmentBudget.put("codefatherbusinessunit",codebusiness);
+
             }
             paramInvestmentBudget.put("origin",origin);
             paramInvestmentBudget.put("path",path);
@@ -107,9 +117,9 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
         if(originReport.equals("investment-detail")){
-            layout.add(years,businessUnit,print);
+            layout.add(years, cutOffDate, businessUnit,print);
         }else {
-            layout.add(years, print);
+            layout.add(years, cutOffDate, print);
         }
         return layout;
     }

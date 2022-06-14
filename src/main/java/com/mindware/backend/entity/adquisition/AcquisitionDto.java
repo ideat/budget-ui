@@ -31,4 +31,8 @@ public class AcquisitionDto {
     private String nameBusinessUnit;
 
     private Integer codeFatherBusinessUnit;
+
+    private LocalDate dateDeliveryAccounting;
+
+    private String accountingPerson;
 }

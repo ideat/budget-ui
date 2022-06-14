@@ -19,11 +19,12 @@ public class InvestmentBudgetRestTemplate {
     @Value("${url_budget}")
     private String url;
 
-    public byte[] reportInvestmentBudgetDetail(String year, String codeFatherBusinessUnit){
+    public byte[] reportInvestmentBudgetDetail(String year, String codeFatherBusinessUnit, String cutOffDate){
         final String uri = url + "/v1/report/investementbudgetreport/investmentBudgetDetail";
         HttpHeaders headers = HeaderJwt.getHeader();
         headers.set("year",year);
         headers.set("codefatherbusinessunit",codeFatherBusinessUnit);
+        headers.set("cutoffdate", cutOffDate);
 
         HttpEntity<byte[]> entity = new HttpEntity<>(headers);
         ResponseEntity<byte[]> reponse = restTemplate.exchange(uri, HttpMethod.GET,entity,byte[].class);

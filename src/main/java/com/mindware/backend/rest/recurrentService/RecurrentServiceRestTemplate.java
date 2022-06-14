@@ -48,5 +48,10 @@ public class RecurrentServiceRestTemplate {
         return response.getBody();
     }
 
+    public void updateState(RecurrentService recurrentService){
+        final String uri = url + "/v1/recurrent-service/updateState";
+        HttpEntity<RecurrentService> entity = new HttpEntity<>(recurrentService, HeaderJwt.getHeader());
+        restTemplate.exchange(uri,HttpMethod.PUT,entity,RecurrentService.class);
+    }
 
 }

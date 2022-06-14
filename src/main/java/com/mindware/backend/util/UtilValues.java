@@ -36,7 +36,7 @@ public class UtilValues {
     @Autowired
     private TypeChangeCurrencyRestTemplate typeChangeCurrencyRestTemplate;
 
-    private String[] months = {"ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO"
+    private final String[] months = {"ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO"
             ,"JULIO","AGOSTO","SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE","DICIEMBRE"};
 
     public List<String> getValueParameterByCategory(String category){
@@ -57,9 +57,9 @@ public class UtilValues {
     }
 
     public List<Integer> getPeriods(){
-        List<Integer> periods = new ArrayList<>();
+
         List<Period> periodList = periodRestTemplate.getAll();
-        periods = periodList.stream()
+        List<Integer> periods = periodList.stream()
                 .map(Period::getYear)
                 .collect(Collectors.toList());
         return periods;
@@ -164,6 +164,17 @@ public class UtilValues {
         return yearPeriods;
     }
 
+    public List<String> getAllYearsString(){
+        List<Period> periodList = periodRestTemplate.getAll();
+        List<String> yearPeriods = periodList.stream()
+                .filter(p ->p.getIsOpen().equals(true))
+                .map(Period::getYear)
+                .map(String::valueOf)
+                .collect(Collectors.toList());
+
+        return yearPeriods;
+    }
+
     public List<String> getNameUserLdapByCriteria(String criteria, String value){
         List<UserLdapDto> userLdapDtoList = dataLdapRestTemplate.getUserByCriteria(criteria,value);
         List<String> nameUsers = userLdapDtoList.stream()
@@ -172,8 +183,8 @@ public class UtilValues {
         return nameUsers;
     }
 
-    public TypeChangeCurrency getCurrentTypeChangeCurrency(String name){
-        return typeChangeCurrencyRestTemplate.getCurrentTypeChangeCurrency(name);
+    public TypeChangeCurrency getCurrentTypeChangeCurrency(String name, String currency){
+        return typeChangeCurrencyRestTemplate.getCurrentTypeChangeCurrency(name,currency);
 
     }
 
