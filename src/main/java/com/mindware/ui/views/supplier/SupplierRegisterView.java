@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindware.backend.entity.supplier.ShareHolder;
 import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -210,7 +211,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         binder.addStatusChangeListener(event -> {
            boolean isValid = !event.hasValidationErrors();
            boolean hasChanges = binder.hasChanges();
-           footerShareHolder.saveState(isValid && hasChanges);
+           footerShareHolder.saveState(isValid && hasChanges && GrantOptions.grantedOption("Proveedores"));
         });
 
         FormLayout form = new FormLayout();

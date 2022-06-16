@@ -52,6 +52,7 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
     private TextField typeBasicServiceFilter;
     private TextField periodFilter;
     private TextField typeDocumentReceivedFilter;
+    private TextField stateFilter;
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
@@ -132,12 +133,12 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
-        grid.addColumn(BasicServicesDto::getNumberDocumentReceived)
-                .setFlexGrow(1)
-                .setHeader("Nro. Factura/Recibo")
-                .setSortable(true)
-                .setAutoWidth(true)
-                .setResizable(true);
+//        grid.addColumn(BasicServicesDto::getNumberDocumentReceived)
+//                .setFlexGrow(1)
+//                .setHeader("Nro. Factura/Recibo")
+//                .setSortable(true)
+//                .setAutoWidth(true)
+//                .setResizable(true);
         grid.addColumn(new NumberRenderer<>(BasicServicesDto::getAmount,
                         " %(,.2f",
                         Locale.US, "0.00") )
@@ -146,14 +147,24 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
+        grid.addColumn(BasicServicesDto::getState)
+                .setFlexGrow(1)
+                .setKey("state")
+                .setHeader("Estado")
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
-                .setFlexGrow(0)
+                .setFlexGrow(1)
                 .setAutoWidth(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonSend))
-                .setFlexGrow(0)
+                .setFlexGrow(1)
                 .setAutoWidth(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonRegard))
-                .setFlexGrow(0)
+                .setFlexGrow(1)
+                .setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonFinish))
+                .setFlexGrow(1)
                 .setAutoWidth(true);
 
         HeaderRow hr = grid.appendHeaderRow();
@@ -190,6 +201,15 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
         });
         hr.getCell(grid.getColumnByKey("typeDocumentReceived")).setComponent(typeDocumentReceivedFilter);
 
+        stateFilter = new TextField();
+        stateFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        stateFilter.setWidthFull();
+        stateFilter.addValueChangeListener(e -> {
+            applyFilter(dataProvider);
+        });
+        hr.getCell(grid.getColumnByKey("state")).setComponent(stateFilter);
+
+
         return grid;
     }
 
@@ -212,12 +232,12 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
 
     private Component createButtonSend(BasicServicesDto basicServicesDto){
         Button btn = new Button();
-        Tooltips.getCurrent().setTooltip(btn,"Enviar Contabilidad");
+        Tooltips.getCurrent().setTooltip(btn,"Enviar");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btn.setIcon(VaadinIcon.THUMBS_UP.create());
         btn.addClickListener(event -> {
-            if(basicServicesDto.getDateDeliveryAccounting()==null){
-                UIUtils.showNotificationType("Registre fecha de envio a contabilidad","alert");
+            if(basicServicesDto.getInvoiceAuthorizer()==null || basicServicesDto.getInvoiceAuthorizer().equals("[]")){
+                UIUtils.showNotificationType("Registre Autorizador de la factura","alert");
                 return;
             }
             BasicServices basicServices = new BasicServices();
@@ -235,12 +255,40 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
         btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
         btn.addClickListener(event -> {
+            if(!basicServicesDto.getState().equals("ENVIADO") || !basicServicesDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADA o FINALIZADO","alert");
+                return;
+            }
             BasicServices basicServices = new BasicServices();
             basicServices.setId(basicServicesDto.getId());
             basicServices.setState("OBSERVADO");
             basicServicesRestTemplate.updateState(basicServices);
             UIUtils.showNotificationType("Servicio Observado","success");
         });
+        return btn;
+    }
+
+    private Component createButtonFinish(BasicServicesDto basicServicesDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Finalizar");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
+        btn.setIcon(VaadinIcon.LOCK.create());
+        btn.addClickListener(event -> {
+            if(!basicServicesDto.getState().equals("ENVIADO")){
+                UIUtils.showNotificationType("No puede finalizar sin estar ENVIADO","alert");
+                return;
+            }
+            if(basicServicesDto.getDateDeliveryAccounting()==null){
+                UIUtils.showNotificationType("No puede finalizar sin enviar a Contabilidad","alert");
+                return;
+            }
+            BasicServices basicServices = new BasicServices();
+            basicServices.setId(basicServicesDto.getId());
+            basicServices.setState("FINALIZADO");
+            basicServicesRestTemplate.updateState(basicServices);
+            UIUtils.showNotificationType("Servicio Finalizado","success");
+        });
+
         return btn;
     }
 
@@ -267,6 +315,11 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
                             typeDocumentReceivedFilter.getValue().trim()));
         }
 
+        if(!stateFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(basicServicesDto ->
+                    StringUtils.containsIgnoreCase(basicServicesDto.getState(),
+                            stateFilter.getValue().trim()));
+        }
     }
 
     private void getListBasicServices(){

@@ -1,0 +1,200 @@
+[
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Proveedores",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Contratos",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Obligaciones",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Servicios Recurrentes",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Servicios Básicos",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Adquisiciones",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Reportes",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Control Gastos y Adqui.",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Presupuesto Inversiones",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Configuración",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Parámetros",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Niveles Aut. Adquisición",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Autorizadores de Facturas",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Cuentas",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Servicios Básicos",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Periodos",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
+    "name": "Tipo Cambio",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "true",
+    "description": "",
+    "name": "Roles",
+    "read": "true",
+    "write": "true",
+    "send": "true",
+    "observed":"true",
+    "finish":"true",
+    "accounting":"true"
+  }
+]

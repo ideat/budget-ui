@@ -446,7 +446,7 @@ public class UIUtils {
 	}
 
 	public static void showNotificationType(String text, String type){
-		Notification notification = Notification.show(text, 4000, Notification.Position.TOP_CENTER);
+		Notification notification = Notification.show(text, 6000, Notification.Position.TOP_CENTER);
 		switch (type){
 			case "success":
 				notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);

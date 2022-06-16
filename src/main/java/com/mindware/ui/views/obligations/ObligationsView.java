@@ -1,12 +1,15 @@
 package com.mindware.ui.views.obligations;
 
 import com.mindware.backend.entity.basicServices.BasicServicesDto;
+import com.mindware.backend.entity.obligations.Obligations;
 import com.mindware.backend.entity.obligations.ObligationsDto;
 import com.mindware.backend.rest.obligations.ObligationsDtoRestTemplate;
+import com.mindware.backend.rest.obligations.ObligationsRestTemplate;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
 import com.mindware.ui.layout.size.Top;
+import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.util.css.BoxSizing;
 import com.mindware.ui.views.ViewFrame;
 import com.vaadin.flow.component.*;
@@ -37,6 +40,9 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
     @Autowired
     private ObligationsDtoRestTemplate restTemplate;
 
+    @Autowired
+    private ObligationsRestTemplate obligationsRestTemplate;
+
     private ListDataProvider<ObligationsDto> dataProvider;
 
     private List<ObligationsDto> obligationsDtoList;
@@ -47,6 +53,7 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
     private TextField typeObligationFilter;
     private TextField periodFilter;
     private TextField typeDocumentReceivedFilter;
+    private TextField stateFilter;
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
@@ -128,12 +135,12 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
-        grid.addColumn(ObligationsDto::getNumberDocumentReceived)
-                .setFlexGrow(1)
-                .setHeader("Nro. Factura/CAABS")
-                .setSortable(true)
-                .setAutoWidth(true)
-                .setResizable(true);
+//        grid.addColumn(ObligationsDto::getNumberDocumentReceived)
+//                .setFlexGrow(1)
+//                .setHeader("Nro. Factura/CAABS")
+//                .setSortable(true)
+//                .setAutoWidth(true)
+//                .setResizable(true);
         grid.addColumn(new NumberRenderer<>(ObligationsDto::getAmount,
                 " %(,.2f",
                 Locale.US, "0.00") )
@@ -142,8 +149,24 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
+        grid.addColumn(ObligationsDto::getState)
+                .setFlexGrow(1)
+                .setKey("state")
+                .setHeader("Estado")
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
-                .setFlexGrow(0)
+                .setFlexGrow(1)
+                .setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonSend))
+                .setFlexGrow(1)
+                .setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonRegard))
+                .setFlexGrow(1)
+                .setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonFinish))
+                .setFlexGrow(1)
                 .setAutoWidth(true);
 
         HeaderRow hr = grid.appendHeaderRow();
@@ -181,6 +204,14 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
         });
         hr.getCell(grid.getColumnByKey("typeDocumentReceived")).setComponent(typeDocumentReceivedFilter);
 
+        stateFilter = new TextField();
+        stateFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        stateFilter.setWidthFull();
+        stateFilter.addValueChangeListener(e -> {
+            applyFilter(dataProvider);
+        });
+        hr.getCell(grid.getColumnByKey("state")).setComponent(stateFilter);
+
         return grid;
     }
 
@@ -201,27 +232,108 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
         return btn;
     }
 
+    private Component createButtonSend(ObligationsDto obligationsDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Enviar");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        btn.setIcon(VaadinIcon.THUMBS_UP.create());
+        btn.addClickListener(event -> {
+            if(obligationsDto.getInvoiceAuthorizer()==null || obligationsDto.getInvoiceAuthorizer().equals("[]")){
+                UIUtils.showNotificationType("Registre Autorizador de la factura","alert");
+                return;
+            }
+            Obligations obligations = new Obligations();
+            obligations.setId(obligationsDto.getId());
+            obligations.setState("ENVIADO");
+            obligationsRestTemplate.updateSate(obligations);
+            obligationsDto.setState("ENVIADO");
+            obligationsDtoList.removeIf(ob -> ob.getId().equals(obligationsDto.getId()));
+            obligationsDtoList.add(obligationsDto);
+            obligationsDtoList.sort(Comparator.comparing(ObligationsDto::getPaymentDate));
+            dataProvider.refreshAll();
+            UIUtils.showNotificationType("Enviado a Contabilidad","success");
+        });
+        return btn;
+    }
+
+    private Component createButtonRegard(ObligationsDto obligationsDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Observar");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
+        btn.addClickListener(event -> {
+            if(obligationsDto.getState().equals("ENVIADO") || !obligationsDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADA o FINALIZADO","alert");
+                return;
+            }
+            Obligations obligations = new Obligations();
+            obligations.setId(obligationsDto.getId());
+            obligations.setState("OBSERVADO");
+            obligationsRestTemplate.updateSate(obligations);
+            obligationsDto.setState("OBSERVADO");
+            obligationsDtoList.removeIf(ob -> ob.getId().equals(obligationsDto.getId()));
+            obligationsDtoList.add(obligationsDto);
+            obligationsDtoList.sort(Comparator.comparing(ObligationsDto::getPaymentDate));
+            dataProvider.refreshAll();
+            UIUtils.showNotificationType("Obligación Observada","success");
+        });
+        return btn;
+    }
+
+    private Component createButtonFinish(ObligationsDto obligationsDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Finalizar");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
+        btn.setIcon(VaadinIcon.LOCK.create());
+        btn.addClickListener(event -> {
+            if(!obligationsDto.getState().equals("ENVIADO")){
+                UIUtils.showNotificationType("No puede finalizar sin estar ENVIADO","alert");
+                return;
+            }
+            if(obligationsDto.getDateDeliveryAccounting()==null){
+                UIUtils.showNotificationType("No puede finalizar sin enviar a Contabilidad","alert");
+                return;
+            }
+            Obligations obligations = new Obligations();
+            obligations.setId(obligationsDto.getId());
+            obligationsDto.setState("FINALIZADO");
+            obligationsRestTemplate.updateSate(obligations);
+            obligationsDtoList.removeIf(ob -> ob.getId().equals(obligationsDto.getId()));
+            obligationsDtoList.add(obligationsDto);
+            obligationsDtoList.sort(Comparator.comparing(ObligationsDto::getPaymentDate));
+            dataProvider.refreshAll();
+            UIUtils.showNotificationType("Obligacion Finalizada","success");
+        });
+
+        return btn;
+    }
+
     private void applyFilter(ListDataProvider<ObligationsDto> dataProvider){
         dataProvider.clearFilters();
         if(!nameSupplierFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(basicServicesDto ->
-                    StringUtils.containsIgnoreCase(basicServicesDto.getNameSupplier(),
+            dataProvider.addFilter(obligationsDto ->
+                    StringUtils.containsIgnoreCase(obligationsDto.getNameSupplier(),
                             nameSupplierFilter.getValue().trim()));
         }
         if(!typeObligationFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(basicServicesDto ->
-                    StringUtils.containsIgnoreCase(basicServicesDto.getTypeObligation(),
+            dataProvider.addFilter(obligationsDto ->
+                    StringUtils.containsIgnoreCase(obligationsDto.getTypeObligation(),
                             typeObligationFilter.getValue().trim()));
         }
         if(!periodFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(basicServicesDto ->
-                    StringUtils.containsIgnoreCase(basicServicesDto.getPeriod(),
+            dataProvider.addFilter(obligationsDto ->
+                    StringUtils.containsIgnoreCase(obligationsDto.getPeriod(),
                             periodFilter.getValue().trim()));
         }
         if(!typeDocumentReceivedFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(basicServicesDto ->
-                    StringUtils.containsIgnoreCase(basicServicesDto.getTypeDocumentReceived(),
+            dataProvider.addFilter(obligationsDto ->
+                    StringUtils.containsIgnoreCase(obligationsDto.getTypeDocumentReceived(),
                             typeDocumentReceivedFilter.getValue().trim()));
+        }
+        if(!stateFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(obligationsDto ->
+                    StringUtils.containsIgnoreCase(obligationsDto.getState(),
+                            stateFilter.getValue().trim()));
         }
 
     }

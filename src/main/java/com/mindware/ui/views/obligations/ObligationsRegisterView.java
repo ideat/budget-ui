@@ -4,16 +4,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
+import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.invoiceAuthorizer.InvoiceAuthorizer;
 import com.mindware.backend.entity.invoiceAuthorizer.SelectedInvoiceAuthorizer;
 import com.mindware.backend.entity.obligations.Obligations;
 import com.mindware.backend.entity.obligations.ObligationsDto;
+import com.mindware.backend.entity.recurrentService.RecurrentServiceDto;
 import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
 import com.mindware.backend.rest.obligations.ObligationsDtoRestTemplate;
 import com.mindware.backend.rest.obligations.ObligationsRestTemplate;
+import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
@@ -86,6 +89,9 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     @Autowired
     private InvoiceAuthorizerRestTemplate invoiceAuthorizerTemplate;
 
+    @Autowired
+    private ParameterRestTemplate parameterRestTemplate;
+
     private ObligationsDto obligationsDto;
     private Supplier supplierSelected;
     private List<ExpenseDistribuite> expenseDistribuiteList;
@@ -110,6 +116,10 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     private TextField description;
     private ComboBox<String> account;
     private ComboBox<String> subAccount;
+    private DatePicker paymentDate;
+
+    private DatePicker dateDeliveryAccounting;
+    private ComboBox<String> accountingPerson;
 
     private Grid<ExpenseDistribuite> expenseDistribuiteGrid;
 
@@ -122,6 +132,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
     private FlexBoxLayout contentCreateObligation;
     private FlexBoxLayout contentInvoiceAuthorizer;
+    private FlexBoxLayout contentDeliveyAccounting;
 
     private String currentTab;
 
@@ -176,11 +187,24 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
         contentCreateObligation = (FlexBoxLayout) createContent(createObligationDtoForm(obligationsDto));
         contentInvoiceAuthorizer = (FlexBoxLayout) createContent(createGridSelectedInvoiceAuthorizer());
+        contentDeliveyAccounting = (FlexBoxLayout) createContent(createDeliverAccounting());
+
         setViewDetails(createDetailDrawer());
         setViewDetailsPosition(Position.BOTTOM);
 
         footer.addSaveListener(event -> {
             try {
+                if(obligationsDto.getInvoiceAuthorizer() !=null && !obligationsDto.getInvoiceAuthorizer().equals("[]")){
+                    binder.forField(dateDeliveryAccounting)
+                            .asRequired("Fecha entrega a contabilidad es requerida")
+                            .withValidator(d -> d.isAfter(paymentDate.getValue()),"Fecha entrega contabilidad no puede ser anterior a la fecha de pago")
+                            .bind(ObligationsDto::getDateDeliveryAccounting, ObligationsDto::setDateDeliveryAccounting);
+                    binder.forField(accountingPerson)
+                            .asRequired("Responsable de contabilidad es requerido")
+                            .bind(ObligationsDto::getAccountingPerson, ObligationsDto::setAccountingPerson);
+
+                }
+
                 if(binder.writeBeanIfValid(obligationsDto)){
                     obligationsDto.setIdSupplier(supplierSelected.getId());
 
@@ -211,7 +235,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     protected void onAttach(AttachEvent attachEvent){
         super.onAttach(attachEvent);
         initBar();
-        setViewContent(contentCreateObligation, contentInvoiceAuthorizer);
+        setViewContent(contentCreateObligation, contentInvoiceAuthorizer, contentDeliveyAccounting);
         binder.readBean(obligationsDto);
 
     }
@@ -222,6 +246,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
         appBar.addTab("Registro Factura Obligacion");
         appBar.addTab("Autorización Factura");
+        appBar.addTab("Entrega a Contabilidad");
 
         appBar.centerTabs();
         currentTab = "Registro Factura Obligacion";
@@ -246,17 +271,29 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         }else{
             contentInvoiceAuthorizer.setEnabled(true);
         }
+        if(obligationsDto.getInvoiceAuthorizer()==null || obligationsDto.getInvoiceAuthorizer().equals("[]")){
+            contentDeliveyAccounting.setEnabled(false);
+        }else{
+            contentDeliveyAccounting.setEnabled(true);
+        }
     }
 
     private void hideContent(){
         contentCreateObligation.setVisible(true);
         contentInvoiceAuthorizer.setVisible(false);
+        contentDeliveyAccounting.setVisible(false);
         if(currentTab.equals("Registro Factura Obligacion")){
             contentCreateObligation.setVisible(true);
             contentInvoiceAuthorizer.setVisible(false);
+            contentDeliveyAccounting.setVisible(false);
         }else if(currentTab.equals("Autorización Factura")){
             contentCreateObligation.setVisible(false);
             contentInvoiceAuthorizer.setVisible(true);
+            contentDeliveyAccounting.setVisible(false);
+        }else if(currentTab.equals("Entrega a Contabilidad")){
+            contentCreateObligation.setVisible(false);
+            contentInvoiceAuthorizer.setVisible(false);
+            contentDeliveyAccounting.setVisible(true);
         }
     }
 
@@ -300,7 +337,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
 
 
-        DatePicker paymentDate = new DatePicker();
+        paymentDate = new DatePicker();
         paymentDate.setWidthFull();
         paymentDate.setRequired(true);
         paymentDate.setLocale(new Locale("es","BO"));
@@ -934,5 +971,61 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         return btn;
     }
 
+    //  DELIVER ACCOUNTING
 
+    private DetailsDrawer createDeliverAccounting(){
+
+        dateDeliveryAccounting = new DatePicker("Fecha de entrega a contabilidad");
+        dateDeliveryAccounting.setWidth("30%");
+        dateDeliveryAccounting.setRequired(true);
+        dateDeliveryAccounting.setClearButtonVisible(true);
+        dateDeliveryAccounting.setRequiredIndicatorVisible(true);
+        dateDeliveryAccounting.setLocale(new Locale("es","BO"));
+
+        accountingPerson = new ComboBox<>("Entregado a");
+        accountingPerson.setWidth("30%");
+        accountingPerson.setRequired(true);
+        accountingPerson.setRequiredIndicatorVisible(true);
+        List<Parameter> parameterList = parameterRestTemplate.getByCategory("CODIGO CARGOS");
+
+        String position = parameterList.stream()
+                .filter(p -> p.getValue().equals("CONTABILIDAD"))
+                .map(Parameter::getDetails)
+                .findFirst().get();
+        List<String> nameUsersPosition =  utilValues.getNameUserLdapByCriteria("title",position);
+        accountingPerson.setItems(nameUsersPosition);
+
+
+//        if(current.getExpenseDistribuite()!=null && !current.getExpenseDistribuite().equals("[]")) {
+        binder.forField(dateDeliveryAccounting)
+//                    .asRequired("Fecha entrega a contabilidad es requerida")
+                .bind(ObligationsDto::getDateDeliveryAccounting, ObligationsDto::setDateDeliveryAccounting);
+        binder.forField(accountingPerson)
+//                    .asRequired("Responsable de contabilidad es requerido")
+                .bind(ObligationsDto::getAccountingPerson, ObligationsDto::setAccountingPerson);
+
+        binder.addStatusChangeListener(event -> {
+            boolean isValid = !event.hasValidationErrors();
+            boolean hasChanges = binder.hasChanges();
+            footer.saveState(isValid && hasChanges);
+        });
+//        }
+        VerticalLayout layout = new VerticalLayout();
+        layout.setWidthFull();
+        layout.add(dateDeliveryAccounting,accountingPerson);
+        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.CENTER,dateDeliveryAccounting,
+                accountingPerson);
+
+        DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
+        detailsDrawer.setWidthFull();
+        detailsDrawer.setHeight("90%");
+
+        detailsDrawer.setPadding(Left.S, Right.S, Top.S);
+        detailsDrawer.setContent(layout);
+//        detailsDrawer.setFooter(footer);
+        detailsDrawer.show();
+
+
+        return detailsDrawer;
+    }
 }

@@ -1,6 +1,12 @@
 package com.mindware.ui;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindware.backend.entity.acquisitionAuthorizer.AcquisitionAuthorizer;
+import com.mindware.backend.entity.rol.Option;
+import com.mindware.backend.entity.rol.Rol;
+import com.mindware.backend.rest.rol.RolRestTemplate;
 import com.mindware.ui.views.acquisition.AcquisitionView;
 import com.mindware.ui.views.acquisitionAuthorizer.AcquisitionAuthorizerView;
 import com.mindware.ui.views.basicServices.BasicServicesView;
@@ -15,6 +21,7 @@ import com.mindware.ui.views.obligations.ObligationsView;
 import com.mindware.ui.views.recurrentService.RecurrentServiceView;
 import com.mindware.ui.views.reports.expenseAcquisitions.ExpenseAcquisitionsReport;
 import com.mindware.ui.views.reports.investmentBudget.InvestmentBudgetReport;
+import com.mindware.ui.views.rol.RolView;
 import com.mindware.ui.views.supplier.SupplierView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasElement;
@@ -47,6 +54,11 @@ import com.mindware.ui.views.personnel.Accountants;
 import com.mindware.ui.views.personnel.Managers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @CssImport(value = "./styles/components/charts.css", themeFor = "vaadin-chart", include = "vaadin-chart-default-theme")
 @CssImport(value = "./styles/components/floating-action-button.css", themeFor = "vaadin-button")
@@ -70,6 +82,7 @@ public class MainLayout extends FlexBoxLayout
 	private static final Logger log = LoggerFactory.getLogger(MainLayout.class);
 	private static final String CLASS_NAME = "root";
 
+
 	private Div appHeaderOuter;
 
 	private FlexBoxLayout row;
@@ -86,6 +99,8 @@ public class MainLayout extends FlexBoxLayout
 	private boolean navigationTabs = false;
 	private AppBar appBar;
 
+	public List<Option> optionList = new ArrayList<>();
+
 	public MainLayout() {
 		VaadinSession.getCurrent()
 				.setErrorHandler((ErrorHandler) errorEvent -> {
@@ -98,15 +113,36 @@ public class MainLayout extends FlexBoxLayout
 		addClassName(CLASS_NAME);
 		setFlexDirection(FlexDirection.COLUMN);
 		setSizeFull();
+		if(VaadinSession.getCurrent().getAttribute("login") != null) {
 
-		// Initialise the UI building blocks
-		initStructure();
+			// Initialise the UI building blocks
+			initStructure();
 
-		// Populate the navigation drawer
-		initNaviItems();
+			// Populate the navigation drawer
+			initNaviItems();
 
-		// Configure the headers and footers (optional)
-		initHeadersAndFooters();
+			// Configure the headers and footers (optional)
+			initHeadersAndFooters();
+		}
+	}
+
+
+
+
+	private boolean assignedOption(String name){
+		if(optionList.size()==0) {
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				optionList = mapper.readValue(VaadinSession.getCurrent().getAttribute("options").toString(),
+						new TypeReference<List<Option>>() {});
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+		}
+
+		List<Option> options = optionList.stream().filter(value -> value.getName().equals(name))
+				.collect(Collectors.toList());
+		return options.get(0).isAssigned();
 	}
 
 	/**
@@ -148,24 +184,60 @@ public class MainLayout extends FlexBoxLayout
 //		menu.addNaviItem(personnel, "Accountants", Accountants.class);
 //		menu.addNaviItem(personnel, "Managers", Managers.class);
 
-		menu.addNaviItem(VaadinIcon.GROUP,"Proveedores", SupplierView.class);
-		menu.addNaviItem(VaadinIcon.FILE_TEXT, "Contratos", ContractView.class);
-		menu.addNaviItem(VaadinIcon.INVOICE, "Obligaciones", ObligationsView.class);
-		menu.addNaviItem(VaadinIcon.GLOBE_WIRE, "Servicios Recurrentes", RecurrentServiceView.class);
-		menu.addNaviItem(VaadinIcon.BUILDING, "Servicios Básicos", BasicServicesView.class);
-		menu.addNaviItem(VaadinIcon.STORAGE,"Adquisiciones", AcquisitionView.class);
-		NaviItem reports = menu.addNaviItem(VaadinIcon.RECORDS,"Reportes",null);
-		menu.addNaviItem(reports,"Control Gastos y Adqui.", ExpenseAcquisitionsReport.class);
-		menu.addNaviItem(reports,"Presupuesto Inversiones.", InvestmentBudgetReport.class);
-
-		NaviItem configuration = menu.addNaviItem(VaadinIcon.COGS, "Configuración",null);
-		menu.addNaviItem(configuration,"Parámetros", ParameterView.class);
-		menu.addNaviItem(configuration,"Niveles Aut. Adquisición", AcquisitionAuthorizerView.class);
-		menu.addNaviItem(configuration,"Autorizadores de Facturas", InvoiceAuthorizerView.class);
-		menu.addNaviItem(configuration, "Cuentas", AccountView.class);
-		menu.addNaviItem(configuration, "Servicios Básicos", BasicServiceProviderView.class);
-		menu.addNaviItem(configuration, "Periodos", PeriodView.class);
-		menu.addNaviItem(configuration,"Tipo Cambio", TypeChangeCurrencyView.class);
+		if(assignedOption("Proveedores")) {
+			menu.addNaviItem(VaadinIcon.GROUP, "Proveedores", SupplierView.class);
+		}
+		if(assignedOption("Contratos")) {
+			menu.addNaviItem(VaadinIcon.FILE_TEXT, "Contratos", ContractView.class);
+		}
+		if(assignedOption("Obligaciones")) {
+			menu.addNaviItem(VaadinIcon.INVOICE, "Obligaciones", ObligationsView.class);
+		}
+		if(assignedOption("Servicios Recurrentes")) {
+			menu.addNaviItem(VaadinIcon.GLOBE_WIRE, "Servicios Recurrentes", RecurrentServiceView.class);
+		}
+		if(assignedOption("Servicios Básicos")) {
+			menu.addNaviItem(VaadinIcon.BUILDING, "Servicios Básicos", BasicServicesView.class);
+		}
+		if(assignedOption("Adquisiciones")) {
+			menu.addNaviItem(VaadinIcon.STORAGE, "Adquisiciones", AcquisitionView.class);
+		}
+		if(assignedOption("Reportes")) {
+			NaviItem reports = menu.addNaviItem(VaadinIcon.RECORDS, "Reportes", null);
+			if(assignedOption("Control Gastos y Adqui.")) {
+				menu.addNaviItem(reports, "Control Gastos y Adqui.", ExpenseAcquisitionsReport.class);
+			}
+			if(assignedOption("Presupuesto Inversiones")) {
+				menu.addNaviItem(reports, "Presupuesto Inversiones", InvestmentBudgetReport.class);
+			}
+		}
+		if(assignedOption("Configuración")) {
+			NaviItem configuration = menu.addNaviItem(VaadinIcon.COGS, "Configuración", null);
+			if(assignedOption("Parámetros")) {
+				menu.addNaviItem(configuration, "Parámetros", ParameterView.class);
+			}
+			if(assignedOption("Niveles Aut. Adquisición")) {
+				menu.addNaviItem(configuration, "Niveles Aut. Adquisición", AcquisitionAuthorizerView.class);
+			}
+			if(assignedOption("Autorizadores de Facturas")) {
+				menu.addNaviItem(configuration, "Autorizadores de Facturas", InvoiceAuthorizerView.class);
+			}
+			if(assignedOption("Cuentas")) {
+				menu.addNaviItem(configuration, "Cuentas", AccountView.class);
+			}
+			if(assignedOption("Servicios Básicos")) {
+				menu.addNaviItem(configuration, "Servicios Básicos", BasicServiceProviderView.class);
+			}
+			if(assignedOption("Periodos")) {
+				menu.addNaviItem(configuration, "Periodos", PeriodView.class);
+			}
+			if(assignedOption("Tipo Cambio")) {
+				menu.addNaviItem(configuration, "Tipo Cambio", TypeChangeCurrencyView.class);
+			}
+			if(assignedOption("Roles")) {
+				menu.addNaviItem(configuration, "Roles", RolView.class);
+			}
+		}
 	}
 
 	/**

@@ -38,7 +38,6 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -52,14 +51,12 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.binder.Validator;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
@@ -213,7 +210,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     private String currentTab;
     private boolean isFirsLoadExpenseDistribuite;
-    private Double amountMaxLevel1;
+    private Double amountMaxLevel1Sus;
+    private Double amountMaxLevel1Bs;
 
     private Checkbox requiresAdvance;
     private DatePicker  purchaseOrder;
@@ -236,11 +234,16 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         params = queryParameters.getParameters();
 
         conceptList = conceptRestTemplate.getAgencia();
-        String strAmount = parameterRestTemplate.getByCategory("MONTO AUTORIZACION").stream()
-                .map(Parameter::getValue)
+        String strAmountSus = parameterRestTemplate.getByCategory("MONTO AUTORIZACION").stream()
+                .filter(f -> f.getValue().toUpperCase().equals("$US"))
+                .map(Parameter::getDetails)
                 .findFirst().get();
-        amountMaxLevel1 = Double.valueOf(strAmount);
-
+        String strAmountBs = parameterRestTemplate.getByCategory("MONTO AUTORIZACION").stream()
+                .filter(f -> f.getValue().toUpperCase().equals("BS"))
+                .map(Parameter::getDetails)
+                .findFirst().get();
+        amountMaxLevel1Sus = Double.valueOf(strAmountSus);
+        amountMaxLevel1Bs = Double.valueOf(strAmountBs);
         footer = new DetailsDrawerFooter();
         if(!params.get("id").get(0).equals("NUEVO")){
             current = acquisitionRestTemplate.getById(params.get("id").get(0));
@@ -402,7 +405,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
             }
 
-            if(invoiceInformationBinder!=null){
+            if(invoiceInformationBinder!=null || !current.getInvoiceInformation().equals("[]")){
                 try {
 
 
@@ -411,9 +414,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         UIUtils.showNotificationType("Monto de facturas supera el monto de la solicitud, Revise los datos","alert");
                         return;
                     }
-
+                    if(invoiceInformationList.size()==0){
+                        UIUtils.showNotificationType("Se tienen que tener facturas registradas","alert");
+                        return;
+                    }
                     String jsonInvoiceInformation = mapper.writeValueAsString(invoiceInformationList);
                     current.setInvoiceInformation(jsonInvoiceInformation);
+                    current.setIdSupplier(UUID.fromString(invoiceInformationList.get(0).getIdSupplier()));
+
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
@@ -427,7 +435,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         .bind(Acquisition::getQuotationRequestDate, Acquisition::setQuotationRequestDate);
                 binder.forField(quotationReceptionDate)
                         .asRequired(("Fecha de recepción de contizaciones es requerida"))
-                        .withValidator(f -> f.isAfter(quotationRequestDate.getValue()),"Fecha recepcion no puede ser anterior a la fechade solicitud")
+                        .withValidator(f -> f.isAfter(quotationRequestDate.getValue() ) || f.isEqual(quotationRequestDate.getValue()),"Fecha recepcion no puede ser anterior a la fechade solicitud")
                         .bind(Acquisition::getQuotationReceptionDate, Acquisition::setQuotationReceptionDate);
             }
 
@@ -530,11 +538,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     current.setItems(jsonItems);
                     String jsonAcquisitionAuthorizerLevel1 = mapper.writeValueAsString(selectedAuthorizerList);
                     String jsonAcquisitionAuthorizerLevel2 = "";
-                    if( current.getAmount()==null || current.getAmount()<= amountMaxLevel1){
+
+                    Double maxAmount = (current.getCurrency()==null ||current.getCurrency().equals("$us"))?amountMaxLevel1Sus:amountMaxLevel1Bs;
+                    if( current.getAmount()==null || current.getAmount()<= maxAmount){
                         jsonAcquisitionAuthorizerLevel2 = "[]";
                     }else {
                         jsonAcquisitionAuthorizerLevel2 = mapper.writeValueAsString(selectedAuthorizerLevel2List);
                     }
+
                     current.setAuthorizersLevel1(jsonAcquisitionAuthorizerLevel1);
                     current.setAuthorizersLevel2(jsonAcquisitionAuthorizerLevel2);
                     try {
@@ -1272,6 +1283,23 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         currency.setAutoOpen(true);
         currency.setRequired(true);
         currency.setItems(utilValues.getValueParameterByCategory("MONEDA"));
+        currency.addValueChangeListener(event -> {
+            if(amountCaabs.getValue()!=null || !amountCaabs.isEmpty()) {
+                if (event.getValue().equals("$us")) {
+                    if (amountCaabs.getValue().doubleValue() > amountMaxLevel1Sus) {
+                        layoutAuthorizerLevel2.setVisible(true);
+                    } else {
+                        layoutAuthorizerLevel2.setVisible(false);
+                    }
+                } else if (event.getValue().equals("Bs")) {
+                    if (amountCaabs.getValue().doubleValue() > amountMaxLevel1Bs) {
+                        layoutAuthorizerLevel2.setVisible(true);
+                    } else {
+                        layoutAuthorizerLevel2.setVisible(false);
+                    }
+                }
+            }
+        });
 
         amountCaabs = new NumberField();
         amountCaabs.setMin(0.0);
@@ -1279,11 +1307,23 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         amountCaabs.setClearButtonVisible(true);
         amountCaabs.setRequiredIndicatorVisible(true);
         amountCaabs.addValueChangeListener(event -> {
-           if(event.getValue().doubleValue()>amountMaxLevel1){
-              layoutAuthorizerLevel2.setVisible(true);
-           }else{
-               layoutAuthorizerLevel2.setVisible(false);
-           }
+            if(event.getValue()!=null) {
+                if (currency.getValue().equals("$us")) {
+                    if (event.getValue().doubleValue() > amountMaxLevel1Sus) {
+                        layoutAuthorizerLevel2.setVisible(true);
+                    } else {
+                        layoutAuthorizerLevel2.setVisible(false);
+                    }
+                } else if (currency.getValue().equals("Bs")) {
+                    if (event.getValue().doubleValue() > amountMaxLevel1Bs) {
+                        layoutAuthorizerLevel2.setVisible(true);
+                    } else {
+                        layoutAuthorizerLevel2.setVisible(false);
+                    }
+                }
+            }else{
+                layoutAuthorizerLevel2.setVisible(false);
+            }
         });
 
 //        if(current.getQuotationReceptionDate()!=null){
@@ -1329,8 +1369,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         detailsDrawer.setPadding(Left.S, Right.S, Top.S);
 //        Label title2 = UIUtils.createLabel(FontSize.M, TextColor.SECONDARY,"Esta solicitud debe ser revisada por:");
 
-
-        if(amountCaabs.isEmpty() || amountCaabs.getValue().doubleValue()<amountMaxLevel1){
+        Double maxAmount = (current.getCurrency()==null ||current.getCurrency().equals("$us"))?amountMaxLevel1Sus:amountMaxLevel1Bs;
+        if(amountCaabs.isEmpty() || amountCaabs.getValue().doubleValue()< maxAmount){
             layoutAuthorizerLevel2.setVisible(false);
         }
         detailsDrawer.setContent(form, gridSelectedAuthorizer(), layoutAuthorizerLevel2);

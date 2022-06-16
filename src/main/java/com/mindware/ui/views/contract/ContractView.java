@@ -8,6 +8,7 @@ import com.mindware.backend.rest.contract.ContractDtoRestTemplate;
 import com.mindware.backend.rest.contract.ContractRestTemplate;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
 import com.mindware.backend.rest.typeChangeCurrency.TypeChangeCurrencyRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -261,7 +262,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         currency.setRequired(true);
         currency.addValueChangeListener(event -> {
             String type = typeChangeCurrency.getValue()==null?"":typeChangeCurrency.getValue();
-            amountTypeChange.setValue(getAmountTypeChange(type,dateSubscription.getValue().toString(),currency.getValue()));
+            amountTypeChange.setValue(getAmountTypeChange(type,dateSubscription.getValue(),currency.getValue()));
         });
 
         NumberField amount = new NumberField();
@@ -323,7 +324,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         typeChangeCurrency.addValueChangeListener(event ->{
 //            TypeChangeCurrency typeChangeCurrency = typeChangeCurrencyRestTemplate
 //                    .getCurrentTypeChangeCurrencyByValidityStart(event.getValue(),dateSubscription.getValue().toString(),currency.getValue());
-            amountTypeChange.setValue(getAmountTypeChange(event.getValue(),dateSubscription.getValue().toString(),currency.getValue()));
+            amountTypeChange.setValue(getAmountTypeChange(event.getValue(),dateSubscription.getValue(),currency.getValue()));
         });
 
         binder = new BeanValidationBinder<>(Contract.class);
@@ -367,7 +368,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.addStatusChangeListener(event ->{
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges);
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOption("Contratos"));
         });
 
         FormLayout form = new FormLayout();
@@ -404,10 +405,10 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         return form;
     }
 
-    private Double getAmountTypeChange(String categoryChange, String suscription, String currency){
-        if(!categoryChange.isEmpty() && !suscription.isEmpty() && !currency.isEmpty() ) {
+    private Double getAmountTypeChange(String categoryChange, LocalDate suscription, String currency){
+        if(!categoryChange.isEmpty() && suscription!=null && !currency.isEmpty() ) {
             TypeChangeCurrency typeChangeCurrency = typeChangeCurrencyRestTemplate
-                    .getCurrentTypeChangeCurrencyByValidityStart(categoryChange, suscription, currency);
+                    .getCurrentTypeChangeCurrencyByValidityStart(categoryChange, suscription.toString(), currency);
             return typeChangeCurrency.getAmountChange();
         }
         return 0.0;

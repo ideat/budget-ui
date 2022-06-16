@@ -61,6 +61,8 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     private TextField stateFilter;
     private TextField nameBusinessUnitFilter;
 
+    private Grid<AcquisitionDto> grid;
+
     @Override
     protected void onAttach(AttachEvent attachEvent){
         super.onAttach(attachEvent);
@@ -107,7 +109,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     }
 
     private Grid createGridAcquisitionDto(){
-        Grid<AcquisitionDto> grid = new Grid<>();
+        grid = new Grid<>();
         grid.addThemeVariants(GridVariant.LUMO_COMPACT);
         grid.setMultiSort(true);
         grid.setSizeFull();
@@ -148,7 +150,6 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
                 .setFlexGrow(1)
                 .setKey("item")
                 .setHeader("Ítems")
-                .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(AcquisitionDto::getState)
@@ -167,6 +168,10 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         grid.addColumn(new ComponentRenderer<>(this::createButtonRegard))
                 .setFlexGrow(1)
                 .setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonFinish))
+                .setFlexGrow(1)
+                .setAutoWidth(true);
+
         HeaderRow hr = grid.appendHeaderRow();
 
         acquisitionNumberFilter = new TextField();
@@ -188,7 +193,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         hr.getCell(grid.getColumnByKey("nameBusinessUnit")).setComponent(nameBusinessUnitFilter);
 
         receptionDateInitFilter = new DatePicker();
-        receptionDateInitFilter.setWidth("50%");
+        receptionDateInitFilter.setWidth("40%");
         receptionDateInitFilter.setLocale(new Locale("es","BO"));
         receptionDateInitFilter.setClearButtonVisible(true);
         receptionDateInitFilter.addValueChangeListener(e -> {
@@ -196,7 +201,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         });
 
         receptionDateEndFilter = new DatePicker();
-        receptionDateEndFilter.setWidth("50%");
+        receptionDateEndFilter.setWidth("40%");
         receptionDateEndFilter.setLocale(new Locale("es","BO"));
         receptionDateEndFilter.setClearButtonVisible(true);
         receptionDateEndFilter.addValueChangeListener(e -> {
@@ -224,6 +229,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     private Component createItem(AcquisitionDto acquisitionDto){
         TextArea textArea = new TextArea();
         textArea.setWidthFull();
+        textArea.setReadOnly(true);
         textArea.setValue(acquisitionDto.getItems());
         return textArea;
     }
@@ -262,8 +268,43 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
             acquisition.setId(acquisitionDto.getId());
             acquisition.setState("ENVIADO");
             acquisitionRestTemplate.udpateState(acquisition);
+            acquisitionDto.setState("ENVIADO");
+            acquisitionDtoList.removeIf(ac -> ac.getId().equals(acquisitionDto.getId()));
+            acquisitionDtoList.add(acquisitionDto);
+            acquisitionDtoList.sort(Comparator.comparing(AcquisitionDto::getReceptionDate));
+            dataProvider.refreshAll();
             UIUtils.showNotificationType("Enviado a Contabilidad","success");
         });
+        return btn;
+    }
+
+    private Component createButtonFinish(AcquisitionDto acquisitionDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Finalizar");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
+        btn.setIcon(VaadinIcon.LOCK.create());
+        btn.addClickListener(event -> {
+            if(!acquisitionDto.getState().equals("ENVIADO")){
+                UIUtils.showNotificationType("No puede finalizar sin estar ENVIADO","alert");
+                return;
+            }
+            if(acquisitionDto.getDateDeliveryAccounting()==null){
+                UIUtils.showNotificationType("No puede finalizar sin enviar a Contabilidad","alert");
+                return;
+            }
+            Acquisition acquisition = new Acquisition();
+            acquisition.setId(acquisitionDto.getId());
+            acquisition.setState("FINALIZADO");
+            acquisitionRestTemplate.udpateState(acquisition);
+            acquisitionDto.setState("FINALIZADO");
+            acquisitionDtoList.removeIf(ac -> ac.getId().equals(acquisitionDto.getId()));
+            acquisitionDtoList.add(acquisitionDto);
+            acquisitionDtoList.sort(Comparator.comparing(AcquisitionDto::getReceptionDate));
+            grid.getDataProvider().refreshAll();
+
+            UIUtils.showNotificationType("Adquisición Finalizada","success");
+        });
+
         return btn;
     }
 
@@ -277,6 +318,11 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
             acquisition.setId(acquisitionDto.getId());
             acquisition.setState("OBSERVADO");
             acquisitionRestTemplate.udpateState(acquisition);
+            acquisitionDto.setState("OBSERVADO");
+            acquisitionDtoList.removeIf(ac -> ac.getId().equals(acquisitionDto.getId()));
+            acquisitionDtoList.add(acquisitionDto);
+            acquisitionDtoList.sort(Comparator.comparing(AcquisitionDto::getReceptionDate));
+            grid.getDataProvider().refreshAll();
             UIUtils.showNotificationType("Adquisición Observada","alert");
         });
         return btn;
@@ -315,7 +361,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     }
 
     private void getAcquisitionDto(){
-        acquisitionDtoList = restTemplate.getAll();
+        acquisitionDtoList = new ArrayList<>(restTemplate.getAll());
         dataProvider = new ListDataProvider<>(acquisitionDtoList);
     }
 }

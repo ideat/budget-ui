@@ -1,9 +1,11 @@
 package com.mindware.ui.views.login;
 
+import com.mindware.backend.entity.rol.Rol;
 import com.mindware.backend.rest.authentication.AuthenticateRestTemplate;
 import com.mindware.backend.rest.authentication.JwtRequest;
 import com.mindware.backend.rest.authentication.Token;
 import com.mindware.backend.rest.authentication.UserData;
+import com.mindware.backend.rest.rol.RolRestTemplate;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.login.LoginForm;
@@ -14,6 +16,7 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.VaadinSession;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Map;
 
 @Route("")
@@ -22,6 +25,9 @@ public class LoginView extends VerticalLayout {
 
     @Autowired
     AuthenticateRestTemplate restTemplate;
+
+    @Autowired
+    private RolRestTemplate rolRestTemplate;
 
     private final LoginI18n i18n = LoginI18n.createDefault();
 
@@ -44,6 +50,16 @@ public class LoginView extends VerticalLayout {
                 VaadinSession.getCurrent().setAttribute("cn", userData.getCn());
                 VaadinSession.getCurrent().setAttribute("sn", userData.getSn());
                 VaadinSession.getCurrent().setAttribute("department", userData.getDepartment());
+                VaadinSession.getCurrent().setAttribute("memberOf",userData.getMemberOf());
+
+                List<Rol> rolList = rolRestTemplate.getAllRols();
+                for(Rol rol:rolList){
+                    if( VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BANCO_USERS")){
+                        VaadinSession.getCurrent().setAttribute("options",rol.getOptions());
+                        break;
+                    }
+                }
+
 
                 UI.getCurrent().navigate("main");
             }catch (Exception ex){

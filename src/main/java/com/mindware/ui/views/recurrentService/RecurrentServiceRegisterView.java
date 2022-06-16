@@ -127,6 +127,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private TextField nitSupplier;
     private IntegerField contract;
     private  TextField paymentFrecuency;
+    private DatePicker paymentDate;
 
     private Grid<ExpenseDistribuite> expenseDistribuiteGrid;
 
@@ -209,7 +210,18 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
 
         footer.addSaveListener(event ->{
+            if(recurrentServiceDto.getInvoiceAuthorizer()!=null && !recurrentServiceDto.getInvoiceAuthorizer().equals("[]")){
+                binder.forField(dateDeliveryAccounting)
+                        .asRequired("Fecha entrega a contabilidad es requerida")
+                        .withValidator(d -> d.isAfter(paymentDate.getValue()),"Fecha entrega contabilidad no puede ser anterior a la fecha de pago")
+                        .bind(RecurrentServiceDto::getDateDeliveryAccounting, RecurrentServiceDto::setDateDeliveryAccounting);
+                binder.forField(accountingPerson)
+                        .asRequired("Responsable de contabilidad es requerido")
+                        .bind(RecurrentServiceDto::getAccountingPerson, RecurrentServiceDto::setAccountingPerson);
+
+            }
             if(binder.writeBeanIfValid(recurrentServiceDto)){
+
                 if(validateAmountExpenseDistribuite()) {
                     recurrentServiceDto.setIdSupplier(supplierSelected.getId());
                     try {
@@ -343,7 +355,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         period.setRequired(true);
         period.setAllowCustomValue(true);
 
-        DatePicker paymentDate = new DatePicker();
+        paymentDate = new DatePicker();
         paymentDate.setWidthFull();
         paymentDate.setRequired(true);
         paymentDate.setLocale(new Locale("es","BO"));

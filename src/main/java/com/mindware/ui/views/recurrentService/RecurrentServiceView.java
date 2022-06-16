@@ -54,6 +54,7 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
     private TextField supplierLocationFilter;
     private TextField periodFilter;
     private TextField paymentFrecuencyFilter;
+    private TextField stateFilter;
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
@@ -148,16 +149,25 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
-        grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
+        grid.addColumn(RecurrentServiceDto::getState)
                 .setFlexGrow(1)
+                .setKey("state")
+                .setHeader("Estado")
+                .setSortable(true)
+                .setAutoWidth(true)
+                .setResizable(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
+                .setFlexGrow(0)
                 .setTextAlign(ColumnTextAlign.START);
         grid.addColumn(new ComponentRenderer<>(this::createButtonSend))
-                .setFlexGrow(1)
+                .setFlexGrow(0)
                 .setTextAlign(ColumnTextAlign.START);
         grid.addColumn(new ComponentRenderer<>(this::createButtonRegard))
-                .setFlexGrow(1)
+                .setFlexGrow(0)
                 .setTextAlign(ColumnTextAlign.START);
-
+        grid.addColumn(new ComponentRenderer<>(this::createButtonFinish))
+                .setFlexGrow(0)
+                .setTextAlign(ColumnTextAlign.START);
         HeaderRow hr = grid.appendHeaderRow();
 
         supplierNameFilter = new TextField();
@@ -184,6 +194,14 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
         paymentFrecuencyFilter.addValueChangeListener(e -> applyFilter(dataProvider));
         hr.getCell(grid.getColumnByKey("paymentFrecuency")).setComponent(paymentFrecuencyFilter);
 
+        stateFilter = new TextField();
+        stateFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        stateFilter.setWidthFull();
+        stateFilter.addValueChangeListener(e -> {
+            applyFilter(dataProvider);
+        });
+        hr.getCell(grid.getColumnByKey("state")).setComponent(stateFilter);
+
         return grid;
     }
 
@@ -208,12 +226,12 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
 
     private Component createButtonSend(RecurrentServiceDto recurrentServiceDto){
         Button btn = new Button();
-        Tooltips.getCurrent().setTooltip(btn,"Enviar Contabilidad");
+        Tooltips.getCurrent().setTooltip(btn,"Enviar");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btn.setIcon(VaadinIcon.THUMBS_UP.create());
         btn.addClickListener(event -> {
-            if(recurrentServiceDto.getDateDeliveryAccounting()==null){
-                UIUtils.showNotificationType("Registre fecha de envio a contabilidad","alert");
+            if(recurrentServiceDto.getInvoiceAuthorizer()==null || (recurrentServiceDto.getInvoiceAuthorizer().equals("[]"))){
+                UIUtils.showNotificationType("Registre Autorizador de la factura","alert");
                 return;
             }
             RecurrentService recurrentService = new RecurrentService();
@@ -231,11 +249,38 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
         btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
         btn.addClickListener(event -> {
+            if(!recurrentServiceDto.getState().equals("ENVIADO") || !recurrentServiceDto.getState().equals("FINALIZADO") ){
+                UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADA o FINALIZADO","alert");
+                return;
+            }
             RecurrentService recurrentService = new RecurrentService();
             recurrentService.setId(recurrentServiceDto.getId());
             recurrentService.setState("OBSERVADO");
             recurrentServiceRestTemplate.updateState(recurrentService);
             UIUtils.showNotificationType("Servicio Observado","success");
+        });
+        return btn;
+    }
+
+    private Component createButtonFinish(RecurrentServiceDto recurrentServiceDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Finalizar");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
+        btn.setIcon(VaadinIcon.LOCK.create());
+        btn.addClickListener(event -> {
+            if(recurrentServiceDto.getState().equals("ENVIADO")){
+                UIUtils.showNotificationType("No puede finalizar sin estar ENVIADO","alert");
+                return;
+            }
+            if(recurrentServiceDto.getDateDeliveryAccounting()==null){
+                UIUtils.showNotificationType("No puede finalizar sin enviar a Contabilidad","alert");
+                return;
+            }
+            RecurrentService recurrentService = new RecurrentService();
+            recurrentService.setId(recurrentServiceDto.getId());
+            recurrentService.setState("FINALIZADO");
+            recurrentServiceRestTemplate.updateState(recurrentService);
+            UIUtils.showNotificationType("Servicio Finalizado","success");
         });
         return btn;
     }
@@ -257,6 +302,10 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
         if(!paymentFrecuencyFilter.getValue().trim().equals("")){
             dataProvider.addFilter(recurrentServiceDto -> StringUtils.containsIgnoreCase(
                     recurrentServiceDto.getPaymentFrecuency(),paymentFrecuencyFilter.getValue()));
+        }
+        if(!stateFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(recurrentServiceDto -> StringUtils.containsIgnoreCase(
+                    recurrentServiceDto.getState(),stateFilter.getValue()));
         }
     }
 

@@ -119,6 +119,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
     private ComboBox<String> account;
     private ComboBox<String> subAccount;
     private TextField instance;
+    private DatePicker paymentDate;
 
     private Grid<ExpenseDistribuite> expenseDistribuiteGrid;
 
@@ -189,6 +190,16 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
         footer.addSaveListener(event -> {
             try {
+                if(basicServicesDto.getInvoiceAuthorizer()!=null && !basicServicesDto.getInvoiceAuthorizer().equals("[]")){
+                    binder.forField(dateDeliveryAccounting)
+
+                    .asRequired("Fecha entrega a contabilidad es requerida")
+                            .withValidator(d -> d.isAfter(paymentDate.getValue()),"Fecha entrega contabilidad no puede ser anterior a la fecha de pago")
+                            .bind(BasicServicesDto::getDateDeliveryAccounting, BasicServicesDto::setDateDeliveryAccounting);
+                    binder.forField(accountingPerson)
+                    .asRequired("Responsable de contabilidad es requerido")
+                            .bind(BasicServicesDto::getAccountingPerson, BasicServicesDto::setAccountingPerson);
+                }
                 if (binder.writeBeanIfValid(basicServicesDto)) {
                     basicServicesDto.setIdBasicServicesProvider(basicServiceProviderSelected.getId());
 
@@ -197,6 +208,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                             if(basicServicesDto.getId()==null){
                                 basicServicesDto.setState("INICIADO");
                             }
+
                             BasicServices basicServices  = basicServicesRestTemplate.add(fillBasicServices());
                             basicServicesDto.setId(basicServices.getId());
                             basicServicesDto.setInvoiceAuthorizer(basicServices.getInvoiceAuthorizer());
@@ -321,7 +333,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         period.setRequired(true);
         period.setAllowCustomValue(true);
 
-        DatePicker paymentDate = new DatePicker();
+        paymentDate = new DatePicker();
         paymentDate.setWidthFull();
         paymentDate.setRequired(true);
         paymentDate.setLocale(new Locale("es","BO"));
@@ -443,6 +455,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         form.addFormItem(account,"Cuenta");
         form.addFormItem(subAccount,"Subcuenta");
         form.addFormItem(typeDocumentReceived,"Tipo Documento");
+        form.addFormItem(categoryTypeDocumentReceived,"Estado");
         form.addFormItem(numberDocumentReceived,"Nro Factura/Recibo");
 
         DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);

@@ -35,4 +35,6 @@ public class AcquisitionDto {
     private LocalDate dateDeliveryAccounting;
 
     private String accountingPerson;
+
+
 }

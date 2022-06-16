@@ -35,4 +35,10 @@ public class Obligations {
     private String numberDocumentReceived;
 
     private String invoiceAuthorizer; //json
+
+    private LocalDate dateDeliveryAccounting;
+
+    private String accountingPerson;
+
+    private String state;
 }
