@@ -18,6 +18,7 @@ import com.mindware.backend.rest.basicServices.BasicServicesRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -190,7 +191,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
         footer.addSaveListener(event -> {
             try {
-                if(basicServicesDto.getInvoiceAuthorizer()!=null && !basicServicesDto.getInvoiceAuthorizer().equals("[]")){
+                if(basicServicesDto.getInvoiceAuthorizer()!=null && !basicServicesDto.getInvoiceAuthorizer().equals("[]") && GrantOptions.grantedOptionAccounting("Servicios Básicos")){
                     binder.forField(dateDeliveryAccounting)
 
                     .asRequired("Fecha entrega a contabilidad es requerida")
@@ -249,7 +250,8 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
         appBar.addTab("Registro Factura Servicio Basico");
         appBar.addTab("Autorización Factura");
-        appBar.addTab("Entrega a Contabilidad");
+        if(GrantOptions.grantedOptionAccounting("Servicios Básicos"))
+            appBar.addTab("Entrega a Contabilidad");
 
         appBar.centerTabs();
         currentTab = "Registro Factura Servicio Basico";
@@ -416,7 +418,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges);
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Básicos"));
         });
 
         FormLayout form = new FormLayout();
@@ -652,7 +654,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = expenseDistribuiteBinder.hasChanges();
 //            footer.saveState(hasChanges && isValid && GrantOptions.grantedOption("Parametros"));
-            footerExpenseDistribuite.saveState(hasChanges && isValid);
+            footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Servicios Básicos"));
         });
 
         expenseDistribuiteBinder.readBean(expenseDistribuite);
@@ -699,7 +701,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                 expenseDistribuiteList.add(currentExpenseDistribuite);
                 detailsDrawerExpenseDistribuite.hide();
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
-                footer.saveState(true); //TODO HABILITAR SI TIENE EL ROL
+                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos"));
 
             }
         });
@@ -758,10 +760,11 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         btn.setIcon(VaadinIcon.TRASH.create());
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        btn.setEnabled(GrantOptions.grantedOptionWrite("Servicios Básicos"));
         btn.addClickListener(event -> {
             expenseDistribuiteList.remove(expenseDistribuite);
             expenseDistribuiteGrid.getDataProvider().refreshAll();
-            footer.saveState(true); //TODO HABILITAR SI TIENE EL ROL
+            footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos"));
         });
 
         return btn;
@@ -772,6 +775,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         btn.setIcon(VaadinIcon.EDIT.create());
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         Tooltips.getCurrent().setTooltip(btn,"Editar");
+        btn.setEnabled(GrantOptions.grantedOptionWrite("Servicios Básicos"));
         btn.addClickListener(event -> {
             setViewDetailsPosition(Position.RIGHT);
             setViewDetails(createDetailsDrawerExpenseDistribuite());
@@ -839,8 +843,8 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                selectedInvoiceAuthorizerList.add(currentSelectedInvoiceAuthorizer);
                detailsDrawerSelectedInvoiceAuthorizer.hide();
                selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
-               footerInvoiceAuthorizer.saveState(true);
-               footer.saveState(true);
+               footerInvoiceAuthorizer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos"));
+               footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos"));
            }
         });
 
@@ -929,6 +933,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         layout.setWidthFull();
         Button btnAdd = new Button("Adicionar");
         btnAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
+        btnAdd.setVisible(GrantOptions.grantedOptionWrite("Servicios Básicos"));
         btnAdd.addClickListener(event -> {
             setViewDetailsPosition(Position.RIGHT);
             setViewDetails(createDetailsDrawerSelectedInvoiceAuthorizer());
@@ -981,6 +986,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         btn.setIcon(VaadinIcon.TRASH.create());
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        btn.setEnabled(GrantOptions.grantedOptionWrite("Servicios Básicos"));
         btn.addClickListener(event -> {
            selectedInvoiceAuthorizerList.remove(selectedInvoiceAuthorizer);
            selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
@@ -1025,7 +1031,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges);
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Básicos"));
         });
 //        }
         VerticalLayout layout = new VerticalLayout();

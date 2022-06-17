@@ -1,8 +1,8 @@
 package com.mindware.ui.views.config.typeChangeCurrency;
 
-import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.config.TypeChangeCurrency;
 import com.mindware.backend.rest.typeChangeCurrency.TypeChangeCurrencyRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -29,7 +29,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
@@ -84,7 +83,7 @@ public class TypeChangeCurrencyView extends SplitViewFrame implements RouterLayo
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
-//        btnNew.setEnabled(GrantOptions.grantedOption("Parametros"));
+        btnNew.setVisible(GrantOptions.grantedOptionWrite("Tipo Cambio"));
         btnNew.addClickListener(e -> {
             showDetails(new TypeChangeCurrency());
         });
@@ -238,8 +237,7 @@ public class TypeChangeCurrencyView extends SplitViewFrame implements RouterLayo
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-//            footer.saveState(hasChanges && isValid && GrantOptions.grantedOption("Parametros"));
-            footer.saveState(hasChanges && isValid);
+            footer.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Tipo Cambio"));
         });
 
         FormLayout form = new FormLayout();

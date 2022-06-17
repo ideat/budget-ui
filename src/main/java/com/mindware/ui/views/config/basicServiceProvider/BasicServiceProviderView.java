@@ -4,6 +4,7 @@ import com.mindware.backend.entity.config.BasicServiceProvider;
 import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.contract.Contract;
 import com.mindware.backend.rest.basicServiceProvider.BasicServiceProviderRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -95,6 +96,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+        btnNew.setVisible(GrantOptions.grantedOptionWrite("Proveedor Serv. Básicos"));
         btnNew.addClickListener(e -> {
             showDetails(new BasicServiceProvider());
         });
@@ -286,7 +288,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(hasChanges && isValid);
+            footer.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Proveedor Serv. Básicos"));
         });
 
         FormLayout form = new FormLayout();

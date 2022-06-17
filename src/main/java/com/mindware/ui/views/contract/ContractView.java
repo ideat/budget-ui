@@ -127,6 +127,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+        btnNew.setVisible(GrantOptions.grantedOptionWrite("Contratos"));
         btnNew.addClickListener(e -> {
 //            UI.getCurrent().navigate(SupplierRegisterView.class,"NUEVO");
             showDetails(new Contract());
@@ -224,6 +225,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         btn.setIcon(VaadinIcon.EDIT.create());
+        btn.setEnabled(GrantOptions.grantedOptionRead("Contratos"));
         btn.addClickListener(buttonClickEvent -> {
             Contract contract = restTemplate.getById(contractDto.getIdContract().toString());
             showDetails(contract);
@@ -368,7 +370,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.addStatusChangeListener(event ->{
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges && GrantOptions.grantedOption("Contratos"));
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Contratos"));
         });
 
         FormLayout form = new FormLayout();

@@ -2,6 +2,7 @@ package com.mindware.ui.views.supplier;
 
 import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
@@ -68,6 +69,7 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+        btnNew.setVisible(GrantOptions.grantedOptionWrite("Proveedores"));
         btnNew.addClickListener(e -> {
             UI.getCurrent().navigate(SupplierRegisterView.class,"NUEVO");
         });
@@ -182,6 +184,8 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
     private Component createButtonEdit(Supplier supplier){
         Button btn = new Button();
         Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
+        btn.setEnabled(GrantOptions.grantedOptionRead("Proveedores"));
+
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         btn.setIcon(VaadinIcon.EDIT.create());
         btn.addClickListener(event -> {

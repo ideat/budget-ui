@@ -30,15 +30,12 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.EmailField;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.router.*;
-import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -69,6 +66,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
     private ListDataProvider<Supplier> dataProvider;
 
     private DetailsDrawerFooter footerShareHolder;
+    private DetailsDrawerFooter footerSupplier;
     private DetailsDrawer detailsDrawer;
     private DetailsDrawerHeader detailsDrawerHeader;
     private String title;
@@ -211,7 +209,8 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         binder.addStatusChangeListener(event -> {
            boolean isValid = !event.hasValidationErrors();
            boolean hasChanges = binder.hasChanges();
-           footerShareHolder.saveState(isValid && hasChanges && GrantOptions.grantedOption("Proveedores"));
+           footerSupplier.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Proveedores"));
+//           footerShareHolder.saveState(isValid && hasChanges && GrantOptions.grantedOption("Proveedores"));
         });
 
         FormLayout form = new FormLayout();
@@ -240,8 +239,11 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         form.addFormItem(location,"Oficina");
         form.addFormItem(pendingCompleting,"Información completa?");
 
-        footerShareHolder = new DetailsDrawerFooter();
-        footerShareHolder.addSaveListener(event -> {
+//        footerShareHolder = new DetailsDrawerFooter();
+        footerSupplier = new DetailsDrawerFooter();
+        footerSupplier.saveState(GrantOptions.grantedOptionWrite("Proveedores"));
+
+        footerSupplier.addSaveListener(event -> {
 
             if(!email.isEmpty()){
                 binder.forField(email)
@@ -271,7 +273,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
             }
         });
 
-        footerShareHolder.addCancelListener(e -> {
+        footerSupplier.addCancelListener(e -> {
             UI.getCurrent().navigate("supplier");
         });
 
@@ -279,7 +281,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         detailsDrawer.setHeight("100%");
         detailsDrawer.setPadding(Left.S, Right.S, Top.S);
         detailsDrawer.setContent(form,layoutGridShareHolders());
-        detailsDrawer.setFooter(footerShareHolder);
+        detailsDrawer.setFooter(footerSupplier);
         detailsDrawer.show();
 
 
@@ -351,6 +353,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
                 }
                 shareHolderList.add(currentShareHolder);
                 gridShareHolder.getDataProvider().refreshAll();
+                footerSupplier.saveState(true);
                 detailsDrawer.hide();
             }else{
                 UIUtils.showNotificationType("Datos incorrectos, verifique nuevamente","alert");
@@ -358,7 +361,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         });
 
         footerShareHolder.addCancelListener(e ->{
-            footerShareHolder.saveState(false);
+
             detailsDrawer.hide();
 
         });
@@ -384,7 +387,11 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         shareHolderBinder.forField(fullName)
                 .asRequired("Nombre Completo es requerido")
                 .bind(ShareHolder::getFullName,ShareHolder::setFullName);
-
+        shareHolderBinder.addStatusChangeListener(event -> {
+                boolean isValid = !event.hasValidationErrors();
+                boolean hasChanges = shareHolderBinder.hasChanges();
+                footerShareHolder.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Proveedores"));
+        });
         FormLayout formLayout = new FormLayout();
         formLayout.addClassNames(LumoStyles.Padding.Bottom.L,
                 LumoStyles.Padding.Horizontal.S, LumoStyles.Padding.Top.S);

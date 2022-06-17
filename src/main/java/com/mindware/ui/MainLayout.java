@@ -225,8 +225,8 @@ public class MainLayout extends FlexBoxLayout
 			if(assignedOption("Cuentas")) {
 				menu.addNaviItem(configuration, "Cuentas", AccountView.class);
 			}
-			if(assignedOption("Servicios Básicos")) {
-				menu.addNaviItem(configuration, "Servicios Básicos", BasicServiceProviderView.class);
+			if(assignedOption("Proveedor Serv. Básicos")) {
+				menu.addNaviItem(configuration, "Proveedor Serv. Básicos", BasicServiceProviderView.class);
 			}
 			if(assignedOption("Periodos")) {
 				menu.addNaviItem(configuration, "Periodos", PeriodView.class);

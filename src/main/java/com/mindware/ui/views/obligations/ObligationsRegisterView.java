@@ -10,7 +10,6 @@ import com.mindware.backend.entity.invoiceAuthorizer.InvoiceAuthorizer;
 import com.mindware.backend.entity.invoiceAuthorizer.SelectedInvoiceAuthorizer;
 import com.mindware.backend.entity.obligations.Obligations;
 import com.mindware.backend.entity.obligations.ObligationsDto;
-import com.mindware.backend.entity.recurrentService.RecurrentServiceDto;
 import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
@@ -18,6 +17,7 @@ import com.mindware.backend.rest.obligations.ObligationsDtoRestTemplate;
 import com.mindware.backend.rest.obligations.ObligationsRestTemplate;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -194,7 +194,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
         footer.addSaveListener(event -> {
             try {
-                if(obligationsDto.getInvoiceAuthorizer() !=null && !obligationsDto.getInvoiceAuthorizer().equals("[]")){
+                if(obligationsDto.getInvoiceAuthorizer() !=null && !obligationsDto.getInvoiceAuthorizer().equals("[]") && GrantOptions.grantedOptionAccounting("Obligaciones")){
                     binder.forField(dateDeliveryAccounting)
                             .asRequired("Fecha entrega a contabilidad es requerida")
                             .withValidator(d -> d.isAfter(paymentDate.getValue()),"Fecha entrega contabilidad no puede ser anterior a la fecha de pago")
@@ -246,7 +246,8 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
         appBar.addTab("Registro Factura Obligacion");
         appBar.addTab("Autorización Factura");
-        appBar.addTab("Entrega a Contabilidad");
+        if(GrantOptions.grantedOptionAccounting("Obligaciones"))
+            appBar.addTab("Entrega a Contabilidad");
 
         appBar.centerTabs();
         currentTab = "Registro Factura Obligacion";
@@ -408,7 +409,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges);
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones"));
         });
 
         FormLayout form = new FormLayout();
@@ -544,6 +545,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     private Component createButtonSelectSupplier(Supplier supplier){
         Button btn = new Button();
         btn.setIcon(VaadinIcon.CHEVRON_CIRCLE_UP.create());
+        btn.setEnabled(GrantOptions.grantedOptionWrite("Obligaciones"));
         btn.addClickListener(event -> {
             nameSupplier.setValue(supplier.getName());
             supplierSelected = supplier;
@@ -641,7 +643,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = expenseDistribuiteBinder.hasChanges();
 //            footer.saveState(hasChanges && isValid && GrantOptions.grantedOption("Parametros"));
-            footerExpenseDistribuite.saveState(hasChanges && isValid);
+            footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Obligaciones"));
         });
 
         expenseDistribuiteBinder.readBean(expenseDistribuite);
@@ -688,7 +690,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 expenseDistribuiteList.add(currentExpenseDistribuite);
                 detailsDrawerExpenseDistribuite.hide();
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
-                footer.saveState(true); //TODO HABILITAR SI TIENE EL ROL
+                footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
 
             }
         });
@@ -745,11 +747,12 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         Button btn = new Button();
         btn.setIcon(VaadinIcon.TRASH.create());
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        btn.setEnabled(GrantOptions.grantedOptionWrite("Obligaciones"));
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
             expenseDistribuiteList.remove(expenseDistribuite);
             expenseDistribuiteGrid.getDataProvider().refreshAll();
-            footer.saveState(true); //TODO HABILITAR SI TIENE EL ROL
+            footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
         });
 
         return btn;
@@ -759,6 +762,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         Button btn = new Button();
         btn.setIcon(VaadinIcon.EDIT.create());
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        btn.setEnabled(GrantOptions.grantedOptionRead("Obligaciones"));
         Tooltips.getCurrent().setTooltip(btn,"Editar");
         btn.addClickListener(event -> {
             setViewDetailsPosition(Position.RIGHT);
@@ -791,6 +795,8 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         obligations.setNumberDocumentReceived(obligationsDto.getNumberDocumentReceived());
         String jsonInvoiceAuthorizer = mapper.writeValueAsString(selectedInvoiceAuthorizerList);
         obligations.setInvoiceAuthorizer(jsonInvoiceAuthorizer);
+        obligations.setDateDeliveryAccounting(obligationsDto.getDateDeliveryAccounting());
+        obligations.setAccountingPerson(obligationsDto.getAccountingPerson());
         return obligations;
     }
     // Invoice Authorizer
@@ -821,8 +827,8 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 selectedInvoiceAuthorizerList.add(currentSelectedInvoiceAuthorizer);
                 detailsDrawerSelectedInvoiceAuthorizer.hide();
                 selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
-                footerInvoiceAuthorizer.saveState(true);
-                footer.saveState(true);
+                footerInvoiceAuthorizer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
+                footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
             }
         });
 
@@ -911,6 +917,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         layout.setWidthFull();
         Button btnAdd = new Button("Adicionar");
         btnAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
+        btnAdd.setEnabled(GrantOptions.grantedOptionWrite("Obligaciones"));
         btnAdd.addClickListener(event -> {
             setViewDetailsPosition(Position.RIGHT);
             setViewDetails(createDetailsDrawerSelectedInvoiceAuthorizer());
@@ -962,6 +969,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         Button btn = new Button();
         btn.setIcon(VaadinIcon.TRASH.create());
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        btn.setEnabled(GrantOptions.grantedOptionWrite("Obligaciones"));
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
             selectedInvoiceAuthorizerList.remove(selectedInvoiceAuthorizer);
@@ -1007,7 +1015,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges);
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones"));
         });
 //        }
         VerticalLayout layout = new VerticalLayout();

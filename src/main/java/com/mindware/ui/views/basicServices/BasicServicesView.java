@@ -4,6 +4,7 @@ import com.mindware.backend.entity.basicServices.BasicServices;
 import com.mindware.backend.entity.basicServices.BasicServicesDto;
 import com.mindware.backend.rest.basicServices.BasicServicesDtoRestTemplate;
 import com.mindware.backend.rest.basicServices.BasicServicesRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
@@ -67,6 +68,7 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+        btnNew.setVisible(GrantOptions.grantedOptionWrite("Servicios Básicos"));
         btnNew.addClickListener(e -> {
             Map<String, List<String>> param = new HashMap<>();
             List<String> id = new ArrayList<>();
@@ -235,6 +237,7 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Enviar");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btn.setIcon(VaadinIcon.THUMBS_UP.create());
+        btn.setVisible(GrantOptions.grantedOptionSend("Servicios Básicos"));
         btn.addClickListener(event -> {
             if(basicServicesDto.getInvoiceAuthorizer()==null || basicServicesDto.getInvoiceAuthorizer().equals("[]")){
                 UIUtils.showNotificationType("Registre Autorizador de la factura","alert");
@@ -254,6 +257,7 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Observado");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
         btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
+        btn.setVisible(GrantOptions.grantedOptionObserved("Servicios Básicos"));
         btn.addClickListener(event -> {
             if(!basicServicesDto.getState().equals("ENVIADO") || !basicServicesDto.getState().equals("FINALIZADO")){
                 UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADA o FINALIZADO","alert");
@@ -273,6 +277,7 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Finalizar");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
         btn.setIcon(VaadinIcon.LOCK.create());
+        btn.setVisible(GrantOptions.grantedOptionFinish("Servicios Básicos"));
         btn.addClickListener(event -> {
             if(!basicServicesDto.getState().equals("ENVIADO")){
                 UIUtils.showNotificationType("No puede finalizar sin estar ENVIADO","alert");

@@ -51,10 +51,12 @@ public class LoginView extends VerticalLayout {
                 VaadinSession.getCurrent().setAttribute("sn", userData.getSn());
                 VaadinSession.getCurrent().setAttribute("department", userData.getDepartment());
                 VaadinSession.getCurrent().setAttribute("memberOf",userData.getMemberOf());
+                VaadinSession.getCurrent().setAttribute("version","Versión 1.0.0");
+
 
                 List<Rol> rolList = rolRestTemplate.getAllRols();
                 for(Rol rol:rolList){
-                    if( VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BANCO_USERS")){
+                    if( VaadinSession.getCurrent().getAttribute("memberOf").toString().contains(rol.getName())){
                         VaadinSession.getCurrent().setAttribute("options",rol.getOptions());
                         break;
                     }

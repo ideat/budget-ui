@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindware.backend.entity.config.Account;
 import com.mindware.backend.entity.config.SubAccount;
 import com.mindware.backend.rest.account.AccountRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -106,7 +107,7 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
-//        btnNew.setEnabled(GrantOptions.grantedOption("Tipo de Credito"));
+        btnNew.setVisible(GrantOptions.grantedOptionWrite("Cuentas"));
         btnNew.addClickListener(e->showDetails(new SubAccount()));
 
         HorizontalLayout topLayout = new HorizontalLayout();
@@ -200,7 +201,7 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges= binder.hasChanges();
-            footer.saveState(isValid && hasChanges);
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Cuentas"));
         });
 
         FormLayout form = new FormLayout();
@@ -261,6 +262,7 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
         Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
         btn.setIcon(VaadinIcon.EDIT.create());
+        btn.setVisible(GrantOptions.grantedOptionWrite("Cuentas"));
         btn.addClickListener(event -> {
             showDetails(subAccount);
         });
@@ -271,11 +273,12 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
         Button btn = new Button();
         btn.setIcon(VaadinIcon.TRASH.create());
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        btn.setVisible(GrantOptions.grantedOptionWrite("Cuentas"));
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
             subAccountList.remove(subAccount);
             grid.getDataProvider().refreshAll();
-            footer.saveState(true);
+            footer.saveState(GrantOptions.grantedOptionWrite("Cuentas"));
         });
 
         return btn;

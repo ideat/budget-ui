@@ -7,6 +7,7 @@ import com.mindware.backend.entity.user.UserLdapDto;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
 import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -104,6 +105,7 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+        btnNew.setVisible(GrantOptions.grantedOptionWrite("Autorizadores de Facturas"));
         btnNew.addClickListener(e -> {
             showDetails(new InvoiceAuthorizer());
         });
@@ -274,7 +276,7 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
         binder.addStatusChangeListener(event ->{
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges);
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Autorizadores de Facturas"));
         });
 
         FormLayout form = new FormLayout();

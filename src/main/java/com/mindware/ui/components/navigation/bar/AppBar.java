@@ -3,6 +3,7 @@ package com.mindware.ui.components.navigation.bar;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.HasValue;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
@@ -16,6 +17,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.shared.Registration;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -115,12 +117,24 @@ public class AppBar extends FlexBoxLayout {
 
 		ContextMenu contextMenu = new ContextMenu(avatar);
 		contextMenu.setOpenOnClick(true);
-		contextMenu.addItem("Settings",
-				e -> Notification.show("Not implemented yet.", 3000,
-						Notification.Position.BOTTOM_CENTER));
-		contextMenu.addItem("Log Out",
-				e -> Notification.show("Not implemented yet.", 3000,
-						Notification.Position.BOTTOM_CENTER));
+		contextMenu.addItem("Usuario: " + VaadinSession.getCurrent().getAttribute("cn").toString(),
+				e -> {});
+		contextMenu.addItem(VaadinSession.getCurrent().getAttribute("version").toString(),
+				e -> {});
+		contextMenu.addItem("Cerrar Sesión",
+				e -> {
+					VaadinSession.getCurrent().setAttribute("login",null);
+					VaadinSession.getCurrent().setAttribute("options",null);
+					VaadinSession.getCurrent().setAttribute("jwt",null);
+					VaadinSession.getCurrent().setAttribute("cn", null);
+					VaadinSession.getCurrent().setAttribute("sn", null);
+					VaadinSession.getCurrent().setAttribute("department", null);
+					VaadinSession.getCurrent().setAttribute("memberOf",null);
+					UI.getCurrent().navigate("login");
+				});
+//		contextMenu.addItem("Log Out",
+//				e -> Notification.show("Not implemented yet.", 3000,
+//						Notification.Position.BOTTOM_CENTER));
 	}
 
 	private void initActionItems() {

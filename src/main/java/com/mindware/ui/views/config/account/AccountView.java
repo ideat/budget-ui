@@ -4,6 +4,7 @@ import com.mindware.backend.entity.config.Account;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.rest.account.AccountRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -101,6 +102,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+        btnNew.setVisible(GrantOptions.grantedOptionWrite("Cuentas"));
         btnNew.addClickListener(e -> {
             showDetails(new Account());
         });
@@ -133,6 +135,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
         Button btnClone = new Button("Copiar Cuentas");
         btnClone.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
+        btnClone.setVisible(GrantOptions.grantedOptionWrite("Cuentas"));
         btnClone.addClickListener(event -> {
            showCloneAccount();
         });
@@ -420,7 +423,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         binder.addStatusChangeListener(event -> {
            boolean isValid = !event.hasValidationErrors();
            boolean hasChanges = binder.hasChanges();
-           footer.saveState(hasChanges && isValid);
+           footer.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Cuentas"));
         });
 
         FormLayout form = new FormLayout();

@@ -3,6 +3,7 @@ package com.mindware.ui.views.config.period;
 import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.config.Period;
 import com.mindware.backend.rest.period.PeriodRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -82,7 +83,7 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
-//        btnNew.setEnabled(GrantOptions.grantedOption("Parametros"));
+        btnNew.setEnabled(GrantOptions.grantedOptionWrite("Periodos"));
         btnNew.addClickListener(e -> {
             showDetails(new Period());
         });
@@ -205,7 +206,7 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(hasChanges && isValid);
+            footer.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Periodos"));
         });
 
         FormLayout form = new FormLayout();
@@ -242,6 +243,7 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Activar");
         btn.setIcon(VaadinIcon.CHECK.create());
         btn.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.setVisible(GrantOptions.grantedOptionWrite("Periodos"));
         btn.addClickListener(event -> {
             period.setIsOpen(true);
             restTemplate.add(period);

@@ -2,6 +2,7 @@ package com.mindware.ui.views.config.parameter;
 
 import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -89,7 +90,7 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
-//        btnNew.setEnabled(GrantOptions.grantedOption("Parametros"));
+        btnNew.setEnabled(GrantOptions.grantedOptionWrite("Parámetros"));
         btnNew.addClickListener(e -> {
             showDetails(new Parameter());
         });
@@ -252,8 +253,7 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
         binder.addStatusChangeListener(event ->{
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-//            footer.saveState(hasChanges && isValid && GrantOptions.grantedOption("Parametros"));
-            footer.saveState(hasChanges && isValid);
+            footer.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Parámetros"));
         });
 
         FormLayout form = new FormLayout();

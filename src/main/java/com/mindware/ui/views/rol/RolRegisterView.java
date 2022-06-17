@@ -9,6 +9,7 @@ import com.mindware.backend.entity.rol.Option;
 import com.mindware.backend.entity.rol.Rol;
 import com.mindware.backend.rest.rol.RolRestTemplate;
 //import com.mindware.backend.util.GrantOptions;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -271,6 +272,7 @@ public class RolRegisterView extends SplitViewFrame implements HasUrlParameter<S
             Tooltips.getCurrent().setTooltip(edit,"Editar");
             edit.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
             edit.setIcon(VaadinIcon.EDIT.create());
+            edit.setVisible(GrantOptions.grantedOptionWrite("Roles"));
             edit.addClickListener(e ->{
                 editor.editItem(option);
 
@@ -300,9 +302,8 @@ public class RolRegisterView extends SplitViewFrame implements HasUrlParameter<S
         layoutOptions.add(horizontalLayout,grid);
 /////////////
 
-
         footer = new DetailsDrawerFooter();
-//        footer.saveState(true && GrantOptions.grantedOption("Roles"));
+        footer.saveState(GrantOptions.grantedOptionWrite("Roles"));
         footer.addSaveListener(e ->{
             if(binder.writeBeanIfValid(rol)){
                 try {
@@ -318,7 +319,7 @@ public class RolRegisterView extends SplitViewFrame implements HasUrlParameter<S
                 } catch (JsonProcessingException ex) {
                     ex.printStackTrace();
                 }
-                UIUtils.dialog("Rol Registrado","success").open();
+                UIUtils.showNotificationType("Rol Registrado","success");
                 UI.getCurrent().navigate(RolView.class);
             }
         });

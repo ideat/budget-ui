@@ -1,10 +1,10 @@
 package com.mindware.ui.views.obligations;
 
-import com.mindware.backend.entity.basicServices.BasicServicesDto;
 import com.mindware.backend.entity.obligations.Obligations;
 import com.mindware.backend.entity.obligations.ObligationsDto;
 import com.mindware.backend.rest.obligations.ObligationsDtoRestTemplate;
 import com.mindware.backend.rest.obligations.ObligationsRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
@@ -68,6 +68,7 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+        btnNew.setVisible(GrantOptions.grantedOptionWrite("Obligaciones"));
         btnNew.addClickListener(e -> {
             Map<String, List<String>> param = new HashMap<>();
             List<String> id = new ArrayList<>();
@@ -237,6 +238,7 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Enviar");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btn.setIcon(VaadinIcon.THUMBS_UP.create());
+        btn.setVisible(GrantOptions.grantedOptionSend("Obligaciones"));
         btn.addClickListener(event -> {
             if(obligationsDto.getInvoiceAuthorizer()==null || obligationsDto.getInvoiceAuthorizer().equals("[]")){
                 UIUtils.showNotificationType("Registre Autorizador de la factura","alert");
@@ -261,6 +263,7 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Observar");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
         btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
+        btn.setVisible(GrantOptions.grantedOptionObserved("Obligaciones"));
         btn.addClickListener(event -> {
             if(obligationsDto.getState().equals("ENVIADO") || !obligationsDto.getState().equals("FINALIZADO")){
                 UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADA o FINALIZADO","alert");
@@ -285,6 +288,7 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Finalizar");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
         btn.setIcon(VaadinIcon.LOCK.create());
+        btn.setVisible(GrantOptions.grantedOptionFinish("Obligaciones"));
         btn.addClickListener(event -> {
             if(!obligationsDto.getState().equals("ENVIADO")){
                 UIUtils.showNotificationType("No puede finalizar sin estar ENVIADO","alert");

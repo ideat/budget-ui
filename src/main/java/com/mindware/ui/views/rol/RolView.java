@@ -2,6 +2,7 @@ package com.mindware.ui.views.rol;
 
 import com.mindware.backend.entity.rol.Rol;
 import com.mindware.backend.rest.rol.RolRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
@@ -58,6 +59,7 @@ public class RolView extends ViewFrame implements RouterLayout {
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
+        btnNew.setVisible(GrantOptions.grantedOptionWrite("Roles"));
         btnNew.addClickListener(e -> {
             UI.getCurrent().navigate(RolRegisterView.class,"NUEVO");
         });

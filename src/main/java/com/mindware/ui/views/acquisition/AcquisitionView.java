@@ -4,6 +4,7 @@ import com.mindware.backend.entity.adquisition.Acquisition;
 import com.mindware.backend.entity.adquisition.AcquisitionDto;
 import com.mindware.backend.rest.acquisition.AcquisitionDtoRestTemplate;
 import com.mindware.backend.rest.acquisition.AcquisitionRestTemplate;
+import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
@@ -259,6 +260,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Enviar");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btn.setIcon(VaadinIcon.THUMBS_UP.create());
+        btn.setVisible(GrantOptions.grantedOptionSend("Adquisiciones"));
         btn.addClickListener(event -> {
             if(acquisitionDto.getDateDeliveryAccounting()==null){
                 UIUtils.showNotificationType("Registre fecha de envio a contabilidad","alert");
@@ -283,6 +285,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Finalizar");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
         btn.setIcon(VaadinIcon.LOCK.create());
+        btn.setVisible(GrantOptions.grantedOptionFinish("Adquisiciones"));
         btn.addClickListener(event -> {
             if(!acquisitionDto.getState().equals("ENVIADO")){
                 UIUtils.showNotificationType("No puede finalizar sin estar ENVIADO","alert");
@@ -313,6 +316,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Observado");
         btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
         btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
+        btn.setVisible(GrantOptions.grantedOptionObserved("Adquisiciones"));
         btn.addClickListener(event -> {
             Acquisition acquisition = new Acquisition();
             acquisition.setId(acquisitionDto.getId());
