@@ -67,4 +67,6 @@ public class Acquisition {
     private Integer invoiceNumber;
 
     private Boolean isBudgeted; //presupuestado?
+
+    private String createdBy;
 }

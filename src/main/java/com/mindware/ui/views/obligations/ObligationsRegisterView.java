@@ -58,6 +58,7 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.server.VaadinSession;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -780,6 +781,10 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
     private Obligations fillObligations() throws JsonProcessingException {
         Obligations obligations = new Obligations();
+        if(obligationsDto.getId()==null){
+            obligations.setCreatedBy(VaadinSession.getCurrent().getAttribute("login").toString());
+            obligations.setState("INICIADO");
+        }
         obligations.setId(obligationsDto.getId());
         obligations.setTypeObligation(obligationsDto.getTypeObligation());
         obligations.setIdSupplier(obligationsDto.getIdSupplier());

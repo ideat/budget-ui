@@ -63,6 +63,7 @@ import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.server.VaadinSession;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -940,6 +941,9 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private RecurrentService fillRecurrentService() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         RecurrentService recurrentService = new RecurrentService();
+        if(recurrentServiceDto.getId()==null){
+            recurrentService.setCreatedBy(VaadinSession.getCurrent().getAttribute("login").toString());
+        }
         recurrentService.setId(recurrentServiceDto.getId());
         recurrentService.setTypeService(recurrentServiceDto.getTypeService());
         recurrentService.setIdSupplier(recurrentServiceDto.getIdSupplier());

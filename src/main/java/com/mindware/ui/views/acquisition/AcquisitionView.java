@@ -30,6 +30,7 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.server.VaadinSession;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -272,7 +273,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
             acquisitionRestTemplate.udpateState(acquisition);
             acquisitionDto.setState("ENVIADO");
             acquisitionDtoList.removeIf(ac -> ac.getId().equals(acquisitionDto.getId()));
-            acquisitionDtoList.add(acquisitionDto);
+//            acquisitionDtoList.add(acquisitionDto);
             acquisitionDtoList.sort(Comparator.comparing(AcquisitionDto::getReceptionDate));
             dataProvider.refreshAll();
             UIUtils.showNotificationType("Enviado a Contabilidad","success");
@@ -324,7 +325,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
             acquisitionRestTemplate.udpateState(acquisition);
             acquisitionDto.setState("OBSERVADO");
             acquisitionDtoList.removeIf(ac -> ac.getId().equals(acquisitionDto.getId()));
-            acquisitionDtoList.add(acquisitionDto);
+//            acquisitionDtoList.add(acquisitionDto);
             acquisitionDtoList.sort(Comparator.comparing(AcquisitionDto::getReceptionDate));
             grid.getDataProvider().refreshAll();
             UIUtils.showNotificationType("Adquisición Observada","alert");
@@ -365,7 +366,11 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     }
 
     private void getAcquisitionDto(){
-        acquisitionDtoList = new ArrayList<>(restTemplate.getAll());
+        if(VaadinSession.getCurrent().getAttribute("scope").toString().equals("NACIONAL")) {
+            acquisitionDtoList = new ArrayList<>(restTemplate.getAll());
+        }else{
+            acquisitionDtoList = new ArrayList<>(restTemplate.getByCreatedByAndState(VaadinSession.getCurrent().getAttribute("login").toString()));
+        }
         dataProvider = new ListDataProvider<>(acquisitionDtoList);
     }
 }

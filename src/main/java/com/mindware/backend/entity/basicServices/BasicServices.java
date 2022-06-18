@@ -45,4 +45,6 @@ public class BasicServices {
     private String accountingPerson;
 
     private String state;
+
+    private String createdBy;
 }

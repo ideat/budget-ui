@@ -50,4 +50,14 @@ public class RecurrentServiceDtoRestTemplate {
         ResponseEntity<RecurrentServiceDto> response = restTemplate.exchange(uri, HttpMethod.GET,entity,RecurrentServiceDto.class,params);
         return response.getBody();
     }
+
+    public List<RecurrentServiceDto> getByCreatedByAndState(String createdBy){
+        final String uri = url + "/v1/recurrent-service-dto/getByCreatedByAndState/{createdby}";
+        Map<String,String> params = new HashMap<>();
+        params.put("createdby",createdBy);
+
+        HttpEntity<RecurrentServiceDto[]> entity = new HttpEntity<>(HeaderJwt.getHeader());
+        ResponseEntity<RecurrentServiceDto[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,RecurrentServiceDto[].class,params);
+        return Arrays.asList(response.getBody());
+    }
 }

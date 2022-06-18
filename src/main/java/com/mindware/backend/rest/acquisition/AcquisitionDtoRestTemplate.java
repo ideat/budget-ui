@@ -39,4 +39,13 @@ public class AcquisitionDtoRestTemplate {
         ResponseEntity<AcquisitionDto[]> response = restTemplate.exchange(uri, HttpMethod.GET, entity, AcquisitionDto[].class, params);
         return Arrays.asList(response.getBody());
     }
+
+    public List<AcquisitionDto> getByCreatedByAndState(String createdBy){
+        final String uri = url + "/v1/acquisitionDto/getByCreatedByAndState/{createdby}";
+        Map<String,String> params = new HashMap<>();
+        params.put("createdby",createdBy);
+        HttpEntity<AcquisitionDto[]> entity = new HttpEntity<>(HeaderJwt.getHeader());
+        ResponseEntity<AcquisitionDto[]> response = restTemplate.exchange(uri, HttpMethod.GET, entity, AcquisitionDto[].class, params);
+        return Arrays.asList(response.getBody());
+    }
 }

@@ -57,4 +57,13 @@ public class ObligationsDtoRestTemplate {
         ResponseEntity<ObligationsDto> response = restTemplate.exchange(uri, HttpMethod.GET,entity,ObligationsDto.class, params);
         return response.getBody();
     }
+
+    public List<ObligationsDto> getByCreatedByAndState(String createdBy){
+        final String uri = url + "/v1/obligationsdto/getCreatedByAndState/{createdby}";
+        Map<String,String> params = new HashMap<>();
+        params.put("createdby",createdBy);
+        HttpEntity<ObligationsDto[]> entity = new HttpEntity<>(HeaderJwt.getHeader());
+        ResponseEntity<ObligationsDto[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,ObligationsDto[].class, params);
+        return Arrays.asList(response.getBody());
+    }
 }

@@ -37,7 +37,7 @@ public class BasicServicesDtoRestTemplate {
         params.put("period",period);
 
         HttpEntity<BasicServicesDto[]> entity = new HttpEntity<>(HeaderJwt.getHeader());
-        ResponseEntity<BasicServicesDto[]> response = restTemplate.exchange(uri,HttpMethod.POST, entity,BasicServicesDto[].class,params);
+        ResponseEntity<BasicServicesDto[]> response = restTemplate.exchange(uri,HttpMethod.GET, entity,BasicServicesDto[].class,params);
         return Arrays.asList(response.getBody());
     }
 
@@ -51,4 +51,13 @@ public class BasicServicesDtoRestTemplate {
         return response.getBody();
     }
 
+    public List<BasicServicesDto> getByCreatedByAndState(String createBy){
+        final String uri = url + "/v1/basicservicesdto/getByCreatedByAndState/{createdby}";
+        Map<String,String> params = new HashMap<>();
+        params.put("createdby",createBy);
+
+        HttpEntity<BasicServicesDto[]> entity = new HttpEntity<>(HeaderJwt.getHeader());
+        ResponseEntity<BasicServicesDto[]> response = restTemplate.exchange(uri,HttpMethod.GET, entity,BasicServicesDto[].class,params);
+        return Arrays.asList(response.getBody());
+    }
 }

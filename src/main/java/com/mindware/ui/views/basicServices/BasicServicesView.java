@@ -26,6 +26,7 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.server.VaadinSession;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -328,7 +329,12 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
     }
 
     private void getListBasicServices(){
-        basicServicesDtoList = new ArrayList<>(restTemplate.getAll());
+        if(VaadinSession.getCurrent().getAttribute("scope").toString().equals("NACIONAL")) {
+            basicServicesDtoList = new ArrayList<>(restTemplate.getAll());
+        }else{
+            basicServicesDtoList = new ArrayList<>(restTemplate.getByCreatedByAndState(VaadinSession.getCurrent().getAttribute("login").toString()));
+        }
+
         dataProvider = new ListDataProvider<>(basicServicesDtoList);
     }
 }

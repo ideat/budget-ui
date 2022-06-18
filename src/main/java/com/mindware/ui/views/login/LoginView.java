@@ -58,6 +58,7 @@ public class LoginView extends VerticalLayout {
                 for(Rol rol:rolList){
                     if( VaadinSession.getCurrent().getAttribute("memberOf").toString().contains(rol.getName())){
                         VaadinSession.getCurrent().setAttribute("options",rol.getOptions());
+                        VaadinSession.getCurrent().setAttribute("scope",rol.getScope());
                         break;
                     }
                 }

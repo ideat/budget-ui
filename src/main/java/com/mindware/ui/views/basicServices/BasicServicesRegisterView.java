@@ -61,6 +61,7 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.server.VaadinSession;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -208,6 +209,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                         try {
                             if(basicServicesDto.getId()==null){
                                 basicServicesDto.setState("INICIADO");
+
                             }
 
                             BasicServices basicServices  = basicServicesRestTemplate.add(fillBasicServices());
@@ -786,6 +788,9 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
     private BasicServices fillBasicServices() throws JsonProcessingException {
         BasicServices basicServices = new BasicServices();
+        if(basicServicesDto.getId()==null){
+            basicServices.setCreatedBy(VaadinSession.getCurrent().getAttribute("login").toString());
+        }
         basicServices.setId(basicServicesDto.getId());
         basicServices.setTypeBasicService(basicServicesDto.getTypeBasicService());
         basicServices.setIdBasicServicesProvider(basicServicesDto.getIdBasicServicesProvider());

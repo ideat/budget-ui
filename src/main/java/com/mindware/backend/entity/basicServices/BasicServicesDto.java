@@ -49,4 +49,6 @@ public class BasicServicesDto {
     private String state;
 
     private String categoryTypeDocumentReceived;
+
+    private String createdBy;
 }

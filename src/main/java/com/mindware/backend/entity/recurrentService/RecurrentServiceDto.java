@@ -58,4 +58,6 @@ public class RecurrentServiceDto {
     private String accountingPerson;
 
     private String state;
+
+    private String createdBy;
 }

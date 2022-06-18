@@ -64,6 +64,7 @@ import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
+import com.vaadin.flow.server.VaadinSession;
 import dev.mett.vaadin.tooltip.Tooltips;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
@@ -532,6 +533,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 try {
                     if(current.getId()==null){
                         current.setState("INICIADO");
+                        current.setCreatedBy(VaadinSession.getCurrent().getAttribute("login").toString());
 //                        contentInformationQuote = (FlexBoxLayout) createContent(createInformationQuote(current));
 //                        setViewContent(contentInformationQuote);
                     }
