@@ -6,6 +6,7 @@ import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
 import com.mindware.ui.layout.size.Top;
+import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.util.css.BoxSizing;
 import com.mindware.ui.views.ViewFrame;
 import com.vaadin.flow.component.AttachEvent;
@@ -73,7 +74,11 @@ public class ExpenseAcquisitionsReport extends ViewFrame implements RouterLayout
         print.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST);
         print.setIcon(VaadinIcon.PRINT.create());
         print.addClickListener(event ->{
-
+            if(periods.isEmpty()){
+                UIUtils.showNotificationType("Seleccione Periodo para su impresión","alert");
+                periods.focus();
+                return;
+            }
             Map<String, List<String>> paramExpenseAcquisition = new HashMap<>();
             List<String> origin = new ArrayList<>();
             origin.add(originReport);

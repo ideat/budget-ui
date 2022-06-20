@@ -7,6 +7,7 @@ import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
 import com.mindware.ui.layout.size.Top;
+import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.util.css.BoxSizing;
 import com.mindware.ui.views.ViewFrame;
 import com.vaadin.flow.component.AttachEvent;
@@ -64,12 +65,12 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
 
     private HorizontalLayout layoutInvestmentBusinessUnit(String originReport, String pathPage){
 
-        ComboBox<Integer> years = new ComboBox<>();
-        years.setWidth("200px");
-        years.setItems(utilValues.getAllYears());
-        years.setAllowCustomValue(false);
-        years.setClearButtonVisible(true);
-        years.setPlaceholder("Seleccione Gestión");
+//        ComboBox<Integer> years = new ComboBox<>();
+//        years.setWidth("200px");
+//        years.setItems(utilValues.getAllYears());
+//        years.setAllowCustomValue(false);
+//        years.setClearButtonVisible(true);
+//        years.setPlaceholder("Seleccione Gestión");
 
         DatePicker cutOffDate = new DatePicker();
         cutOffDate.setWidth("300px");
@@ -87,6 +88,16 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
         print.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST);
         print.setIcon(VaadinIcon.PRINT.create());
         print.addClickListener(event ->{
+            if(cutOffDate.isEmpty()){
+                UIUtils.showNotificationType("Ingrese la Fecha de Corte","alert");
+                cutOffDate.focus();
+                return;
+            }
+            if(businessUnit.isEmpty()){
+                UIUtils.showNotificationType("Seleccione la Unidad de Negocio","alert");
+                businessUnit.focus();
+                return;
+            }
 
             Map<String, List<String>> paramInvestmentBudget = new HashMap<>();
             List<String> origin = new ArrayList<>();
@@ -94,21 +105,27 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
             List<String> path = new ArrayList<>();
             path.add(pathPage);
             List<String> year = new ArrayList<>();
-            year.add(years.getValue().toString());
+            year.add(String.valueOf(cutOffDate.getValue().getYear()));
             List<String> cutOffDateParam = new ArrayList<>();
             cutOffDateParam.add(cutOffDate.getValue().toString());
             paramInvestmentBudget.put("cutoffdate",cutOffDateParam);
+            List<String> nameBusinessUnit = new ArrayList<>();
+            nameBusinessUnit.add(businessUnit.getValue().getDescription());
 
             if(originReport.equals("investment-detail")){
                 List<String> codebusiness = new ArrayList<>();
-                codebusiness.add(businessUnit.getValue().getCode());
-
+                if(businessUnit.getValue().getDescription().equals("OFICINA NACIONAL")){
+                   codebusiness.add(businessUnit.getValue().getCode2());
+                }else {
+                    codebusiness.add(businessUnit.getValue().getCode());
+                }
                 paramInvestmentBudget.put("codefatherbusinessunit",codebusiness);
 
             }
             paramInvestmentBudget.put("origin",origin);
             paramInvestmentBudget.put("path",path);
             paramInvestmentBudget.put("year",year);
+            paramInvestmentBudget.put("namebusinessunit",nameBusinessUnit);
             QueryParameters qp = new QueryParameters(paramInvestmentBudget);
             UI.getCurrent().navigate("report-preview", qp);
 
@@ -117,9 +134,9 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
         if(originReport.equals("investment-detail")){
-            layout.add(years, cutOffDate, businessUnit,print);
+            layout.add( cutOffDate, businessUnit,print);
         }else {
-            layout.add(years, cutOffDate, print);
+            layout.add(cutOffDate, print);
         }
         return layout;
     }

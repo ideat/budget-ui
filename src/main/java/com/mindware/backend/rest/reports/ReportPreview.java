@@ -73,9 +73,10 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
             String year = param.get("year").get(0);
             String codefatherBusinessUnit = param.get("codefatherbusinessunit").get(0);
             String cutOffDate = param.get("cutoffdate").get(0);
+            String nameBusinessUnit = param.get("namebusinessunit").get(0);
 
             previousPage = param.get("path").get(0);
-            file = investmentBudgetRestTemplate.reportInvestmentBudgetDetail(year,codefatherBusinessUnit,cutOffDate);
+            file = investmentBudgetRestTemplate.reportInvestmentBudgetDetail(year,codefatherBusinessUnit,cutOffDate,nameBusinessUnit);
             paramPrev.put("year",param.get("year"));
         }
 
