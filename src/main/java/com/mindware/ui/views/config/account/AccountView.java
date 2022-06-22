@@ -69,11 +69,13 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
     private TextField nameAccountFilter;
     private ComboBox<String> currencyFilter;
     private ComboBox<Integer> periodFilter;
-    private TextField nameBusinessUnitFilter;
+    private ComboBox<String> nameBusinessUnitFilter;
+    private ComboBox<String> typeAccountFilter;
 
     private ComboBox<Integer> cmbPeriod;
     private IntegerField codeBusinessUnit;
     private ComboBox<String> nameBusinessUnit;
+    private IntegerField codeFatherBusinessUnit;
 
     private ListDataProvider<Account> dataProvider;
     private Binder<Account> binder;
@@ -246,10 +248,10 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
-        grid.addColumn(Account::getCurrency)
+        grid.addColumn(Account::getTypeAccount)
                 .setFlexGrow(1)
-                .setKey("currency")
-                .setHeader("Moneda")
+                .setKey("typeaccount")
+                .setHeader("Tipo Cuenta")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
@@ -270,9 +272,10 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
         HeaderRow hr = grid.appendHeaderRow();
 
-        nameBusinessUnitFilter = new TextField();
-        nameBusinessUnitFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        nameBusinessUnitFilter = new ComboBox<>();
+        nameBusinessUnitFilter.setAutoOpen(true);
         nameBusinessUnitFilter.setWidthFull();
+        nameBusinessUnitFilter.setItems(utilValues.getNameBusinessUnit());
         nameBusinessUnitFilter.addValueChangeListener(e -> applyFilter(dataProvider));
         hr.getCell(grid.getColumnByKey("nameBusinessUnit")).setComponent(nameBusinessUnitFilter);
 
@@ -290,13 +293,21 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         nameAccountFilter.addValueChangeListener(e -> applyFilter(dataProvider));
         hr.getCell(grid.getColumnByKey("nameAccount")).setComponent(nameAccountFilter);
 
-        currencyFilter = new ComboBox<>();
-        currencyFilter.setItems(utilValues.getValueParameterByCategory("MONEDA"));
-        currencyFilter.setWidthFull();
-        currencyFilter.addValueChangeListener(e -> {
-           applyFilter(dataProvider);
+//        currencyFilter = new ComboBox<>();
+//        currencyFilter.setItems(utilValues.getValueParameterByCategory("MONEDA"));
+//        currencyFilter.setWidthFull();
+//        currencyFilter.addValueChangeListener(e -> {
+//           applyFilter(dataProvider);
+//        });
+//        hr.getCell(grid.getColumnByKey("currency")).setComponent(currencyFilter);
+
+        typeAccountFilter = new ComboBox<>();
+        typeAccountFilter.setItems("INVERSION","GASTO");
+        typeAccountFilter.setWidthFull();
+        typeAccountFilter.addValueChangeListener(e -> {
+            applyFilter(dataProvider);
         });
-        hr.getCell(grid.getColumnByKey("currency")).setComponent(currencyFilter);
+        hr.getCell(grid.getColumnByKey("typeaccount")).setComponent(typeAccountFilter);
 
         periodFilter = new ComboBox<>();
         periodFilter.setItems( utilValues.getValueIntParameterByCategory("PERIODO"));
@@ -345,6 +356,9 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         codeBusinessUnit = new IntegerField();
         codeBusinessUnit.setReadOnly(true);
 
+        codeFatherBusinessUnit = new IntegerField();
+        codeFatherBusinessUnit.setReadOnly(true);
+
         nameBusinessUnit = new ComboBox<>();
         nameBusinessUnit.setPlaceholder("Seleccione Unidad de Negocio");
         nameBusinessUnit.setWidthFull();
@@ -355,11 +369,11 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
                 .map(Concept::getDescription));
 
         nameBusinessUnit.addValueChangeListener(event -> {
-            String code = conceptList.stream()
+            Concept concept = conceptList.stream()
                     .filter(e -> e.getDescription().equals(event.getValue()))
-                    .map(Concept::getCode2)
                     .findFirst().get();
-            codeBusinessUnit.setValue(Integer.valueOf(code));
+            codeBusinessUnit.setValue(Integer.valueOf(concept.getCode2()));
+            codeFatherBusinessUnit.setValue(Integer.valueOf(concept.getCode()));
         });
 
         cmbPeriod = new ComboBox<>();
@@ -403,6 +417,8 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         binder.forField(codeBusinessUnit)
                 .asRequired("Codigo Unidad de Negocio es requerido")
                 .bind(Account::getCodeBusinessUnit,Account::setCodeBusinessUnit);
+        binder.forField(codeFatherBusinessUnit)
+                .bind(Account::getCodeFatherBusinessUnit,Account::setCodeFatherBusinessUnit);
         binder.forField(numberAccount)
                 .asRequired("Número de Cuenta es requerido")
                 .bind(Account::getNumberAccount,Account::setNumberAccount);
@@ -536,7 +552,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
     private void applyFilter(ListDataProvider<Account> dataProvider){
         dataProvider.clearFilters();
-        if(!nameBusinessUnitFilter.getValue().trim().equals("")){
+        if(nameBusinessUnitFilter.getValue()!=null && !nameBusinessUnitFilter.getValue().trim().equals("")){
             dataProvider.addFilter(account -> StringUtils.containsIgnoreCase(account.getNameBusinessUnit(),nameBusinessUnitFilter.getValue().trim()));
         }
         if(!numberAccountFilter.getValue().trim().equals("")){
@@ -545,8 +561,8 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         if(!nameAccountFilter.getValue().trim().equals("")){
             dataProvider.addFilter(account -> StringUtils.containsIgnoreCase(account.getNameAccount(),nameAccountFilter.getValue().trim()));
         }
-        if (currencyFilter.getValue()!=null){
-            dataProvider.addFilter(account -> Objects.equals(currencyFilter.getValue(),account.getCurrency()));
+        if (typeAccountFilter.getValue()!=null && !typeAccountFilter.getValue().equals("")){
+            dataProvider.addFilter(typeAccount -> Objects.equals(typeAccountFilter.getValue(),typeAccount.getTypeAccount()));
         }
         if (periodFilter.getValue()!=null){
             dataProvider.addFilter(account -> Objects.equals(periodFilter.getValue(),account.getPeriod()));

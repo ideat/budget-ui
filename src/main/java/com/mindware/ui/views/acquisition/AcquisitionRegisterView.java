@@ -337,7 +337,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         }
 
         conceptList = new ArrayList<>(conceptRestTemplate.getAgencia());
-        conceptList.addAll(conceptRestTemplate.getSucursal());
+//        conceptList.addAll(conceptRestTemplate.getSucursal());
         conceptList.sort(Comparator.comparing(Concept::getCode));
 
 

@@ -11,6 +11,8 @@ public class Account {
 
     private UUID id;
 
+    private Integer codeFatherBusinessUnit;
+
     private Integer codeBusinessUnit;
 
     private String nameBusinessUnit;

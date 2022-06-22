@@ -3,8 +3,10 @@ package com.mindware.backend.util;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindware.backend.entity.config.*;
+import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.user.UserLdapDto;
 import com.mindware.backend.rest.account.AccountRestTemplate;
+import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.rest.period.PeriodRestTemplate;
@@ -32,6 +34,9 @@ public class UtilValues {
 
     @Autowired
     private DataLdapRestTemplate dataLdapRestTemplate;
+
+    @Autowired
+    private ConceptRestTemplate conceptRestTemplate;
 
     @Autowired
     private TypeChangeCurrencyRestTemplate typeChangeCurrencyRestTemplate;
@@ -181,6 +186,13 @@ public class UtilValues {
                 .map(UserLdapDto::getCn)
                 .collect(Collectors.toList());
         return nameUsers;
+    }
+
+    public List<String> getNameBusinessUnit(){
+        List<Concept> conceptList = conceptRestTemplate.getAgencia();
+        return conceptList.stream()
+                .map(Concept::getDescription)
+                .collect(Collectors.toList());
     }
 
     public TypeChangeCurrency getCurrentTypeChangeCurrency(String name, String currency){

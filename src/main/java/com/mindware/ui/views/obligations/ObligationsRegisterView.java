@@ -183,7 +183,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         selectedInvoiceAuthorizerDataProvider = new ListDataProvider<>(selectedInvoiceAuthorizerList);
 
         conceptList = new ArrayList<>(conceptRestTemplate.getAgencia());
-        conceptList.addAll(conceptRestTemplate.getSucursal());
+//        conceptList.addAll(conceptRestTemplate.getSucursal());
         conceptList.sort(Comparator.comparing(Concept::getCode));
 
         contentCreateObligation = (FlexBoxLayout) createContent(createObligationDtoForm(obligationsDto));

@@ -200,7 +200,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
 
         conceptList = new ArrayList<>(conceptRestTemplate.getAgencia());
-        conceptList.addAll(conceptRestTemplate.getSucursal());
+//        conceptList.addAll(conceptRestTemplate.getSucursal());
         conceptList.sort(Comparator.comparing(Concept::getCode));
 
         contentCreateRecurrentService = (FlexBoxLayout) createContent(createRecurrentServiceDtoForm(recurrentServiceDto));

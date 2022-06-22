@@ -88,44 +88,64 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
         print.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST);
         print.setIcon(VaadinIcon.PRINT.create());
         print.addClickListener(event ->{
-            if(cutOffDate.isEmpty()){
-                UIUtils.showNotificationType("Ingrese la Fecha de Corte","alert");
-                cutOffDate.focus();
-                return;
-            }
-            if(businessUnit.isEmpty()){
-                UIUtils.showNotificationType("Seleccione la Unidad de Negocio","alert");
-                businessUnit.focus();
-                return;
-            }
 
             Map<String, List<String>> paramInvestmentBudget = new HashMap<>();
             List<String> origin = new ArrayList<>();
             origin.add(originReport);
             List<String> path = new ArrayList<>();
             path.add(pathPage);
-            List<String> year = new ArrayList<>();
-            year.add(String.valueOf(cutOffDate.getValue().getYear()));
-            List<String> cutOffDateParam = new ArrayList<>();
-            cutOffDateParam.add(cutOffDate.getValue().toString());
-            paramInvestmentBudget.put("cutoffdate",cutOffDateParam);
-            List<String> nameBusinessUnit = new ArrayList<>();
-            nameBusinessUnit.add(businessUnit.getValue().getDescription());
+
+
 
             if(originReport.equals("investment-detail")){
+
+
+                if (cutOffDate.isEmpty()) {
+                    UIUtils.showNotificationType("Ingrese la Fecha de Corte", "alert");
+                    cutOffDate.focus();
+                    return;
+                }
+                if (businessUnit.isEmpty()) {
+                    UIUtils.showNotificationType("Seleccione la Unidad de Negocio", "alert");
+                    businessUnit.focus();
+                    return;
+                }
+
+                List<String> cutOffDateParam = new ArrayList<>();
+                cutOffDateParam.add(cutOffDate.getValue().toString());
+                paramInvestmentBudget.put("cutoffdate",cutOffDateParam);
+
+                List<String> year = new ArrayList<>();
+                year.add(String.valueOf(cutOffDate.getValue().getYear()));
+
                 List<String> codebusiness = new ArrayList<>();
                 if(businessUnit.getValue().getDescription().equals("OFICINA NACIONAL")){
                    codebusiness.add(businessUnit.getValue().getCode2());
                 }else {
                     codebusiness.add(businessUnit.getValue().getCode());
                 }
+
+                List<String> nameBusinessUnit = new ArrayList<>();
+                nameBusinessUnit.add(businessUnit.getValue().getDescription());
                 paramInvestmentBudget.put("codefatherbusinessunit",codebusiness);
+                paramInvestmentBudget.put("year",year);
+                paramInvestmentBudget.put("namebusinessunit",nameBusinessUnit);
+
+            }else if(originReport.equals("investment-business-unit")){
+                if (cutOffDate.isEmpty()) {
+                    UIUtils.showNotificationType("Ingrese la Fecha de Corte", "alert");
+                    cutOffDate.focus();
+                    return;
+                }
+
+                List<String> cutOffDateParam = new ArrayList<>();
+                cutOffDateParam.add(cutOffDate.getValue().toString());
+                paramInvestmentBudget.put("cutoffdate",cutOffDateParam);
 
             }
             paramInvestmentBudget.put("origin",origin);
             paramInvestmentBudget.put("path",path);
-            paramInvestmentBudget.put("year",year);
-            paramInvestmentBudget.put("namebusinessunit",nameBusinessUnit);
+
             QueryParameters qp = new QueryParameters(paramInvestmentBudget);
             UI.getCurrent().navigate("report-preview", qp);
 

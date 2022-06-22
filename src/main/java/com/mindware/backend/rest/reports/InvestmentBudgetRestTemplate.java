@@ -31,4 +31,15 @@ public class InvestmentBudgetRestTemplate {
         ResponseEntity<byte[]> reponse = restTemplate.exchange(uri, HttpMethod.GET,entity,byte[].class);
         return reponse.getBody();
     }
+
+    public byte[] reportInvestmentBudgetGroupedBusinessUnit(String cutOffDate){
+        final String uri = url + "/v1/report/investementbudgetreport/investmentBudgetGroupedBydBusinessUnit";
+        HttpHeaders headers = HeaderJwt.getHeader();
+        headers.set("cutoffdate", cutOffDate);
+
+
+        HttpEntity<byte[]> entity = new HttpEntity<>(headers);
+        ResponseEntity<byte[]> reponse = restTemplate.exchange(uri, HttpMethod.GET,entity,byte[].class);
+        return reponse.getBody();
+    }
 }
