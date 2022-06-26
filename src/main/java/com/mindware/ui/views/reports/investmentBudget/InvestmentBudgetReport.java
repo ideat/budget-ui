@@ -142,6 +142,17 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
                 cutOffDateParam.add(cutOffDate.getValue().toString());
                 paramInvestmentBudget.put("cutoffdate",cutOffDateParam);
 
+            }else if(originReport.equals("investment-resume")){
+                if (cutOffDate.isEmpty()) {
+                    UIUtils.showNotificationType("Ingrese la Fecha de Corte", "alert");
+                    cutOffDate.focus();
+                    return;
+                }
+
+                List<String> cutOffDateParam = new ArrayList<>();
+                cutOffDateParam.add(cutOffDate.getValue().toString());
+                paramInvestmentBudget.put("cutoffdate",cutOffDateParam);
+
             }
             paramInvestmentBudget.put("origin",origin);
             paramInvestmentBudget.put("path",path);

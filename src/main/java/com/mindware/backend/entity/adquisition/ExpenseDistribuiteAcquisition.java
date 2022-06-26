@@ -25,4 +25,6 @@ public class ExpenseDistribuiteAcquisition {
 
     private String nameBusinessUnit;
 
+    private Integer codeFatherBusiness;
+
 }

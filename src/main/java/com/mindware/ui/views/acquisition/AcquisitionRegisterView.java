@@ -411,8 +411,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 try {
 
 
-                    Double summaryAmountInvoice = calculateInvoice(invoiceInformationList,current.getCurrency());
-                    if(summaryAmountInvoice.doubleValue() > current.getAmount().doubleValue()){
+                    Double summaryAmountInvoice = calculateInvoice(invoiceInformationList,currency.getValue());
+                    if(summaryAmountInvoice.doubleValue() > amountCaabs.getValue().doubleValue()){
                         UIUtils.showNotificationType("Monto de facturas supera el monto de la solicitud, Revise los datos","alert");
                         return;
                     }
@@ -2360,6 +2360,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         codeBusinessUnit.setWidth("20%");
         codeBusinessUnit.setReadOnly(true);
 
+        IntegerField codeFatherBusinessUnit = new IntegerField();
+        codeFatherBusinessUnit.setWidth("20%");
+        codeFatherBusinessUnit.setReadOnly(true);
+
         TextField nameBusinessUnit = new TextField();
         nameBusinessUnit.setWidth("70%");
         nameBusinessUnit.setReadOnly(true);
@@ -2414,11 +2418,13 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     if(!existBusinessUnitAndItem(expSearch,auxItem)) {
                         codeBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode2()));
                         nameBusinessUnit.setValue(event.getValue().getDescription());
+                        codeFatherBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode()));
                     } else {
                         UIUtils.showNotificationType("Unidad de Negocio e Item ya fue agregada", "alert");
                         unitBusiness.clear();
                         codeBusinessUnit.clear();
                         nameBusinessUnit.clear();
+                        codeFatherBusinessUnit.clear();
                     }
                 }else{
                     isFirsLoadExpenseDistribuite = false;
@@ -2455,6 +2461,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         expenseDistribuiteBinder.forField(codeBusinessUnit)
                 .asRequired("Codigo Unidad negocio es requerido")
                 .bind(ExpenseDistribuiteAcquisition::getCodeBusinessUnit,ExpenseDistribuiteAcquisition::setCodeBusinessUnit);
+        expenseDistribuiteBinder.forField(codeFatherBusinessUnit)
+                .asRequired("Codigo Sucursal es requerido")
+                .bind(ExpenseDistribuiteAcquisition::getCodeFatherBusiness,ExpenseDistribuiteAcquisition::setCodeFatherBusiness);
         expenseDistribuiteBinder.forField(nameBusinessUnit)
                 .asRequired("Nombre unidad negocio es requerido")
                 .bind(ExpenseDistribuiteAcquisition::getNameBusinessUnit,ExpenseDistribuiteAcquisition::setNameBusinessUnit);
