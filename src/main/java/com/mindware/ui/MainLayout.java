@@ -20,6 +20,7 @@ import com.mindware.ui.views.invoiceAuthorizer.InvoiceAuthorizerView;
 import com.mindware.ui.views.obligations.ObligationsView;
 import com.mindware.ui.views.recurrentService.RecurrentServiceView;
 import com.mindware.ui.views.reports.expenseAcquisitions.ExpenseAcquisitionsReport;
+import com.mindware.ui.views.reports.expenseServices.ExpenseServicesReport;
 import com.mindware.ui.views.reports.investmentBudget.InvestmentBudgetReport;
 import com.mindware.ui.views.rol.RolView;
 import com.mindware.ui.views.supplier.SupplierView;
@@ -209,6 +210,9 @@ public class MainLayout extends FlexBoxLayout
 			}
 			if(assignedOption("Presupuesto Inversiones")) {
 				menu.addNaviItem(reports, "Presupuesto Inversiones", InvestmentBudgetReport.class);
+			}
+			if(assignedOption("Presupuesto Gastos")) {
+				menu.addNaviItem(reports, "Presupuesto Gastos", ExpenseServicesReport.class);
 			}
 		}
 		if(assignedOption("Configuración")) {

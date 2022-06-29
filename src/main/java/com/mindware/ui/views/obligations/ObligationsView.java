@@ -254,7 +254,7 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
             obligationsDtoList.add(obligationsDto);
             obligationsDtoList.sort(Comparator.comparing(ObligationsDto::getPaymentDate));
             dataProvider.refreshAll();
-            UIUtils.showNotificationType("Enviado a Contabilidad","success");
+            UIUtils.showNotificationType("Enviado a Oficina Nacional","success");
         });
         return btn;
     }

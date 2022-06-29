@@ -276,7 +276,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
 //            acquisitionDtoList.add(acquisitionDto);
             acquisitionDtoList.sort(Comparator.comparing(AcquisitionDto::getReceptionDate));
             dataProvider.refreshAll();
-            UIUtils.showNotificationType("Enviado a Contabilidad","success");
+            UIUtils.showNotificationType("Enviado a Oficina Nacional","success");
         });
         return btn;
     }

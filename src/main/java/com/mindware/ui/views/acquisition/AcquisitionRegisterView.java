@@ -457,6 +457,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             if(current.getCaabsNumber()!=null && !current.getCaabsNumber().isEmpty()){
                 adjudicationInfomationBinder.forField(purchaseOrder)
                         .asRequired("Fecha de envio de la orden de compra es requerido")
+                        .withValidator(d -> d.isAfter(quotationReceptionDate.getValue()) ||  d.isEqual(quotationReceptionDate.getValue()),"Fecha Envio compra no puede ser menor a la Fecha de Recepción de Cotizaciones")
                         .bind(AdjudicationInfomation::getPurchaseOrder,AdjudicationInfomation::setPurchaseOrder);
                 adjudicationInfomationBinder.forField(deliverTime)
                         .asRequired("Tiempo de entrega es requerido")
@@ -464,16 +465,53 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         .bind(AdjudicationInfomation::getDeliveryTime,AdjudicationInfomation::setDeliveryTime);
                 adjudicationInfomationBinder.forField(requiresAdvance)
                         .bind(AdjudicationInfomation::getRequiresAdvance,AdjudicationInfomation::setRequiresAdvance);
+                if(requiresAdvance.getValue()!=true){
+                    adjudicationInfomationBinder.forField(requireUpdateDoc)
+                            .bind(AdjudicationInfomation::getRequireUpdateDoc, AdjudicationInfomation::setRequireUpdateDoc);
+                    adjudicationInfomationBinder.forField(contractRequestDateToLegal)
+                            .bind(AdjudicationInfomation::getContractRequestDateToLegal, AdjudicationInfomation::setContractRequestDateToLegal);
+                    adjudicationInfomationBinder.forField(contractDeliverContractFromLegal)
+                            .bind(AdjudicationInfomation::getContractDeliverContractFromLegal, AdjudicationInfomation::setContractDeliverContractFromLegal);
+                    adjudicationInfomationBinder.forField(dateSignature)
+                            .bind(AdjudicationInfomation::getDateSignature, AdjudicationInfomation::setDateSignature);
+                }else {
+
+                    adjudicationInfomationBinder.forField(requireUpdateDoc)
+                            .asRequired("Fecha es requerida")
+                            .withValidator(d -> d.isEqual(purchaseOrder.getValue()) ||
+                                    d.isAfter(purchaseOrder.getValue()), "Fecha Solicitud Actualización no puede ser anterior a la Orden de Compra")
+                            .bind(AdjudicationInfomation::getRequireUpdateDoc, AdjudicationInfomation::setRequireUpdateDoc);
+                    adjudicationInfomationBinder.forField(contractRequestDateToLegal)
+                            .asRequired("Fecha solicitud contrato es requerida")
+                            .withValidator(d -> d.isEqual(purchaseOrder.getValue()) ||
+                                    d.isAfter(purchaseOrder.getValue()), "Fecha Solicitud Contrato no puede ser anterior a la Orden de Compra")
+                            .withValidator(d -> d.isAfter(contractRequestDateToLegal.getValue()) ||
+                                    d.isEqual(contractRequestDateToLegal.getValue()), "Fecha Solicitud Contrato no puede ser anterior a la Solicitud Actualizacion")
+                            .bind(AdjudicationInfomation::getContractRequestDateToLegal, AdjudicationInfomation::setContractRequestDateToLegal);
+                    adjudicationInfomationBinder.forField(contractDeliverContractFromLegal)
+                            .asRequired("Fecha Entrega Contrato es Requerida")
+                            .withValidator(d -> d.isAfter(purchaseOrder.getValue()) ||
+                                    d.isEqual(purchaseOrder.getValue()), "Fecha Entrega Contrato no puede ser anterior a la Orden de Compra")
+                            .withValidator(d -> d.isAfter(contractRequestDateToLegal.getValue()) ||
+                                    d.isEqual(contractRequestDateToLegal.getValue()), "Fecha Entrega Contrato no puede ser anterior a la Solicitud Actualizacion")
+                            .withValidator(d -> d.isAfter(requireUpdateDoc.getValue()) ||
+                                    d.isEqual(requireUpdateDoc.getValue()), "Fecha Entrega Contrato no puede ser anterior a la Solicitud Contrato Legal")
+                            .bind(AdjudicationInfomation::getContractDeliverContractFromLegal, AdjudicationInfomation::setContractDeliverContractFromLegal);
+                    adjudicationInfomationBinder.forField(dateSignature)
+                            .asRequired("Fecha de Firmas es Requerida")
+                            .withValidator(d -> d.isAfter(purchaseOrder.getValue()) ||
+                                    d.isEqual(purchaseOrder.getValue()), "Fecha Firma Contrato no puede ser anterior a la Orden de Compra")
+                            .withValidator(d -> d.isAfter(contractRequestDateToLegal.getValue()) ||
+                                    d.isEqual(contractRequestDateToLegal.getValue()), "Fecha Firma Contrato no puede ser anterior a la Solicitud Actualizacion")
+                            .withValidator(d -> d.isAfter(requireUpdateDoc.getValue()) ||
+                                    d.isEqual(requireUpdateDoc.getValue()), "Fecha Firma Contrato no puede ser anterior a la Solicitud Contrato Legal")
+                            .withValidator(d -> d.isAfter(contractDeliverContractFromLegal.getValue()) ||
+                                    d.isEqual(contractDeliverContractFromLegal.getValue()), "Fecha Firma Contrato no puede ser anterior a la Entrega Contrato por Legal")
+                            .bind(AdjudicationInfomation::getDateSignature, AdjudicationInfomation::setDateSignature);
+                }
                 adjudicationInfomationBinder.forField(correspondsContract)
-                        .bind(AdjudicationInfomation::getCorrespondsContract,AdjudicationInfomation::setCorrespondsContract);
-                adjudicationInfomationBinder.forField(requireUpdateDoc)
-                        .bind(AdjudicationInfomation::getRequireUpdateDoc,AdjudicationInfomation::setRequireUpdateDoc);
-                adjudicationInfomationBinder.forField(contractRequestDateToLegal)
-                        .bind(AdjudicationInfomation::getContractRequestDateToLegal,AdjudicationInfomation::setContractRequestDateToLegal);
-                adjudicationInfomationBinder.forField(contractDeliverContractFromLegal)
-                        .bind(AdjudicationInfomation::getContractDeliverContractFromLegal,AdjudicationInfomation::setContractDeliverContractFromLegal);
-                adjudicationInfomationBinder.forField(dateSignature)
-                        .bind(AdjudicationInfomation::getDateSignature,AdjudicationInfomation::setDateSignature);
+                        .bind(AdjudicationInfomation::getCorrespondsContract, AdjudicationInfomation::setCorrespondsContract);
+                adjudicationInfomationBinder.validate();
             }
 
             if(current.getAdjudicationInformation()!=null && !current.getAdjudicationInformation().equals("{}")){
@@ -489,6 +527,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 receptionInformationBinder.forField(receiveBy)
                         .asRequired("Persona que firma la conformidad de recepción es requerida")
                         .bind(ReceptionInformation::getReceivedBy,ReceptionInformation::setReceivedBy);
+                receptionInformationBinder.validate();
             }
             if(current.getExpenseDistribuite()!=null && !current.getExpenseDistribuite().equals("[]") && GrantOptions.grantedOptionAccounting("Adquisiciones")) {
                 binder.forField(dateDeliveryAccounting)
@@ -2165,6 +2204,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         dateInvoice.setRequired(true);
         dateInvoice.setLocale(new Locale("es","BO"));
 
+        NumberField amountTypeChange = new NumberField();
+        amountTypeChange.setWidthFull();
+        amountTypeChange.setReadOnly(true);
+
         NumberField amount = new NumberField();
         amount.setMin(0.0);
         amount.setWidthFull();
@@ -2180,6 +2223,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         typeCurrencyChange.setItems(utilValues.getValueParameterByCategory("CATEGORIA TIPO CAMBIO"));
         typeCurrencyChange.setAllowCustomValue(false);
         typeCurrencyChange.setRequired(true);
+        typeCurrencyChange.addValueChangeListener(event -> {
+           TypeChangeCurrency currentTypeChange = utilValues.getCurrentTypeChangeCurrencyByValidityStart(event.getValue(), dateInvoice.getValue().toString(), currency.getValue());
+           amountTypeChange.setValue(currentTypeChange.getAmountChange());
+        });
 
         invoiceInformationBinder = new BeanValidationBinder<>(InvoiceInformation.class);
         invoiceInformationBinder.forField(idSupplierInvoiceInformation)
@@ -2201,6 +2248,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         invoiceInformationBinder.forField(typeCurrencyChange)
                 .asRequired("Tipo Cambio es requerido")
                 .bind(InvoiceInformation::getTypeCurrencyChange,InvoiceInformation::setTypeCurrencyChange);
+        invoiceInformationBinder.forField(amountTypeChange)
+                .asRequired("Monto Tipo Cambio es requerido")
+                .bind(InvoiceInformation::getAmountTypeChange,InvoiceInformation::setAmountTypeChange);
 
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
@@ -2225,6 +2275,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         form.addFormItem(dateInvoice,"Fecha factura");
         form.addFormItem(amount,"Monto factura");
         form.addFormItem(typeCurrencyChange,"Tipo Cambio");
+        form.addFormItem(amountTypeChange,"Monto Tipo Cambio");
         form.addFormItem(invoiceNumber,"Número factura");
 
         btnNit.addClickListener(event -> {
@@ -2764,8 +2815,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             Integer quantity = expenseDistribuiteList.stream()
                     .filter(e -> e.getNameItem().equals(item.getDescription()))
                     .mapToInt(ExpenseDistribuiteAcquisition::getQuantity).sum();
-            if(item.getQuantity().intValue() != quantity){
-                result = result + String.format("Cantidad de items distribuidos de '%s' no coindice con los items registrados", item.getDescription()) +"\n";
+            if(item.getQuantity().intValue() < quantity){
+                result = result + String.format("Cantidad de items distribuidos de '%s' no puede ser mayor con los items registrados", item.getDescription()) +"\n";
             }
         }
         return result;

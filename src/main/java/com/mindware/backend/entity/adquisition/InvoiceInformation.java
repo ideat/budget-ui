@@ -31,4 +31,6 @@ public class InvoiceInformation {
     private Integer invoiceNumber;
 
     private String typeCurrencyChange;
+
+    private Double amountTypeChange;
 }

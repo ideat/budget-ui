@@ -248,7 +248,12 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
             basicServices.setId(basicServicesDto.getId());
             basicServices.setState("ENVIADO");
             basicServicesRestTemplate.updateState(basicServices);
-            UIUtils.showNotificationType("Enviado a Contabilidad","success");
+            basicServicesDtoList.remove(basicServicesDto);
+            basicServicesDto.setState("ENVIADO");
+            basicServicesDtoList.add(basicServicesDto);
+
+            dataProvider.refreshItem(basicServicesDto);
+            UIUtils.showNotificationType("Enviado a Oficina Nacional","success");
         });
         return btn;
     }
@@ -260,14 +265,18 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
         btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
         btn.setVisible(GrantOptions.grantedOptionObserved("Servicios Básicos"));
         btn.addClickListener(event -> {
-            if(!basicServicesDto.getState().equals("ENVIADO") || !basicServicesDto.getState().equals("FINALIZADO")){
-                UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADA o FINALIZADO","alert");
+            if(!basicServicesDto.getState().equals("ENVIADO") /*|| basicServicesDto.getState().equals("FINALIZADO")*/){
+                UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADO","alert");
                 return;
             }
             BasicServices basicServices = new BasicServices();
             basicServices.setId(basicServicesDto.getId());
             basicServices.setState("OBSERVADO");
             basicServicesRestTemplate.updateState(basicServices);
+            basicServicesDtoList.remove(basicServicesDto);
+            basicServicesDto.setState("OBSERVADO");
+            basicServicesDtoList.add(basicServicesDto);
+            dataProvider.refreshItem(basicServicesDto);
             UIUtils.showNotificationType("Servicio Observado","success");
         });
         return btn;
@@ -292,6 +301,10 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
             basicServices.setId(basicServicesDto.getId());
             basicServices.setState("FINALIZADO");
             basicServicesRestTemplate.updateState(basicServices);
+            basicServicesDtoList.remove(basicServicesDto);
+            basicServicesDto.setState("FINALIZADO");
+            basicServicesDtoList.add(basicServicesDto);
+            dataProvider.refreshItem(basicServicesDto);
             UIUtils.showNotificationType("Servicio Finalizado","success");
         });
 

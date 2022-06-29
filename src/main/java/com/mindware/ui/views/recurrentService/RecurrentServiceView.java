@@ -242,8 +242,12 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
             RecurrentService recurrentService = new RecurrentService();
             recurrentService.setId(recurrentServiceDto.getId());
             recurrentService.setState("ENVIADO");
+            recurrentServiceDtoList.remove(recurrentServiceDto);
+            recurrentServiceDto.setState("ENVIADO");
+            recurrentServiceDtoList.add(recurrentServiceDto);
+            dataProvider.refreshItem(recurrentServiceDto);
             recurrentServiceRestTemplate.updateState(recurrentService);
-            UIUtils.showNotificationType("Enviado a Contabilidad","success");
+            UIUtils.showNotificationType("Enviado a Oficina Nacional","success");
         });
         return btn;
     }
@@ -255,13 +259,17 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
         btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
         btn.setVisible(GrantOptions.grantedOptionObserved("Servicios Recurrentes"));
         btn.addClickListener(event -> {
-            if(!recurrentServiceDto.getState().equals("ENVIADO") || !recurrentServiceDto.getState().equals("FINALIZADO") ){
-                UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADA o FINALIZADO","alert");
+            if(!recurrentServiceDto.getState().equals("ENVIADO") /*|| !recurrentServiceDto.getState().equals("FINALIZADO")*/ ){
+                UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADO","alert");
                 return;
             }
             RecurrentService recurrentService = new RecurrentService();
             recurrentService.setId(recurrentServiceDto.getId());
             recurrentService.setState("OBSERVADO");
+            recurrentServiceDtoList.remove(recurrentServiceDto);
+            recurrentServiceDto.setState("OBSERVADO");
+            recurrentServiceDtoList.add(recurrentServiceDto);
+            dataProvider.refreshItem(recurrentServiceDto);
             recurrentServiceRestTemplate.updateState(recurrentService);
             UIUtils.showNotificationType("Servicio Observado","success");
         });
@@ -275,7 +283,7 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
         btn.setIcon(VaadinIcon.LOCK.create());
         btn.setVisible(GrantOptions.grantedOptionFinish("Servicios Recurrentes"));
         btn.addClickListener(event -> {
-            if(recurrentServiceDto.getState().equals("ENVIADO")){
+            if(!recurrentServiceDto.getState().equals("ENVIADO")){
                 UIUtils.showNotificationType("No puede finalizar sin estar ENVIADO","alert");
                 return;
             }
@@ -286,6 +294,10 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
             RecurrentService recurrentService = new RecurrentService();
             recurrentService.setId(recurrentServiceDto.getId());
             recurrentService.setState("FINALIZADO");
+            recurrentServiceDtoList.remove(recurrentServiceDto);
+            recurrentServiceDto.setState("FINALIZADO");
+            recurrentServiceDtoList.add(recurrentServiceDto);
+            dataProvider.refreshItem(recurrentServiceDto);
             recurrentServiceRestTemplate.updateState(recurrentService);
             UIUtils.showNotificationType("Servicio Finalizado","success");
         });

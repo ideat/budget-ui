@@ -1,4 +1,4 @@
-package com.mindware.ui.views.reports.investmentBudget;
+package com.mindware.ui.views.reports.expenseServices;
 
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
@@ -26,14 +26,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 
-@Route(value = "investment-budget-report", layout = MainLayout.class)
+@Route(value = "expenses-services-report", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
 @PageTitle("Reportes")
-public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
+public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
 
-    private static final String INVESTMENT_BUDGET_RESUME ="RESUMEN EJECUTIVO";
-    private static final String INVESTMENT_BUSINESS_UNIT ="CONSOLIDADO REGIONALES";
-    private static final String INVESTMENT_BUDGET_DETAIL ="DETALLE INVERSIONES";
+    private static final String EXPENSE_SERVICE_BUDGET_RESUME ="RESUMEN EJECUTIVO";
+    private static final String EXPENSE_SERVICE_FATHER_BUSINESS_UNIT ="CONSOLIDADO SUCURSAL";
+    private static final String EXPENSE_SERVICE_BUDGET_DETAIL ="DETALLE GASTOS SUCURSAL-AGENCIAS";
 
     @Autowired
     UtilValues utilValues;
@@ -46,24 +46,28 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        conceptList = conceptRestTemplate.getAgencia();
+        conceptList = conceptRestTemplate.getSucursal();
+        Concept concept = new Concept();
+        concept.setCode("20");
+        concept.setCode2("50");
+        concept.setDescription("OFICINA NACIONAL");
         setViewContent(createContent());
     }
 
     private Accordion createOptionsReport() {
         Accordion optionDetails = new Accordion();
 
-        AccordionPanel resumeInvestmentBudget = optionDetails
-                .add(INVESTMENT_BUDGET_RESUME, layoutInvestmentBusinessUnit( "investment-resume","investment-budget-report"));
-        AccordionPanel investmentBusinessUnit = optionDetails
-                .add(INVESTMENT_BUSINESS_UNIT, layoutInvestmentBusinessUnit("investment-business-unit","investment-budget-report"));
-        AccordionPanel investmentBudgetDetail = optionDetails
-                .add(INVESTMENT_BUDGET_DETAIL, layoutInvestmentBusinessUnit("investment-detail","investment-budget-report"));
+        AccordionPanel resumeExpenseServiceBudget = optionDetails
+                .add(EXPENSE_SERVICE_BUDGET_RESUME, layoutExpenseServiceBusinessUnit( "expenses-service-resume","expenses-services-report"));
+        AccordionPanel expenseServiceBusinessUnit = optionDetails
+                .add(EXPENSE_SERVICE_FATHER_BUSINESS_UNIT, layoutExpenseServiceBusinessUnit("expense-service-father-business-unit","expenses-services-report"));
+        AccordionPanel expenseServiceBudgetDetail = optionDetails
+                .add(EXPENSE_SERVICE_BUDGET_DETAIL, layoutExpenseServiceBusinessUnit("expenses-service-detail","expenses-services-report"));
 
         return optionDetails;
     }
 
-    private HorizontalLayout layoutInvestmentBusinessUnit(String originReport, String pathPage){
+    private HorizontalLayout layoutExpenseServiceBusinessUnit(String originReport, String pathPage){
 
         DatePicker cutOffDate = new DatePicker();
         cutOffDate.setWidth("300px");
@@ -82,7 +86,7 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
         print.setIcon(VaadinIcon.PRINT.create());
         print.addClickListener(event ->{
 
-            Map<String, List<String>> paramInvestmentBudget = new HashMap<>();
+            Map<String, List<String>> paramExpensesServiceBudget = new HashMap<>();
             List<String> origin = new ArrayList<>();
             origin.add(originReport);
             List<String> path = new ArrayList<>();
@@ -90,7 +94,7 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
 
 
 
-            if(originReport.equals("investment-detail")){
+            if(originReport.equals("expenses-service-detail") || originReport.equals("expense-service-father-business-unit")){
 
 
                 if (cutOffDate.isEmpty()) {
@@ -106,58 +110,60 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
 
                 List<String> cutOffDateParam = new ArrayList<>();
                 cutOffDateParam.add(cutOffDate.getValue().toString());
-                paramInvestmentBudget.put("cutoffdate",cutOffDateParam);
+                paramExpensesServiceBudget.put("cutoffdate",cutOffDateParam);
 
                 List<String> year = new ArrayList<>();
                 year.add(String.valueOf(cutOffDate.getValue().getYear()));
 
                 List<String> codebusiness = new ArrayList<>();
                 if(businessUnit.getValue().getDescription().equals("OFICINA NACIONAL")){
-                   codebusiness.add(businessUnit.getValue().getCode2());
+                    codebusiness.add(businessUnit.getValue().getCode2());
                 }else {
                     codebusiness.add(businessUnit.getValue().getCode());
                 }
 
                 List<String> nameBusinessUnit = new ArrayList<>();
                 nameBusinessUnit.add(businessUnit.getValue().getDescription());
-                paramInvestmentBudget.put("codefatherbusinessunit",codebusiness);
-                paramInvestmentBudget.put("year",year);
-                paramInvestmentBudget.put("namebusinessunit",nameBusinessUnit);
-
-            }else if(originReport.equals("investment-business-unit")){
-                if (cutOffDate.isEmpty()) {
-                    UIUtils.showNotificationType("Ingrese la Fecha de Corte", "alert");
-                    cutOffDate.focus();
-                    return;
-                }
-
-                List<String> cutOffDateParam = new ArrayList<>();
-                cutOffDateParam.add(cutOffDate.getValue().toString());
-                paramInvestmentBudget.put("cutoffdate",cutOffDateParam);
-
-            }else if(originReport.equals("investment-resume")){
-                if (cutOffDate.isEmpty()) {
-                    UIUtils.showNotificationType("Ingrese la Fecha de Corte", "alert");
-                    cutOffDate.focus();
-                    return;
-                }
-
-                List<String> cutOffDateParam = new ArrayList<>();
-                cutOffDateParam.add(cutOffDate.getValue().toString());
-                paramInvestmentBudget.put("cutoffdate",cutOffDateParam);
+                paramExpensesServiceBudget.put("codefatherbusinessunit",codebusiness);
+//                paramInvestmentBudget.put("year",year);
+                paramExpensesServiceBudget.put("namebusinessunit",nameBusinessUnit);
 
             }
-            paramInvestmentBudget.put("origin",origin);
-            paramInvestmentBudget.put("path",path);
+//            else if(originReport.equals("expense-service-father-business-unit")){
+//                if (cutOffDate.isEmpty()) {
+//                    UIUtils.showNotificationType("Ingrese la Fecha de Corte", "alert");
+//                    cutOffDate.focus();
+//                    return;
+//                }
+//
+//                List<String> cutOffDateParam = new ArrayList<>();
+//                cutOffDateParam.add(cutOffDate.getValue().toString());
+//                paramExpensesServiceBudget.put("cutoffdate",cutOffDateParam);
+//
+//            }
+            else if(originReport.equals("expenses-service-resume")){
+                if (cutOffDate.isEmpty()) {
+                    UIUtils.showNotificationType("Ingrese la Fecha de Corte", "alert");
+                    cutOffDate.focus();
+                    return;
+                }
 
-            QueryParameters qp = new QueryParameters(paramInvestmentBudget);
+                List<String> cutOffDateParam = new ArrayList<>();
+                cutOffDateParam.add(cutOffDate.getValue().toString());
+                paramExpensesServiceBudget.put("cutoffdate",cutOffDateParam);
+
+            }
+            paramExpensesServiceBudget.put("origin",origin);
+            paramExpensesServiceBudget.put("path",path);
+
+            QueryParameters qp = new QueryParameters(paramExpensesServiceBudget);
             UI.getCurrent().navigate("report-preview", qp);
 
         });
 
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
-        if(originReport.equals("investment-detail")){
+        if(originReport.equals("expenses-service-detail") || originReport.equals("expense-service-father-business-unit")){
             layout.add( cutOffDate, businessUnit,print);
         }else {
             layout.add(cutOffDate, print);

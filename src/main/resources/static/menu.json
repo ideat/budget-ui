@@ -101,6 +101,17 @@
   {
     "assigned": "false",
     "description": "",
+    "name": "Presupuesto Gastos",
+    "read": "false",
+    "write": "false",
+    "send": "false",
+    "observed":"false",
+    "finish":"false",
+    "accounting":"false"
+  },
+  {
+    "assigned": "false",
+    "description": "",
     "name": "Configuración",
     "read": "false",
     "write": "false",
@@ -156,7 +167,7 @@
   {
     "assigned": "false",
     "description": "",
-    "name": "Servicios Básicos",
+    "name": "Proveedor Serv. Básicos",
     "read": "false",
     "write": "false",
     "send": "false",

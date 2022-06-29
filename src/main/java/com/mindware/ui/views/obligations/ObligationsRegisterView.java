@@ -4,13 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
+import com.mindware.backend.entity.config.BasicServiceProvider;
 import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.invoiceAuthorizer.InvoiceAuthorizer;
 import com.mindware.backend.entity.invoiceAuthorizer.SelectedInvoiceAuthorizer;
 import com.mindware.backend.entity.obligations.Obligations;
 import com.mindware.backend.entity.obligations.ObligationsDto;
-import com.mindware.backend.entity.supplier.Supplier;
+import com.mindware.backend.rest.basicServiceProvider.BasicServiceProviderRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
 import com.mindware.backend.rest.obligations.ObligationsDtoRestTemplate;
@@ -78,8 +79,11 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     @Autowired
     private ObligationsDtoRestTemplate obligationsDtoRestTemplate;
 
+//    @Autowired
+//    private SupplierRestTemplate supplierRestTemplate;
+
     @Autowired
-    private SupplierRestTemplate supplierRestTemplate;
+    private BasicServiceProviderRestTemplate basicServiceProviderRestTemplate;
 
     @Autowired
     private UtilValues utilValues;
@@ -94,7 +98,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     private ParameterRestTemplate parameterRestTemplate;
 
     private ObligationsDto obligationsDto;
-    private Supplier supplierSelected;
+    private BasicServiceProvider basicServiceProviderSelected;
     private List<ExpenseDistribuite> expenseDistribuiteList;
 
     private ListDataProvider<ExpenseDistribuite> expenseDistribuiteDataProvider;
@@ -124,10 +128,10 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
     private Grid<ExpenseDistribuite> expenseDistribuiteGrid;
 
-    private TextField nameSupplierFilter;
-    private TextField nitSupplierFilter;
-    private TextField locationSupplierFilter;
-    private TextField primaryActivitySupplierFilter;
+    private TextField nameBasicProviderFilter;
+    private TextField nitBasicProviderFilter;
+    private TextField descriptionBasicProviderFilter;
+    private TextField typeServiceBasicProviderFilter;
 
     private List<Concept> conceptList;
 
@@ -163,7 +167,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         if(!param.get("id").get(0).equals("NUEVO")){
             obligationsDto = obligationsDtoRestTemplate.getById(param.get("id").get(0));
             title = "Proveedor: ".concat(obligationsDto.getNameSupplier());
-            supplierSelected = supplierRestTemplate.getById(obligationsDto.getIdSupplier().toString());
+            basicServiceProviderSelected = basicServiceProviderRestTemplate.getById(obligationsDto.getIdSupplier().toString());
 
         }else{
             obligationsDto = new ObligationsDto();
@@ -207,7 +211,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 }
 
                 if(binder.writeBeanIfValid(obligationsDto)){
-                    obligationsDto.setIdSupplier(supplierSelected.getId());
+                    obligationsDto.setIdSupplier(basicServiceProviderSelected.getId());
 
                     if(validateAmountExpenseDistribuite()) {
                         try{
@@ -479,77 +483,77 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     }
 
     private Grid searchSupplier() {
-        List<Supplier> supplierList = supplierRestTemplate.getAll();
-        ListDataProvider<Supplier> dataProvider = new ListDataProvider<>(supplierList);
-        Grid<Supplier> grid = new Grid<>();
+        List<BasicServiceProvider> basicServiceProviderList = basicServiceProviderRestTemplate.getAll();
+        ListDataProvider<BasicServiceProvider> dataProvider = new ListDataProvider<>(basicServiceProviderList);
+        Grid<BasicServiceProvider> grid = new Grid<>();
         grid.setWidthFull();
         grid.setDataProvider(dataProvider);
 
-        grid.addColumn(Supplier::getName)
+        grid.addColumn(BasicServiceProvider::getProvider)
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setFlexGrow(1)
                 .setKey("name")
                 .setHeader("Proveedor");
-        grid.addColumn(Supplier::getNit)
+        grid.addColumn(BasicServiceProvider::getNit)
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setFlexGrow(1)
                 .setKey("nit")
                 .setHeader("NIT");
-        grid.addColumn(Supplier::getLocation)
+        grid.addColumn(BasicServiceProvider::getTypeService)
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setFlexGrow(1)
-                .setKey("location")
-                .setHeader("Ubicacion");
-        grid.addColumn(Supplier::getPrimaryActivity)
+                .setKey("typeservice")
+                .setHeader("Tipo Servicio");
+        grid.addColumn(BasicServiceProvider::getDescription)
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setFlexGrow(1)
-                .setKey("primaryActivity")
-                .setHeader("Actividad Principal");
+                .setKey("description")
+                .setHeader("Descripción");
         grid.addColumn(new ComponentRenderer<>(this::createButtonSelectSupplier))
                 .setFlexGrow(0)
                 .setAutoWidth(true);
 
         HeaderRow hr = grid.appendHeaderRow();
 
-        nameSupplierFilter = new TextField();
-        nameSupplierFilter.setWidthFull();
-        nameSupplierFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        nameSupplierFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
-        hr.getCell(grid.getColumnByKey("name")).setComponent(nameSupplierFilter);
+        nameBasicProviderFilter = new TextField();
+        nameBasicProviderFilter.setWidthFull();
+        nameBasicProviderFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        nameBasicProviderFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
+        hr.getCell(grid.getColumnByKey("name")).setComponent(nameBasicProviderFilter);
 
 
-        nitSupplierFilter = new TextField();
-        nitSupplierFilter.setWidthFull();
-        nitSupplierFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        nitSupplierFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
-        hr.getCell(grid.getColumnByKey("nit")).setComponent(nitSupplierFilter);
+        nitBasicProviderFilter = new TextField();
+        nitBasicProviderFilter.setWidthFull();
+        nitBasicProviderFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        nitBasicProviderFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
+        hr.getCell(grid.getColumnByKey("nit")).setComponent(nitBasicProviderFilter);
 
-        locationSupplierFilter = new TextField();
-        locationSupplierFilter.setWidthFull();
-        locationSupplierFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        locationSupplierFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
-        hr.getCell(grid.getColumnByKey("location")).setComponent(locationSupplierFilter);
+        descriptionBasicProviderFilter = new TextField();
+        descriptionBasicProviderFilter.setWidthFull();
+        descriptionBasicProviderFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        descriptionBasicProviderFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
+        hr.getCell(grid.getColumnByKey("description")).setComponent(descriptionBasicProviderFilter);
 
-        primaryActivitySupplierFilter = new TextField();
-        primaryActivitySupplierFilter.setWidthFull();
-        primaryActivitySupplierFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        primaryActivitySupplierFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
-        hr.getCell(grid.getColumnByKey("primaryActivity")).setComponent(primaryActivitySupplierFilter);
+        typeServiceBasicProviderFilter = new TextField();
+        typeServiceBasicProviderFilter.setWidthFull();
+        typeServiceBasicProviderFilter.setValueChangeMode(ValueChangeMode.EAGER);
+        typeServiceBasicProviderFilter.addValueChangeListener(e -> applyFilterSupplier(dataProvider));
+        hr.getCell(grid.getColumnByKey("typeservice")).setComponent(typeServiceBasicProviderFilter);
 
         return grid;
     }
 
-    private Component createButtonSelectSupplier(Supplier supplier){
+    private Component createButtonSelectSupplier(BasicServiceProvider basicServiceProvider){
         Button btn = new Button();
         btn.setIcon(VaadinIcon.CHEVRON_CIRCLE_UP.create());
         btn.setEnabled(GrantOptions.grantedOptionWrite("Obligaciones"));
         btn.addClickListener(event -> {
-            nameSupplier.setValue(supplier.getName());
-            supplierSelected = supplier;
+            nameSupplier.setValue(basicServiceProvider.getProvider());
+            basicServiceProviderSelected = basicServiceProvider;
 
             detailsDrawer.hide();
         });
@@ -557,19 +561,19 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         return btn;
     }
 
-    private void applyFilterSupplier(ListDataProvider<Supplier> dataProvider){
+    private void applyFilterSupplier(ListDataProvider<BasicServiceProvider> dataProvider){
         dataProvider.clearFilters();
-        if(!nameSupplierFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getName(),nameSupplierFilter.getValue()));
+        if(!nameBasicProviderFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getProvider(), nameBasicProviderFilter.getValue()));
         }
-        if(nitSupplierFilter.getValue()!=null){
-            dataProvider.addFilter(supplier -> Objects.equals(supplier.getNit(),nitSupplierFilter.getValue()));
+        if(nitBasicProviderFilter.getValue()!=null){
+            dataProvider.addFilter(supplier -> Objects.equals(supplier.getNit(), nitBasicProviderFilter.getValue()));
         }
-        if(!locationSupplierFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getLocation(),locationSupplierFilter.getValue()));
+        if(!descriptionBasicProviderFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getDescription(), descriptionBasicProviderFilter.getValue()));
         }
-        if(!primaryActivitySupplierFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getPrimaryActivity(),primaryActivitySupplierFilter.getValue()));
+        if(!typeServiceBasicProviderFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getTypeService(), typeServiceBasicProviderFilter.getValue()));
         }
     }
 

@@ -229,14 +229,20 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
             if (current !=null && binder.writeBeanIfValid(current)){
-                BasicServiceProvider result = restTemplate.add(current);
-                if (current.getId()==null){
-                    basicServiceProviderList.add(result);
-                    grid.getDataProvider().refreshAll();
-                }else{
-                    grid.getDataProvider().refreshItem(current);
+                try {
+                    BasicServiceProvider result = restTemplate.add(current);
+                    if (current.getId()==null){
+                        basicServiceProviderList.add(result);
+                        grid.getDataProvider().refreshAll();
+                    }else{
+                        grid.getDataProvider().refreshItem(current);
+                    }
+                    detailsDrawer.hide();
+                    UIUtils.showNotificationType("Datos registrados","success");
+                }catch(Exception ex){
+                    UIUtils.showNotificationType("Datos incorrectos, verifique que el tipo de servicio y proveedor no se repitan","alert");
                 }
-                detailsDrawer.hide();
+
             }else{
                 UIUtils.dialog("Datos incorrectos, verifique nuevamente","alert").open();
             }

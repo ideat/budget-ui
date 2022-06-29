@@ -132,11 +132,9 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         legalRepresentative.setWidthFull();
         legalRepresentative.setRequired(true);
 
-        ComboBox<String> areaWork = new ComboBox<>();
+        TextField areaWork = new TextField();
         areaWork.setWidthFull();
         areaWork.setRequired(true);
-        areaWork.setItems(utilValues.getValueParameterByCategory("RUBRO"));
-        areaWork.setAllowCustomValue(true);
 
         ComboBox<String> typeBusinessCompany = new ComboBox<>();
         typeBusinessCompany.setWidthFull();
