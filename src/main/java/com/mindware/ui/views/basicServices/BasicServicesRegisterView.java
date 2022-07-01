@@ -134,6 +134,8 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
     private List<Concept> conceptList;
 
+    private List<InvoiceAuthorizer> invoiceAuthorizerList;
+
     private FlexBoxLayout contentCreateBasicService;
     private FlexBoxLayout contentInvoiceAuthorizer;
     private FlexBoxLayout contentDeliveyAccounting;
@@ -865,9 +867,14 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         Concept concept = conceptList.stream()
                 .filter(c -> String.valueOf(expenseDistribuiteList.get(0).getCodeBusinessUnit()).equals(c.getCode2()))
                 .findFirst().get();
-        List<InvoiceAuthorizer> invoiceAuthorizerList = invoiceAuthorizerTemplate
-                .getByCodeBranchOffice(Integer.valueOf(concept.getCode()));
 
+        if(concept.getDescription().equals("OFICINA NACIONAL")){
+            invoiceAuthorizerList = invoiceAuthorizerTemplate
+                    .getByCodeBranchOffice(Integer.valueOf(concept.getCode2()));
+        }else {
+            invoiceAuthorizerList = invoiceAuthorizerTemplate
+                    .getByCodeBranchOffice(Integer.valueOf(concept.getCode()));
+        }
         TextField codePosition = new TextField();
         codePosition.setWidthFull();
         codePosition.setRequired(true);

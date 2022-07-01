@@ -31,7 +31,7 @@ import java.util.*;
 @PageTitle("Reportes")
 public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
 
-    private static final String EXPENSE_SERVICE_BUDGET_RESUME ="RESUMEN EJECUTIVO";
+    private static final String EXPENSE_SERVICE_BUDGET_RESUME ="RESUMEN EJECUTIVO SUCURSAL";
     private static final String EXPENSE_SERVICE_FATHER_BUSINESS_UNIT ="CONSOLIDADO SUCURSAL";
     private static final String EXPENSE_SERVICE_BUDGET_DETAIL ="DETALLE GASTOS SUCURSAL-AGENCIAS";
 
@@ -46,11 +46,12 @@ public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        conceptList = conceptRestTemplate.getSucursal();
+        conceptList = new ArrayList<>(conceptRestTemplate.getSucursal());
         Concept concept = new Concept();
         concept.setCode("20");
         concept.setCode2("50");
         concept.setDescription("OFICINA NACIONAL");
+        conceptList.add(concept);
         setViewContent(createContent());
     }
 
@@ -58,7 +59,7 @@ public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
         Accordion optionDetails = new Accordion();
 
         AccordionPanel resumeExpenseServiceBudget = optionDetails
-                .add(EXPENSE_SERVICE_BUDGET_RESUME, layoutExpenseServiceBusinessUnit( "expenses-service-resume","expenses-services-report"));
+                .add(EXPENSE_SERVICE_BUDGET_RESUME, layoutExpenseServiceBusinessUnit( "expenses-service-resume-businessunit","expenses-services-report"));
         AccordionPanel expenseServiceBusinessUnit = optionDetails
                 .add(EXPENSE_SERVICE_FATHER_BUSINESS_UNIT, layoutExpenseServiceBusinessUnit("expense-service-father-business-unit","expenses-services-report"));
         AccordionPanel expenseServiceBudgetDetail = optionDetails
@@ -94,7 +95,7 @@ public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
 
 
 
-            if(originReport.equals("expenses-service-detail") || originReport.equals("expense-service-father-business-unit")){
+            if(originReport.equals("expenses-service-detail") || originReport.equals("expense-service-father-business-unit") || originReport.equals("expenses-service-resume-businessunit")){
 
 
                 if (cutOffDate.isEmpty()) {
@@ -117,7 +118,7 @@ public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
 
                 List<String> codebusiness = new ArrayList<>();
                 if(businessUnit.getValue().getDescription().equals("OFICINA NACIONAL")){
-                    codebusiness.add(businessUnit.getValue().getCode2());
+                    codebusiness.add(businessUnit.getValue().getCode());
                 }else {
                     codebusiness.add(businessUnit.getValue().getCode());
                 }
@@ -163,7 +164,7 @@ public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
 
         HorizontalLayout layout = new HorizontalLayout();
         layout.setSpacing(true);
-        if(originReport.equals("expenses-service-detail") || originReport.equals("expense-service-father-business-unit")){
+        if(originReport.equals("expenses-service-detail") || originReport.equals("expense-service-father-business-unit") || originReport.equals("expenses-service-resume-businessunit")){
             layout.add( cutOffDate, businessUnit,print);
         }else {
             layout.add(cutOffDate, print);

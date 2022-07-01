@@ -33,5 +33,31 @@ public class ExpenseServicesRestTemplate {
 
     }
 
+    public byte[] reportExpensesServiceBusinessUnit( String codeFatherBusinessUnit, String cutOffDate, String nameBusinessUnit){
+        final String uri = url + "/v1/report/expensesService/expenseServiceBusinessUnit";
+        HttpHeaders headers = HeaderJwt.getHeader();
+        headers.set("codefatherbusinessunit",codeFatherBusinessUnit);
+        headers.set("cutoffdate", cutOffDate);
+        headers.set("namebusinessunit",nameBusinessUnit);
+
+        HttpEntity<byte[]> entity = new HttpEntity<>(headers);
+        ResponseEntity<byte[]> reponse = restTemplate.exchange(uri, HttpMethod.GET,entity,byte[].class);
+        return reponse.getBody();
+
+    }
+
+    public byte[] reportExpensesServiceResume( String codeFatherBusinessUnit, String cutOffDate, String nameBusinessUnit){
+        final String uri = url + "/v1/report/expensesService/expenseServiceResumeBusinessUnit";
+        HttpHeaders headers = HeaderJwt.getHeader();
+        headers.set("codefatherbusinessunit",codeFatherBusinessUnit);
+        headers.set("cutoffdate", cutOffDate);
+        headers.set("namebusinessunit",nameBusinessUnit);
+
+        HttpEntity<byte[]> entity = new HttpEntity<>(headers);
+        ResponseEntity<byte[]> reponse = restTemplate.exchange(uri, HttpMethod.GET,entity,byte[].class);
+        return reponse.getBody();
+
+    }
+
 
 }

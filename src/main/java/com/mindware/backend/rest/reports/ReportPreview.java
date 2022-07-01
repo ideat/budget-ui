@@ -93,11 +93,13 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
             previousPage = param.get("path").get(0);
             file = investmentBudgetRestTemplate.reportInvestmentBudgetExecutive(cutOffDate);
 
-        }else  if(param.get("origin").get(0).equals("expenses-service-resume")){
+        }else  if(param.get("origin").get(0).equals("expenses-service-resume-businessunit")){
+            String codefatherBusinessUnit = param.get("codefatherbusinessunit").get(0);
             String cutOffDate = param.get("cutoffdate").get(0);
+            String nameBusinessUnit = param.get("namebusinessunit").get(0);
 
             previousPage = param.get("path").get(0);
-//            file = expenseServicesRestTemplate.reportExpensesServiceDetail(cutOffDate);
+            file = expenseServicesRestTemplate.reportExpensesServiceResume(codefatherBusinessUnit,cutOffDate,nameBusinessUnit);
 
         }else  if(param.get("origin").get(0).equals("expense-service-father-business-unit")){
             String codefatherBusinessUnit = param.get("codefatherbusinessunit").get(0);
@@ -105,7 +107,7 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
             String nameBusinessUnit = param.get("namebusinessunit").get(0);
 
             previousPage = param.get("path").get(0);
-            file = expenseServicesRestTemplate.reportExpensesServiceDetail(codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"businessunit");
+            file = expenseServicesRestTemplate.reportExpensesServiceBusinessUnit(codefatherBusinessUnit,cutOffDate,nameBusinessUnit);
 
         }else  if(param.get("origin").get(0).equals("expenses-service-detail")){
             String codefatherBusinessUnit = param.get("codefatherbusinessunit").get(0);

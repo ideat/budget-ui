@@ -226,7 +226,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
 
         form.addFormItem(nit,"Nro. de NIT");
         form.addFormItem(name,"Nombre o Razón Social");
-        form.addFormItem(idCardLegalRepresentative,"Carnet Identidad");
+        form.addFormItem(idCardLegalRepresentative,"Carnet Identidad Representante Legal");
         form.addFormItem(legalRepresentative,"Representante Legal");
         form.addFormItem(typeBusinessCompany,"Tipo Sociedad");
         form.addFormItem(areaWork,"Rubro");
