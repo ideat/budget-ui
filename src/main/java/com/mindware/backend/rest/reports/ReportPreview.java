@@ -117,6 +117,12 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
             previousPage = param.get("path").get(0);
             file = expenseServicesRestTemplate.reportExpensesServiceDetail(codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"detail");
 
+        }else  if(param.get("origin").get(0).equals("expenses-service-consolidated")){
+            String cutOffDate = param.get("cutoffdate").get(0);
+
+            previousPage = param.get("path").get(0);
+            file = expenseServicesRestTemplate.reportExpenseConsolidated(cutOffDate);
+
         }
 
         if(!error) {

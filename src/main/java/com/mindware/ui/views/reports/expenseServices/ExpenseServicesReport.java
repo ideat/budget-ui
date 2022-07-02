@@ -31,6 +31,7 @@ import java.util.*;
 @PageTitle("Reportes")
 public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
 
+    private static final String EXPENSE_SERVICE_CONSOLIDATED = "CONSOLIDADO NACIONAL";
     private static final String EXPENSE_SERVICE_BUDGET_RESUME ="RESUMEN EJECUTIVO SUCURSAL";
     private static final String EXPENSE_SERVICE_FATHER_BUSINESS_UNIT ="CONSOLIDADO SUCURSAL";
     private static final String EXPENSE_SERVICE_BUDGET_DETAIL ="DETALLE GASTOS SUCURSAL-AGENCIAS";
@@ -58,6 +59,8 @@ public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
     private Accordion createOptionsReport() {
         Accordion optionDetails = new Accordion();
 
+        AccordionPanel resumeExpensConsolidated = optionDetails
+                .add(EXPENSE_SERVICE_CONSOLIDATED, layoutExpenseServiceBusinessUnit( "expenses-service-consolidated","expenses-services-report"));
         AccordionPanel resumeExpenseServiceBudget = optionDetails
                 .add(EXPENSE_SERVICE_BUDGET_RESUME, layoutExpenseServiceBusinessUnit( "expenses-service-resume-businessunit","expenses-services-report"));
         AccordionPanel expenseServiceBusinessUnit = optionDetails
@@ -117,11 +120,12 @@ public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
                 year.add(String.valueOf(cutOffDate.getValue().getYear()));
 
                 List<String> codebusiness = new ArrayList<>();
-                if(businessUnit.getValue().getDescription().equals("OFICINA NACIONAL")){
-                    codebusiness.add(businessUnit.getValue().getCode());
-                }else {
-                    codebusiness.add(businessUnit.getValue().getCode());
-                }
+//                if(businessUnit.getValue().getDescription().equals("OFICINA NACIONAL")){
+//                    codebusiness.add(businessUnit.getValue().getCode());
+//                }else {
+//                    codebusiness.add(businessUnit.getValue().getCode());
+//                }
+                codebusiness.add(businessUnit.getValue().getCode());
 
                 List<String> nameBusinessUnit = new ArrayList<>();
                 nameBusinessUnit.add(businessUnit.getValue().getDescription());
@@ -142,7 +146,7 @@ public class ExpenseServicesReport extends ViewFrame implements RouterLayout {
 //                paramExpensesServiceBudget.put("cutoffdate",cutOffDateParam);
 //
 //            }
-            else if(originReport.equals("expenses-service-resume")){
+            else if(originReport.equals("expenses-service-consolidated")){
                 if (cutOffDate.isEmpty()) {
                     UIUtils.showNotificationType("Ingrese la Fecha de Corte", "alert");
                     cutOffDate.focus();
