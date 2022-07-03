@@ -494,7 +494,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
     }
 
     private Grid searchProvider(){
-        List<BasicServiceProvider> basicServiceProviderList = basicServiceProviderRestTemplate.getAll();
+        List<BasicServiceProvider> basicServiceProviderList = basicServiceProviderRestTemplate.getAllByCategoryService("SERVICIO-BASICO");
         ListDataProvider<BasicServiceProvider> dataProvider = new ListDataProvider<>(basicServiceProviderList);
         Grid<BasicServiceProvider> grid = new Grid<>();
         grid.setWidthFull();

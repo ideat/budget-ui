@@ -78,6 +78,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
     private TextField providerFilter;
     private IntegerField nitFilter;
     private TextField descriptionFilter;
+    private ComboBox<String> categoryServiceFilter;
 
     private BasicServiceProvider current;
     private List<String> typeServiceList;
@@ -149,10 +150,17 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
-        grid.addColumn(BasicServiceProvider::getNit)
+//        grid.addColumn(BasicServiceProvider::getNit)
+//                .setFlexGrow(1)
+//                .setKey("nit")
+//                .setHeader("NIT")
+//                .setSortable(true)
+//                .setAutoWidth(true)
+//                .setResizable(true);
+        grid.addColumn(BasicServiceProvider::getCategoryService)
                 .setFlexGrow(1)
-                .setKey("nit")
-                .setHeader("NIT")
+                .setKey("categoryService")
+                .setHeader("Categoria Servicio")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
@@ -186,14 +194,22 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         });
         hr.getCell(grid.getColumnByKey("description")).setComponent(descriptionFilter);
 
-        nitFilter = new IntegerField();
-        nitFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        nitFilter.setWidthFull();
-        nitFilter.setMin(0);
-        nitFilter.addValueChangeListener(e -> {
+//        nitFilter = new IntegerField();
+//        nitFilter.setValueChangeMode(ValueChangeMode.EAGER);
+//        nitFilter.setWidthFull();
+//        nitFilter.setMin(0);
+//        nitFilter.addValueChangeListener(e -> {
+//            applyFilter(dataProvider);
+//        });
+//        hr.getCell(grid.getColumnByKey("nit")).setComponent(nitFilter);
+
+        categoryServiceFilter = new ComboBox<>();
+        categoryServiceFilter.setWidthFull();
+        categoryServiceFilter.setItems("SERVICIO-BASICO","OBLIGACION");
+        categoryServiceFilter.addValueChangeListener(e -> {
             applyFilter(dataProvider);
         });
-        hr.getCell(grid.getColumnByKey("nit")).setComponent(nitFilter);
+        hr.getCell(grid.getColumnByKey("categoryService")).setComponent(categoryServiceFilter);
 
         return grid;
     }
@@ -244,7 +260,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
                 }
 
             }else{
-                UIUtils.dialog("Datos incorrectos, verifique nuevamente","alert").open();
+                UIUtils.showNotificationType("Datos incorrectos, verifique nuevamente","alert");
             }
         });
 
@@ -279,6 +295,11 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         state.setValue("ACTIVO");
         state.setRequired(true);
 
+        RadioButtonGroup<String> categoryService = new RadioButtonGroup<>();
+        categoryService.setItems("SERVICIO-BASICO","OBLIGACION");
+        categoryService.setValue("SERVICIO-BASICO");
+        categoryService.setRequired(true);
+
         binder = new BeanValidationBinder<>(BasicServiceProvider.class);
         binder.forField(typeService).asRequired("Tipo de Servicio es requerido")
                 .bind(BasicServiceProvider::getTypeService,BasicServiceProvider::setTypeService);
@@ -290,6 +311,8 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
                 .bind(BasicServiceProvider::getNit,BasicServiceProvider::setNit);
         binder.forField(state).asRequired("Estado del proveedor es requerido")
                 .bind(BasicServiceProvider::getState,BasicServiceProvider::setState);
+        binder.forField(categoryService).asRequired("Categoria Tipo Servicio es requerido")
+                .bind(BasicServiceProvider::getCategoryService,BasicServiceProvider::setCategoryService);
 
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
@@ -311,7 +334,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         UIUtils.setColSpan(2,descriptionItem);
         form.addFormItem(nit,"NIT");
         form.addFormItem(state,"Estado");
-
+        form.addFormItem(categoryService,"Categoria Servicio");
 
         return form;
     }
@@ -327,8 +350,11 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         if(!descriptionFilter.getValue().trim().equals("")){
             dataProvider.addFilter(basicServiceProvider -> StringUtils.containsIgnoreCase(basicServiceProvider.getDescription(),descriptionFilter.getValue()));
         }
-        if(nitFilter.getValue()!=null){
-            dataProvider.addFilter(basicServiceProvider ->Objects.equals(basicServiceProvider.getNit(),nitFilter.getValue()));
+//        if(nitFilter.getValue()!=null){
+//            dataProvider.addFilter(basicServiceProvider ->Objects.equals(basicServiceProvider.getNit(),nitFilter.getValue()));
+//        }
+        if(categoryServiceFilter.getValue()!=null){
+            dataProvider.addFilter(basicServiceProvider -> Objects.equals(categoryServiceFilter.getValue(),basicServiceProvider.getCategoryService()));
         }
 
     }

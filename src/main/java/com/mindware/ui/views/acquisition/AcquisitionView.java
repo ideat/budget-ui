@@ -271,11 +271,15 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
             acquisition.setId(acquisitionDto.getId());
             acquisition.setState("ENVIADO");
             acquisitionRestTemplate.udpateState(acquisition);
-            acquisitionDto.setState("ENVIADO");
-            acquisitionDtoList.removeIf(ac -> ac.getId().equals(acquisitionDto.getId()));
-//            acquisitionDtoList.add(acquisitionDto);
+            acquisitionDtoList.remove(acquisitionDto);
+            if(VaadinSession.getCurrent().getAttribute("scope").toString().equals("NACIONAL")){
+                acquisitionDto.setState("ENVIADO");
+                acquisitionDtoList.add(acquisitionDto);
+                dataProvider.refreshItem(acquisitionDto);
+            }
+
             acquisitionDtoList.sort(Comparator.comparing(AcquisitionDto::getReceptionDate));
-            dataProvider.refreshAll();
+
             UIUtils.showNotificationType("Enviado a Oficina Nacional","success");
         });
         return btn;

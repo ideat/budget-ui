@@ -46,7 +46,11 @@ public class InvestmentBudgetReport  extends ViewFrame implements RouterLayout {
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        conceptList = conceptRestTemplate.getAgencia();
+        conceptList = conceptRestTemplate.getSucursal();
+        Concept concept = new Concept();
+        concept.setCode("20");
+        concept.setCode2("50");
+        concept.setDescription("OFICINA NACIONAL");
         setViewContent(createContent());
     }
 

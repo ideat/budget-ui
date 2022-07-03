@@ -47,10 +47,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@Route(value = "parameter", layout = MainLayout.class)
+@Route(value = "parameter-obligations", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
-@PageTitle("Parametros")
-public class ParameterView extends SplitViewFrame implements RouterLayout {
+@PageTitle("Parametros Obligaciones")
+public class ParameterObligationsView extends SplitViewFrame implements RouterLayout {
 
     @Autowired
     private ParameterRestTemplate restTemplate;
@@ -65,16 +65,16 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
     private Grid<Parameter> grid;
     private ComboBox<String> cmbCategoryFilter;
     private TextField txtValueFilter;
-    private TextField txtDetailsFilter;
+    private TextField txtFrecuencyFilter;
 
     private Binder<Parameter> binder;
     private ListDataProvider<Parameter> dataProvider;
 
     private Parameter current;
 
-    private String[] param = {"ACTIVIDAD","CARGOS","CATEGORIA TIPO CAMBIO","CODIGO CARGOS","MONEDA", "FRECUENCIA PAGO",
-            "MONTO AUTORIZACION", "NIVELES AUTORIZACION", /*"OBLIGACIONES Y POLIZAS",*/"OFICINAS","PERIODO",
-            "RUBRO","SERVICIOS RECURRENTES", "TIPO ADQUISICION", "TIPO CUENTA",/*"TIPO OBLIGACION",*/ "TIPO SERVICIO BASICO", "TIPO SOCIEDAD"};
+//    private String[] param = {"ACTIVIDAD","CARGOS","CATEGORIA TIPO CAMBIO","CODIGO CARGOS","MONEDA", "FRECUENCIA PAGO",
+//            "MONTO AUTORIZACION", "NIVELES AUTORIZACION", /*"OBLIGACIONES Y POLIZAS",*/"OFICINAS","PERIODO",
+//            "RUBRO","SERVICIOS RECURRENTES", "TIPO ADQUISICION", "TIPO CUENTA","TIPO OBLIGACION", "TIPO SERVICIO BASICO", "TIPO SOCIEDAD"};
 
     @Override
     protected void onAttach(AttachEvent attachEvent){
@@ -86,11 +86,11 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
     }
 
     private HorizontalLayout createTopBar(){
-        btnNew = new Button("Nuevo Parámetro");
+        btnNew = new Button("Nuevo Tipo Obligación");
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
         btnNew.addClickShortcut(Key.KEY_N, KeyModifier.ALT);
-        btnNew.setEnabled(GrantOptions.grantedOptionWrite("Parámetros"));
+        btnNew.setEnabled(GrantOptions.grantedOptionWrite("Parametro Tipo Obligación"));
         btnNew.addClickListener(e -> {
             showDetails(new Parameter());
         });
@@ -117,7 +117,7 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
 
     private void showDetails(Parameter parameter){
         current = parameter;
-        detailsDrawerHeader.setTitle("Parámetro: ".concat(parameter.getValue()==null?"Nuevo":parameter.getValue()));
+        detailsDrawerHeader.setTitle("Tipo Obligación: ".concat(parameter.getValue()==null?"Nuevo":parameter.getValue()));
         detailsDrawer.setContent(createDetails(parameter));
         detailsDrawer.show();
         binder.readBean(parameter);
@@ -178,40 +178,40 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
                 .setHeader("Valor").setSortable(true).setFrozen(false).setResizable(true)
                 .setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
         grid.addColumn(Parameter::getDetails)
-                .setFlexGrow(1).setKey("details")
-                .setHeader("Descripción").setAutoWidth(true).setResizable(true)
+                .setFlexGrow(1).setKey("frecuency")
+                .setHeader("Frecuencia").setAutoWidth(true).setResizable(true)
                 .setTextAlign(ColumnTextAlign.START);
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
                 .setAutoWidth(true)
                 .setFlexGrow(0);
 
-        HeaderRow hr = grid.appendHeaderRow();
-
-        cmbCategoryFilter = new ComboBox<>();
-        cmbCategoryFilter.setItems(param);
-        cmbCategoryFilter.setWidth("100%");
-        cmbCategoryFilter.addValueChangeListener(e ->{
-            applyFilter(dataProvider);
-        });
-        hr.getCell(grid.getColumnByKey("category")).setComponent(cmbCategoryFilter);
-
-        txtValueFilter = new TextField();
-        txtValueFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        txtValueFilter.setWidth("100%");
-        txtValueFilter.addValueChangeListener(e ->{
-            applyFilter(dataProvider);
-        });
-        hr.getCell(grid.getColumnByKey("value")).setComponent(txtValueFilter);
-
-
-        txtDetailsFilter = new TextField();
-        txtDetailsFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        txtDetailsFilter.setWidth("100%");
-        txtDetailsFilter.addValueChangeListener(e ->{
-
-            applyFilter(dataProvider);
-        });
-        hr.getCell(grid.getColumnByKey("details")).setComponent(txtDetailsFilter);
+//        HeaderRow hr = grid.appendHeaderRow();
+//
+//        cmbCategoryFilter = new ComboBox<>();
+//        cmbCategoryFilter.setItems("MENSUAL","ANUAL");
+//        cmbCategoryFilter.setWidth("100%");
+//        cmbCategoryFilter.addValueChangeListener(e ->{
+//            applyFilter(dataProvider);
+//        });
+//        hr.getCell(grid.getColumnByKey("category")).setComponent(cmbCategoryFilter);
+//
+//        txtValueFilter = new TextField();
+//        txtValueFilter.setValueChangeMode(ValueChangeMode.EAGER);
+//        txtValueFilter.setWidth("100%");
+//        txtValueFilter.addValueChangeListener(e ->{
+//            applyFilter(dataProvider);
+//        });
+//        hr.getCell(grid.getColumnByKey("value")).setComponent(txtValueFilter);
+//
+//
+//        txtFrecuencyFilter = new TextField();
+//        txtFrecuencyFilter.setValueChangeMode(ValueChangeMode.EAGER);
+//        txtFrecuencyFilter.setWidth("100%");
+//        txtFrecuencyFilter.addValueChangeListener(e ->{
+//
+//            applyFilter(dataProvider);
+//        });
+//        hr.getCell(grid.getColumnByKey("details")).setComponent(txtFrecuencyFilter);
 
         return grid;
     }
@@ -229,30 +229,32 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
 
     private FormLayout createDetails(Parameter parameter){
 
-        ComboBox<String> cmbCategory = new ComboBox<>();
-        cmbCategory.setItems(param);
-        cmbCategory.setWidth("100%");
-        cmbCategory.setRequired(true);
+        TextField txtCategory = new TextField();
+        txtCategory.setWidth("100%");
+        txtCategory.setRequired(true);
+        txtCategory.setValue("TIPO OBLIGACION");
+        txtCategory.setReadOnly(true);
 
-        TextField txtValue = new TextField();
-        txtValue.setRequired(true);
-        txtValue.setWidth("100%");
+        TextField txtNameTypeObligation = new TextField();
+        txtNameTypeObligation.setRequired(true);
+        txtNameTypeObligation.setWidth("100%");
 
-        TextArea txtDescription = new TextArea();
-        txtDescription.setRequired(true);
-        txtDescription.setWidth("100%");
+        ComboBox<String> cmbFrecuency = new ComboBox<>();
+        cmbFrecuency.setRequired(true);
+        cmbFrecuency.setItems("MENSUAL","ANUAL");
+        cmbFrecuency.setWidth("100%");
 
         binder = new BeanValidationBinder<>(Parameter.class);
 
-        binder.forField(cmbCategory).asRequired("Categoría es requerida").bind(Parameter::getCategory,Parameter::setCategory);
-        binder.forField(txtValue).asRequired("Valor es requerido").bind(Parameter::getValue,Parameter::setValue);
-        binder.forField(txtDescription).asRequired("Descripción es requerida").bind(Parameter::getDetails,Parameter::setDetails);
+        binder.forField(txtCategory).asRequired("Categoría es requerida").bind(Parameter::getCategory,Parameter::setCategory);
+        binder.forField(txtNameTypeObligation).asRequired("Nombre tipo obligacion es requerido").bind(Parameter::getValue,Parameter::setValue);
+        binder.forField(cmbFrecuency).asRequired("Descripción es requerida").bind(Parameter::getDetails,Parameter::setDetails);
 
 
         binder.addStatusChangeListener(event ->{
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Parámetros"));
+            footer.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Parametro Tipo Obligación"));
         });
 
         FormLayout form = new FormLayout();
@@ -263,9 +265,9 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
                         FormLayout.ResponsiveStep.LabelsPosition.TOP),
                 new FormLayout.ResponsiveStep("21em", 2,
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
-        form.addFormItem(cmbCategory,"Categoría");
-        form.addFormItem(txtValue,"Valor");
-        FormLayout.FormItem descriptionItem = form.addFormItem(txtDescription,"Descripción");
+        form.addFormItem(txtCategory,"Categoría");
+        form.addFormItem(txtNameTypeObligation,"Nombre Tipo obligación");
+        FormLayout.FormItem descriptionItem = form.addFormItem(cmbFrecuency,"Frecuencia");
         UIUtils.setColSpan(2,descriptionItem);
         return form;
 
@@ -273,24 +275,26 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
 
 
     private void getListParameter(){
-        parameterList = new ArrayList<>(restTemplate.getAll());
+        parameterList = new ArrayList<>(restTemplate.getByCategory("TIPO OBLIGACION"));
         dataProvider = new ListDataProvider<>(parameterList);
     }
 
-    private void applyFilter(ListDataProvider<Parameter> dataProvider){
-        dataProvider.clearFilters();
-        if (cmbCategoryFilter.getValue()!=null){
-            dataProvider.addFilter(parameter -> Objects.equals(cmbCategoryFilter.getValue(),parameter.getCategory()));
-        }
-        if(!txtValueFilter.getValue().trim().equals("")){
-//            dataProvider.addFilter(parameter -> Objects.equals(txtValueFilter.getValue(),parameter.getValue()));
-            dataProvider.addFilter(parameter -> StringUtils.containsIgnoreCase(parameter.getValue(),txtValueFilter.getValue()));
-        }
-        if(!txtDetailsFilter.getValue().trim().equals("")){
-//            dataProvider.addFilter(parameter -> Objects.equals(txtDescriptionFilter.getValue(),parameter.getDescription()));
-            dataProvider.addFilter(parameter -> StringUtils.containsIgnoreCase(parameter.getDetails(), txtDetailsFilter.getValue()));
-        }
+//    private void applyFilter(ListDataProvider<Parameter> dataProvider){
+//        dataProvider.clearFilters();
+//        if (cmbCategoryFilter.getValue()!=null){
+//            dataProvider.addFilter(parameter -> StringUtils.containsIgnoreCase(cmbCategoryFilter.getValue(),parameter.getCategory()));
+//        }
+//        if(!txtValueFilter.getValue().trim().equals("")){
+////            dataProvider.addFilter(parameter -> Objects.equals(txtValueFilter.getValue(),parameter.getValue()));
+//            dataProvider.addFilter(parameter -> StringUtils.containsIgnoreCase(parameter.getValue(),txtValueFilter.getValue()));
+//        }
+//        if(!txtFrecuencyFilter.getValue().trim().equals("")){
+////            dataProvider.addFilter(parameter -> Objects.equals(txtDescriptionFilter.getValue(),parameter.getDescription()));
+//            dataProvider.addFilter(parameter -> StringUtils.containsIgnoreCase(parameter.getDetails(), txtFrecuencyFilter.getValue()));
+//        }
+//
+//
+//    }
 
 
-    }
 }

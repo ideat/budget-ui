@@ -207,5 +207,16 @@
     "observed":"true",
     "finish":"true",
     "accounting":"true"
+  },
+  {
+    "assigned": "true",
+    "description": "",
+    "name": "Parametro Tipo Obligación",
+    "read": "true",
+    "write": "true",
+    "send": "true",
+    "observed":"true",
+    "finish":"true",
+    "accounting":"true"
   }
 ]

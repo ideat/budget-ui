@@ -242,11 +242,14 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
             RecurrentService recurrentService = new RecurrentService();
             recurrentService.setId(recurrentServiceDto.getId());
             recurrentService.setState("ENVIADO");
-            recurrentServiceDtoList.remove(recurrentServiceDto);
-            recurrentServiceDto.setState("ENVIADO");
-            recurrentServiceDtoList.add(recurrentServiceDto);
-            dataProvider.refreshItem(recurrentServiceDto);
             recurrentServiceRestTemplate.updateState(recurrentService);
+            recurrentServiceDtoList.remove(recurrentServiceDto);
+            if(VaadinSession.getCurrent().getAttribute("scope").toString().equals("NACIONAL")){
+                recurrentServiceDto.setState("ENVIADO");
+                recurrentServiceDtoList.add(recurrentServiceDto);
+//                dataProvider.refreshItem(recurrentServiceDto);
+            }
+            dataProvider.refreshAll();
             UIUtils.showNotificationType("Enviado a Oficina Nacional","success");
         });
         return btn;

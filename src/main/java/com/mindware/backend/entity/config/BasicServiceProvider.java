@@ -20,4 +20,6 @@ public class BasicServiceProvider {
     private String description;
 
     private String state;
+
+    private String categoryService;
 }

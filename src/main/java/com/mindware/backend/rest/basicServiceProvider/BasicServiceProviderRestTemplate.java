@@ -39,6 +39,17 @@ public class BasicServiceProviderRestTemplate {
         return Arrays.asList(response.getBody());
     }
 
+    public List<BasicServiceProvider> getAllByCategoryService(String categoryService){
+        final String uri = url + "/v1/basic-service-provider/getAllCategoryService/{categoryservice}";
+
+        Map<String,String> params = new HashMap<>();
+        params.put("categoryservice", categoryService);
+
+        HttpEntity<BasicServiceProvider[]> entity = new HttpEntity<>( HeaderJwt.getHeader());
+        ResponseEntity<BasicServiceProvider[]> response = restTemplate.exchange(uri, HttpMethod.GET,entity,BasicServiceProvider[].class,params);
+        return Arrays.asList(response.getBody());
+    }
+
     public BasicServiceProvider getById(String id){
         final String uri = url + "/v1/basic-service-provider/getById/{id}";
         Map<String,String> params = new HashMap<>();

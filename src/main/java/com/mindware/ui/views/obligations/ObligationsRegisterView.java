@@ -151,12 +151,15 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     private ListDataProvider<SelectedInvoiceAuthorizer> selectedInvoiceAuthorizerDataProvider;
 
     private List<String> typeObligationList = new ArrayList<>();
+    private List<Parameter> parameterList = new ArrayList<>();
 
     @Override
     public void setParameter(BeforeEvent beforeEvent,  @OptionalParameter String s) {
-        typeObligationList.add("PATENTES");
-        typeObligationList.add("IMPUESTOS");
-        typeObligationList.add("OTRAS TASAS");
+//        typeObligationList.add("PATENTES");
+//        typeObligationList.add("IMPUESTOS");
+//        typeObligationList.add("OTRAS TASAS");
+        typeObligationList.addAll(utilValues.getValueParameterByCategory("TIPO OBLIGACION"));
+        parameterList.addAll(parameterRestTemplate.getByCategory("TIPO OBLIGACION"));
 
         mapper = new ObjectMapper();
         Location location = beforeEvent.getLocation();
@@ -320,9 +323,18 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
         ComboBox<String> typeObligation = new ComboBox<>();
         typeObligation.setWidthFull();
-        typeObligation.setItems(utilValues.getValueParameterByCategory("TIPO OBLIGACION"));
+        typeObligation.setItems(typeObligationList);
         typeObligation.addValueChangeListener(event -> {
-            if(typeObligationList.contains(event.getValue()) ){
+
+            Optional<String> frecuency = parameterList.stream()
+                    .filter(f -> f.getValue().equals(event.getValue()))
+                    .map(Parameter::getDetails)
+                    .findFirst();
+            if(frecuency.isEmpty()){
+                UIUtils.showNotificationType("Frecuencia no configurada en los parametros","alert");
+                return;
+            }
+            if(frecuency.get().equals("ANUAL") ){
                 period.clear();
                 period.setItems(utilValues.getAllYearsString());
             }else{
@@ -483,7 +495,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     }
 
     private Grid searchSupplier() {
-        List<BasicServiceProvider> basicServiceProviderList = basicServiceProviderRestTemplate.getAll();
+        List<BasicServiceProvider> basicServiceProviderList = basicServiceProviderRestTemplate.getAllByCategoryService("OBLIGACION");
         ListDataProvider<BasicServiceProvider> dataProvider = new ListDataProvider<>(basicServiceProviderList);
         Grid<BasicServiceProvider> grid = new Grid<>();
         grid.setWidthFull();

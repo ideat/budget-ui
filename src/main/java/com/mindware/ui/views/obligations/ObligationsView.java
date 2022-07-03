@@ -249,9 +249,13 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
             obligations.setId(obligationsDto.getId());
             obligations.setState("ENVIADO");
             obligationsRestTemplate.updateSate(obligations);
-            obligationsDto.setState("ENVIADO");
-            obligationsDtoList.removeIf(ob -> ob.getId().equals(obligationsDto.getId()));
-            obligationsDtoList.add(obligationsDto);
+            obligationsDtoList.remove(obligationsDto.getId());
+            if(VaadinSession.getCurrent().getAttribute("scope").toString().equals("NACIONAL")){
+                obligationsDto.setState("ENVIADO");
+                obligationsDtoList.add(obligationsDto);
+//                dataProvider.refreshItem(obligationsDto);
+            }
+
             obligationsDtoList.sort(Comparator.comparing(ObligationsDto::getPaymentDate));
             dataProvider.refreshAll();
             UIUtils.showNotificationType("Enviado a Oficina Nacional","success");

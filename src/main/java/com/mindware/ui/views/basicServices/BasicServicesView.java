@@ -249,10 +249,12 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
             basicServices.setState("ENVIADO");
             basicServicesRestTemplate.updateState(basicServices);
             basicServicesDtoList.remove(basicServicesDto);
-            basicServicesDto.setState("ENVIADO");
-            basicServicesDtoList.add(basicServicesDto);
-
-            dataProvider.refreshItem(basicServicesDto);
+            if(VaadinSession.getCurrent().getAttribute("scope").toString().equals("NACIONAL")){
+                basicServicesDto.setState("ENVIADO");
+                basicServicesDtoList.add(basicServicesDto);
+//                dataProvider.refreshItem(basicServicesDto);
+            }
+            dataProvider.refreshAll();
             UIUtils.showNotificationType("Enviado a Oficina Nacional","success");
         });
         return btn;

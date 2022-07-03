@@ -12,6 +12,7 @@ import com.mindware.ui.views.acquisitionAuthorizer.AcquisitionAuthorizerView;
 import com.mindware.ui.views.basicServices.BasicServicesView;
 import com.mindware.ui.views.config.account.AccountView;
 import com.mindware.ui.views.config.basicServiceProvider.BasicServiceProviderView;
+import com.mindware.ui.views.config.parameter.ParameterObligationsView;
 import com.mindware.ui.views.config.parameter.ParameterView;
 import com.mindware.ui.views.config.period.PeriodView;
 import com.mindware.ui.views.config.typeChangeCurrency.TypeChangeCurrencyView;
@@ -220,6 +221,9 @@ public class MainLayout extends FlexBoxLayout
 			if(assignedOption("Parámetros")) {
 				menu.addNaviItem(configuration, "Parámetros", ParameterView.class);
 			}
+			if(assignedOption("Parametro Tipo Obligación")) {
+				menu.addNaviItem(configuration, "Parametro Tipo Obligación", ParameterObligationsView.class);
+			}
 			if(assignedOption("Niveles Aut. Adquisición")) {
 				menu.addNaviItem(configuration, "Niveles Aut. Adquisición", AcquisitionAuthorizerView.class);
 			}
@@ -230,7 +234,7 @@ public class MainLayout extends FlexBoxLayout
 				menu.addNaviItem(configuration, "Cuentas", AccountView.class);
 			}
 			if(assignedOption("Proveedor Serv. Básicos")) {
-				menu.addNaviItem(configuration, "Proveedor Serv. Básicos", BasicServiceProviderView.class);
+				menu.addNaviItem(configuration, "Serv. Básicos y Obligaciones", BasicServiceProviderView.class);
 			}
 			if(assignedOption("Periodos")) {
 				menu.addNaviItem(configuration, "Periodos", PeriodView.class);
