@@ -275,9 +275,9 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
             if(VaadinSession.getCurrent().getAttribute("scope").toString().equals("NACIONAL")){
                 acquisitionDto.setState("ENVIADO");
                 acquisitionDtoList.add(acquisitionDto);
-                dataProvider.refreshItem(acquisitionDto);
+//                dataProvider.refreshItem(acquisitionDto);
             }
-
+            dataProvider.refreshAll();
             acquisitionDtoList.sort(Comparator.comparing(AcquisitionDto::getReceptionDate));
 
             UIUtils.showNotificationType("Enviado a Oficina Nacional","success");

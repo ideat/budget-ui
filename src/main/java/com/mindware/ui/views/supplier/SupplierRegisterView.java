@@ -20,12 +20,15 @@ import com.mindware.ui.util.LumoStyles;
 import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.views.SplitViewFrame;
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -34,8 +37,10 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.router.*;
+import dev.mett.vaadin.tooltip.Tooltips;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -293,10 +298,10 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         gridShareHolder.setDataProvider(shareHolderListDataProvider);
         gridShareHolder.setWidthFull();
 
-        gridShareHolder.addSelectionListener(event -> {
-            initShareHolder = event.getFirstSelectedItem().get();
-            event.getFirstSelectedItem().ifPresent(this::showDetails);
-        });
+//        gridShareHolder.addSelectionListener(event -> {
+//            initShareHolder = event.getFirstSelectedItem().get();
+//            event.getFirstSelectedItem().ifPresent(this::showDetails);
+//        });
 
         gridShareHolder.addColumn(ShareHolder::getIdCard)
                 .setFlexGrow(1)
@@ -308,6 +313,12 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
                 .setAutoWidth(true)
                 .setSortable(true)
                 .setHeader("Nombre Completo");
+        gridShareHolder.addColumn(new ComponentRenderer<>(this::createButtonEdit))
+                .setFlexGrow(0)
+                .setTextAlign(ColumnTextAlign.START);
+        gridShareHolder.addColumn(new ComponentRenderer<>(this::createButtonDelete))
+                .setFlexGrow(0)
+                .setTextAlign(ColumnTextAlign.START);
 
         Button btnNewShareHolder = new Button("Nuevo Accionista");
         btnNewShareHolder.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -322,6 +333,33 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         layout.add(headerLayout,gridShareHolder);
 
         return layout;
+    }
+
+    private Component createButtonEdit(ShareHolder shareHolder){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.setIcon(VaadinIcon.EDIT.create());
+
+        btn.addClickListener(buttonClickEvent -> {
+            showDetails(shareHolder);
+        });
+
+        return btn;
+    }
+
+    private Component createButtonDelete(ShareHolder shareHolder){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.TRASH.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        btn.addClickListener(event -> {
+            shareHolderList.remove(shareHolder);
+            shareHolderListDataProvider.refreshAll();
+            footerSupplier.saveState(GrantOptions.grantedOptionWrite("Proveedores"));
+        });
+
+        return btn;
     }
 
     private void showDetails(ShareHolder shareHolder){

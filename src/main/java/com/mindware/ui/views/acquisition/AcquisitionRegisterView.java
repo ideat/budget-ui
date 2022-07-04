@@ -867,7 +867,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones"));
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones")
+                    && !current.getState().equals("FINALIZADO"));
         });
 
         FormLayout form = new FormLayout();
@@ -1180,7 +1181,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 itemList.add(currentItem);
                 detailsDrawerItem.hide();
                 itemGrid.getDataProvider().refreshAll();
-                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
+                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
 
             }
         });
@@ -1239,7 +1240,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addClickListener(event -> {
             itemList.remove(item);
             itemGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
+            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO") );
         });
 
         return btn;
@@ -1289,7 +1290,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             binder.addStatusChangeListener(event ->{
                 boolean isValid = !event.hasValidationErrors();
                 boolean hasChanges = binder.hasChanges();
-                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones"));
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
             });
 //        }
         VerticalLayout layout = new VerticalLayout();
@@ -1383,7 +1384,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             binder.addStatusChangeListener(event ->{
                 boolean isValid = !event.hasValidationErrors();
                 boolean hasChanges = binder.hasChanges();
-                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones"));
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones")
+                        && !current.getState().equals("FINALIZADO"));
             });
 
 //        }
@@ -1552,7 +1554,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                detailsDrawerSelectedAuthorizer.hide();
                selectedAuthorizerGrid.getDataProvider().refreshAll();
                footerSelectedAuthorizer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
-               footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
+               footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
            }
         });
         footerSelectedAuthorizer.addCancelListener(e -> detailsDrawerSelectedAuthorizer.hide());
@@ -1681,7 +1683,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 detailsDrawerSelectedAuthorizer.hide();
                 selectedAuthorizerLevel2Grid.getDataProvider().refreshAll();
                 footerSelectedAuthorizer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
-                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
+                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
             }
         });
         footerSelectedAuthorizer.addCancelListener(e -> detailsDrawerSelectedAuthorizer.hide());
@@ -1899,7 +1901,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             adjudicationInfomationBinder.addStatusChangeListener(event -> {
                 boolean isValid = !event.hasValidationErrors();
                 boolean hasChanges = adjudicationInfomationBinder.hasChanges();
-                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones"));
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones")
+                        && !current.getState().equals("FINALIZADO"));
             });
 
             adjudicationInfomationBinder.readBean(currentAdjudicationInformation);
@@ -1986,7 +1989,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             receptionInformationBinder.addStatusChangeListener(event -> {
                 boolean isValid = !event.hasValidationErrors();
                 boolean hasChanges = receptionInformationBinder.hasChanges();
-                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones"));
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones")
+                        && !current.getState().equals("FINALIZADO"));
             });
 
             receptionInformationBinder.readBean(currentReceptionInformation);
@@ -2128,7 +2132,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addClickListener(event -> {
             invoiceInformationList.remove(invoiceInformation);
             invoiceInformationGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
+            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones") && !current.getState().equals("FINALIZADO"));
         });
 
         return btn;
@@ -2175,7 +2179,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 detailsDrawerInvoiceInformation.hide();
                 invoiceInformationGrid.getDataProvider().refreshAll();
                 footerInvoiceInformation.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
-                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
+                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
             }
         });
         footerInvoiceInformation.addCancelListener(e -> detailsDrawerInvoiceInformation.hide());
@@ -2290,8 +2294,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     dialog.setModal(true);
                     dialog.open();
                 }else{
-                    idSupplierInvoiceInformation.setValue(supplier.getId().toString());
-                    nameSupplierInvoiceInformation.setValue(supplier.getName());
+                    if(supplier.getPendingCompleting().equals("SI")) {
+                        idSupplierInvoiceInformation.setValue(supplier.getId().toString());
+                        nameSupplierInvoiceInformation.setValue(supplier.getName());
+                    }else{
+                        UIUtils.showNotificationType("Proveedor no tiene informacion completa, " +
+                                "complete los datos del proveedor","alert");
+                        return;
+                    }
                 }
             }else{
                nit.setInvalid(true);
@@ -2541,7 +2551,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             boolean hasChanges = expenseDistribuiteBinder.hasChanges();
 //            footer.saveState(hasChanges && isValid && GrantOptions.grantedOption("Parametros"));
             footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Adquisiciones"));
-            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
+            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
         });
 
         expenseDistribuiteBinder.readBean(currentExpenseDistribuite);
@@ -2594,7 +2604,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 expenseDistribuiteList.add(currentExpenseDistribuite);
                 detailsDrawerExpenseDistribuite.hide();
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
-                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
+                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
 
             }
         });
@@ -2701,7 +2711,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addClickListener(event -> {
             expenseDistribuiteList.remove(expenseDistribuite);
             expenseDistribuiteGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones"));
+            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
         });
 
         return btn;
@@ -2765,7 +2775,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             binder.addStatusChangeListener(event -> {
                 boolean isValid = !event.hasValidationErrors();
                 boolean hasChanges = binder.hasChanges();
-                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones"));
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Adquisiciones")
+                        && !current.getState().equals("FINALIZADO"));
             });
 //        }
             VerticalLayout layout = new VerticalLayout();

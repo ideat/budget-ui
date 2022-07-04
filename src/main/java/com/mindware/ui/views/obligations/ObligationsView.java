@@ -245,11 +245,15 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
                 UIUtils.showNotificationType("Registre Autorizador de la factura","alert");
                 return;
             }
+            if(obligationsDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
+                return;
+            }
             Obligations obligations = new Obligations();
             obligations.setId(obligationsDto.getId());
             obligations.setState("ENVIADO");
             obligationsRestTemplate.updateSate(obligations);
-            obligationsDtoList.remove(obligationsDto.getId());
+            obligationsDtoList.remove(obligationsDto);
             if(VaadinSession.getCurrent().getAttribute("scope").toString().equals("NACIONAL")){
                 obligationsDto.setState("ENVIADO");
                 obligationsDtoList.add(obligationsDto);
@@ -272,6 +276,10 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
         btn.addClickListener(event -> {
             if(obligationsDto.getState().equals("ENVIADO") || !obligationsDto.getState().equals("FINALIZADO")){
                 UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADA o FINALIZADO","alert");
+                return;
+            }
+            if(obligationsDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
                 return;
             }
             Obligations obligations = new Obligations();
@@ -301,6 +309,10 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
             }
             if(obligationsDto.getDateDeliveryAccounting()==null){
                 UIUtils.showNotificationType("No puede finalizar sin enviar a Contabilidad","alert");
+                return;
+            }
+            if(obligationsDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
                 return;
             }
             Obligations obligations = new Obligations();

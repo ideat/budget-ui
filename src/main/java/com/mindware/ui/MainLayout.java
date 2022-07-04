@@ -222,7 +222,7 @@ public class MainLayout extends FlexBoxLayout
 				menu.addNaviItem(configuration, "Parámetros", ParameterView.class);
 			}
 			if(assignedOption("Parametro Tipo Obligación")) {
-				menu.addNaviItem(configuration, "Parametro Tipo Obligación", ParameterObligationsView.class);
+				menu.addNaviItem(configuration, "Parámetro Tipo Obligación", ParameterObligationsView.class);
 			}
 			if(assignedOption("Niveles Aut. Adquisición")) {
 				menu.addNaviItem(configuration, "Niveles Aut. Adquisición", AcquisitionAuthorizerView.class);
@@ -234,7 +234,7 @@ public class MainLayout extends FlexBoxLayout
 				menu.addNaviItem(configuration, "Cuentas", AccountView.class);
 			}
 			if(assignedOption("Proveedor Serv. Básicos")) {
-				menu.addNaviItem(configuration, "Serv. Básicos y Obligaciones", BasicServiceProviderView.class);
+				menu.addNaviItem(configuration, "Prov. Básicos y Obliga.", BasicServiceProviderView.class);
 			}
 			if(assignedOption("Periodos")) {
 				menu.addNaviItem(configuration, "Periodos", PeriodView.class);

@@ -259,6 +259,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
         appBar.centerTabs();
         currentTab = "Registro Factura Servicio Basico";
+        hideContent();
         appBar.addTabSelectionListener(e -> {
             enabledSheets();
             if(e.getSource().getSelectedTab()!=null) {
@@ -422,7 +423,8 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Básicos"));
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Básicos")
+                    && !baseServicesDto.getState().equals("FINALIZADO"));
         });
 
         FormLayout form = new FormLayout();
@@ -705,7 +707,8 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                 expenseDistribuiteList.add(currentExpenseDistribuite);
                 detailsDrawerExpenseDistribuite.hide();
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
-                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos"));
+                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos")
+                        && !basicServicesDto.getState().equals("FINALIZADO"));
 
             }
         });
@@ -768,7 +771,8 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         btn.addClickListener(event -> {
             expenseDistribuiteList.remove(expenseDistribuite);
             expenseDistribuiteGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos"));
+            footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos")
+                    && !basicServicesDto.getState().equals("FINALIZADO"));
         });
 
         return btn;
@@ -851,7 +855,8 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                detailsDrawerSelectedInvoiceAuthorizer.hide();
                selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
                footerInvoiceAuthorizer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos"));
-               footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos"));
+               footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos")
+                       && !basicServicesDto.getState().equals("FINALIZADO"));
            }
         });
 
@@ -1043,7 +1048,8 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Básicos"));
+            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Básicos")
+                    && !basicServicesDto.getState().equals("FINALIZADO"));
         });
 //        }
         VerticalLayout layout = new VerticalLayout();

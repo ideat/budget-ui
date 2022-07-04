@@ -267,7 +267,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         appBar.centerTabs();
 
         currentTab = "Registro Factura Servicio Recurrente";
-
+        hideContent();
         appBar.addTabSelectionListener(e -> {
             enabledSheets();
             if(e.getSource().getSelectedTab()!=null) {
@@ -460,7 +460,8 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         binder.addStatusChangeListener(event -> {
            boolean isValid = !event.hasValidationErrors();
            boolean hasChanges = binder.hasChanges();
-           footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+           footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Recurrentes")
+           && !recurrentServiceDto.getState().equals("FINALIZADO"));
         });
 
 
@@ -812,7 +813,8 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = expenseDistribuiteBinder.hasChanges();
 //            footer.saveState(hasChanges && isValid && GrantOptions.grantedOption("Parametros"));
-            footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+            footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Servicios Recurrentes")
+                    && !recurrentServiceDto.getState().equals("FINALIZADO"));
         });
 
 
@@ -858,7 +860,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 expenseDistribuiteList.add(currentExpenseDistribuite);
                 detailsDrawerExpenseDistribuite.hide();
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
-                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes") && !recurrentServiceDto.getState().equals("FINALIZADO"));
 
             }
         });
@@ -919,7 +921,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         btn.addClickListener(event -> {
             expenseDistribuiteList.remove(expenseDistribuite);
             expenseDistribuiteGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+            footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes") && !recurrentServiceDto.getState().equals("FINALIZADO"));
         });
         return btn;
     }
@@ -943,6 +945,8 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         RecurrentService recurrentService = new RecurrentService();
         if(recurrentServiceDto.getId()==null){
             recurrentService.setCreatedBy(VaadinSession.getCurrent().getAttribute("login").toString());
+        }else{
+            recurrentService.setCreatedBy(recurrentServiceDto.getCreatedBy());
         }
         recurrentService.setId(recurrentServiceDto.getId());
         recurrentService.setTypeService(recurrentServiceDto.getTypeService());
@@ -1000,7 +1004,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 detailsDrawerSelectedInvoiceAuthorizer.hide();
                 selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
                 footerInvoiceAuthorizer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
-                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes") && !recurrentServiceDto.getState().equals("FINALIZADO"));
             }
         });
 
@@ -1185,7 +1189,8 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges  && GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+            footer.saveState(isValid && hasChanges  && GrantOptions.grantedOptionWrite("Servicios Recurrentes")
+                    && !recurrentServiceDto.getState().equals("FINALIZADO"));
         });
 //        }
         VerticalLayout layout = new VerticalLayout();

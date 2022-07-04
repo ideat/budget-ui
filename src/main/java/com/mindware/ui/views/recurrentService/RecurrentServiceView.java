@@ -239,6 +239,10 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
                 UIUtils.showNotificationType("Registre Autorizador de la factura","alert");
                 return;
             }
+            if(recurrentServiceDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
+                return;
+            }
             RecurrentService recurrentService = new RecurrentService();
             recurrentService.setId(recurrentServiceDto.getId());
             recurrentService.setState("ENVIADO");
@@ -264,6 +268,10 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
         btn.addClickListener(event -> {
             if(!recurrentServiceDto.getState().equals("ENVIADO") /*|| !recurrentServiceDto.getState().equals("FINALIZADO")*/ ){
                 UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADO","alert");
+                return;
+            }
+            if(recurrentServiceDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
                 return;
             }
             RecurrentService recurrentService = new RecurrentService();
@@ -292,6 +300,10 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
             }
             if(recurrentServiceDto.getDateDeliveryAccounting()==null){
                 UIUtils.showNotificationType("No puede finalizar sin enviar a Contabilidad","alert");
+                return;
+            }
+            if(recurrentServiceDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
                 return;
             }
             RecurrentService recurrentService = new RecurrentService();

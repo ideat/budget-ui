@@ -44,6 +44,7 @@ import javax.imageio.plugins.tiff.BaselineTIFFTagSet;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Route(value = "period", layout = MainLayout.class)
@@ -249,18 +250,19 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
             restTemplate.add(period);
 
             if(periodList.size()>1) {
-                Period aux = periodList.stream()
+                Optional<Period> aux = periodList.stream()
                         .filter(p -> p.getIsOpen().equals(true) && !p.getYear().equals(period.getYear()))
-                        .collect(Collectors.toList()).get(0);
-                if(aux != null) {
-                    aux.setIsOpen(false);
-                    restTemplate.add(aux);
+                        .findFirst();
+                if(!aux.isEmpty()) {
+                    aux.get().setIsOpen(false);
+                    restTemplate.add(aux.get());
                 }
 
             }
             periodList.clear();
             periodList.addAll(restTemplate.getAll());
             grid.getDataProvider().refreshAll();
+            UIUtils.showNotificationType("Periodo Activado","success");
         });
 
         return btn;

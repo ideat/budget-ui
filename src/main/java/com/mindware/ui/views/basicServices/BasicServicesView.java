@@ -244,6 +244,10 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
                 UIUtils.showNotificationType("Registre Autorizador de la factura","alert");
                 return;
             }
+            if(basicServicesDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
+                return;
+            }
             BasicServices basicServices = new BasicServices();
             basicServices.setId(basicServicesDto.getId());
             basicServices.setState("ENVIADO");
@@ -269,6 +273,10 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
         btn.addClickListener(event -> {
             if(!basicServicesDto.getState().equals("ENVIADO") /*|| basicServicesDto.getState().equals("FINALIZADO")*/){
                 UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADO","alert");
+                return;
+            }
+            if(basicServicesDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
                 return;
             }
             BasicServices basicServices = new BasicServices();
@@ -297,6 +305,10 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
             }
             if(basicServicesDto.getDateDeliveryAccounting()==null){
                 UIUtils.showNotificationType("No puede finalizar sin enviar a Contabilidad","alert");
+                return;
+            }
+            if(basicServicesDto.getState().equals("FINALIZADO")){
+                UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
                 return;
             }
             BasicServices basicServices = new BasicServices();
