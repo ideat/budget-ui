@@ -169,11 +169,13 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
         if(!param.get("id").get(0).equals("NUEVO")){
             obligationsDto = obligationsDtoRestTemplate.getById(param.get("id").get(0));
+
             title = "Proveedor: ".concat(obligationsDto.getNameSupplier());
             basicServiceProviderSelected = basicServiceProviderRestTemplate.getById(obligationsDto.getIdSupplier().toString());
 
         }else{
             obligationsDto = new ObligationsDto();
+            obligationsDto.setState("INICIADO");
             obligationsDto.setExpenseDistribuite("[]");
             obligationsDto.setInvoiceAuthorizer("[]");
             title = "Registro Nuevo";
@@ -427,8 +429,11 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones")
-            && !obligationsDto.getState().equals("FINALIZADO"));
+            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones"));
+            }else{
+                footer.saveState(false);
+            }
         });
 
         FormLayout form = new FormLayout();
@@ -661,9 +666,12 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         expenseDistribuiteBinder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = expenseDistribuiteBinder.hasChanges();
-//            footer.saveState(hasChanges && isValid && GrantOptions.grantedOption("Parametros"));
-            footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Obligaciones")
-                    && !obligationsDto.getState().equals("FINALIZADO"));
+            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")){
+                footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Obligaciones"));
+            }else{
+                footerExpenseDistribuite.saveState(false);
+            }
+
         });
 
         expenseDistribuiteBinder.readBean(expenseDistribuite);
@@ -710,7 +718,11 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 expenseDistribuiteList.add(currentExpenseDistribuite);
                 detailsDrawerExpenseDistribuite.hide();
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
-                footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones") && !obligationsDto.getState().equals("FINALIZADO"));
+                if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+                    footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones") );
+                }else{
+                    footer.saveState(false);
+                }
 
             }
         });
@@ -772,7 +784,11 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         btn.addClickListener(event -> {
             expenseDistribuiteList.remove(expenseDistribuite);
             expenseDistribuiteGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones") && !obligationsDto.getState().equals("FINALIZADO"));
+            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+                footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
+            }else{
+                footer.saveState(false);
+            }
         });
 
         return btn;
@@ -855,7 +871,11 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 detailsDrawerSelectedInvoiceAuthorizer.hide();
                 selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
                 footerInvoiceAuthorizer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
-                footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones") && !obligationsDto.getState().equals("FINALIZADO"));
+                if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+                    footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
+                }else{
+                    footer.saveState(false);
+                }
             }
         });
 
@@ -1042,7 +1062,13 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones") && !obligationsDto.getState().equals("FINALIZADO")) ;
+            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones"));
+            }else{
+                footer.saveState(false);
+//            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones")
+//                    && !obligationsDto.getState().equals("FINALIZADO")) ;
+            }
         });
 //        }
         VerticalLayout layout = new VerticalLayout();

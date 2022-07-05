@@ -249,6 +249,10 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
                 UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
                 return;
             }
+            if( obligationsDto.getInvoiceAuthorizer()==null || obligationsDto.getInvoiceAuthorizer().equals("[]")){
+                UIUtils.showNotificationType("Registre autorizadores de la factura antes de Enviar","alert");
+                return;
+            }
             Obligations obligations = new Obligations();
             obligations.setId(obligationsDto.getId());
             obligations.setState("ENVIADO");
@@ -274,14 +278,17 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
         btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
         btn.setVisible(GrantOptions.grantedOptionObserved("Obligaciones"));
         btn.addClickListener(event -> {
-            if(obligationsDto.getState().equals("ENVIADO") || !obligationsDto.getState().equals("FINALIZADO")){
-                UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADA o FINALIZADO","alert");
-                return;
-            }
+
             if(obligationsDto.getState().equals("FINALIZADO")){
                 UIUtils.showNotificationType("Operación ya fue Finalizada","alert");
                 return;
             }
+
+            if(!obligationsDto.getState().equals("ENVIADO") ){
+                UIUtils.showNotificationType("No puede OBSERVARSE antes de ser ENVIADA","alert");
+                return;
+            }
+
             Obligations obligations = new Obligations();
             obligations.setId(obligationsDto.getId());
             obligations.setState("OBSERVADO");
@@ -317,6 +324,7 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
             }
             Obligations obligations = new Obligations();
             obligations.setId(obligationsDto.getId());
+            obligations.setState("FINALIZADO");
             obligationsDto.setState("FINALIZADO");
             obligationsRestTemplate.updateSate(obligations);
             obligationsDtoList.removeIf(ob -> ob.getId().equals(obligationsDto.getId()));

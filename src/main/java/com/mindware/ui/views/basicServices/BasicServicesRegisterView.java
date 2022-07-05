@@ -165,6 +165,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
             basicServiceProviderSelected = basicServiceProviderRestTemplate.getById(basicServicesDto.getIdBasicServicesProvider().toString());
         }else{
             basicServicesDto = new BasicServicesDto();
+            basicServicesDto.setState("INICIADO");
             basicServicesDto.setExpenseDistribuite("[]");
             basicServicesDto.setInvoiceAuthorizer("[]");
             title = "Registro Nuevo";

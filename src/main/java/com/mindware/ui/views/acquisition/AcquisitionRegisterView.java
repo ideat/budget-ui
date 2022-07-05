@@ -16,6 +16,7 @@ import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.rest.supplier.SupplierRestTemplate;
+import com.mindware.backend.rest.typeChangeCurrency.TypeChangeCurrencyRestTemplate;
 import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
@@ -99,6 +100,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     @Autowired
     private ParameterRestTemplate parameterRestTemplate;
+
+    @Autowired
+    private TypeChangeCurrencyRestTemplate typeChangeCurrencyRestTemplate;
 
     private Map<String, List<String>> params;
     private ObjectMapper mapper;
@@ -226,6 +230,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     private Optional<ExpenseDistribuiteAcquisition> expSearch;
     private String auxItem;
+    private Double amountMax;
 
     @SneakyThrows
     @Override
@@ -434,6 +439,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
                 binder.forField(quotationRequestDate)
                         .asRequired("Fecha solicitud cotización es requerida")
+                        .withValidator(f -> f.isAfter(receptionDate.getValue()),"Fecha solicitud de cotizacion no puede ser anterior a la fecha de recepción de la Solicitude Compra")
                         .bind(Acquisition::getQuotationRequestDate, Acquisition::setQuotationRequestDate);
                 binder.forField(quotationReceptionDate)
                         .asRequired(("Fecha de recepción de contizaciones es requerida"))
@@ -465,7 +471,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         .bind(AdjudicationInfomation::getDeliveryTime,AdjudicationInfomation::setDeliveryTime);
                 adjudicationInfomationBinder.forField(requiresAdvance)
                         .bind(AdjudicationInfomation::getRequiresAdvance,AdjudicationInfomation::setRequiresAdvance);
-                if(requiresAdvance.getValue()!=true){
+                if(requiresAdvance.getValue()!=null && requiresAdvance.getValue().equals(false)){
                     adjudicationInfomationBinder.forField(requireUpdateDoc)
                             .bind(AdjudicationInfomation::getRequireUpdateDoc, AdjudicationInfomation::setRequireUpdateDoc);
                     adjudicationInfomationBinder.forField(contractRequestDateToLegal)
@@ -1428,12 +1434,20 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
     private FormLayout layoutAuthorizersLevel(SelectedAuthorizer selectedAuthorizer, String level){
         Concept concept = conceptList.stream()
-                .filter(c -> String.valueOf(current.getCodeBusinessUnit()).equals(c.getCode2()))
+                .filter(c -> String.valueOf(current.getCodeFatherBusinessUnit()).equals(c.getCode())) //TODO: authorizer is from  codefatherbusiness or codebusiness?
                 .findFirst().get();
+        amountMax = 0.0;
+        TypeChangeCurrency typeChangeCurrency = typeChangeCurrencyRestTemplate.getCurrentTypeChangeCurrencyByValidityStart("CONTABLE",quotationReceptionDate.getValue().toString(),"$us");
+
+        if(currency.getValue().equals("Bs")){
+            amountMax = amountCaabs.getValue()/typeChangeCurrency.getAmountChange();
+        }else{
+            amountMax = amountCaabs.getValue();
+        }
         List<AcquisitionAuthorizer> acquisitionAuthorizerList = acquisitionAuthorizerRestTemplate
                 .getByCodeBranchOffice(Integer.valueOf(concept.getCode()))
                 .stream()
-                .filter(au -> au.getMaxAmount().doubleValue()>= amountCaabs.getValue())
+                .filter(au -> au.getMaxAmount().doubleValue()>= amountMax)
                 .collect(Collectors.toList());
 
         if(level.equals("level2")) {

@@ -169,7 +169,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         grid.addColumn(new LocalDateRenderer<>(ContractDto::getDateSubscription
                 , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                 .setKey("dateSubscription")
-                .setHeader("Fecha Subscripción")
+                .setHeader("Fecha Suscripción")
                 .setFlexGrow(1)
                 .setAutoWidth(true)
                 .setSortable(true);
@@ -256,7 +256,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         dateSubscription.setRequired(true);
         dateSubscription.setI18n(UIUtils.spanish());
         dateSubscription.setWidth("90%");
-        dateSubscription.setErrorMessage("Fecha Inicio no puede ser anterior a la Fecha de Subscripción");
+        dateSubscription.setErrorMessage("Fecha Inicio no puede ser anterior a la Fecha de Suscripción");
 
         ComboBox<String> currency = new ComboBox<>();
         currency.setWidth("40%");
@@ -332,7 +332,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder = new BeanValidationBinder<>(Contract.class);
 
         binder.forField(dateSubscription)
-                .asRequired("Fecha de Subscripción es requerida")
+                .asRequired("Fecha de Suscripción es requerida")
 //                .withValidator(d -> (startDate.getValue()!=null && d.isBefore(startDate.getValue())),"Fecha de subscripción no puede ser posterior a la fecha de inicio")
                 .bind(Contract::getDateSubscription,Contract::setDateSubscription);
         binder.forField(currency).asRequired("Moneda es requerida")
@@ -346,7 +346,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.forField(startDate)
                 .asRequired("Fecha de Inicio es requerida")
 //                .withValidator(d ->  finishDate.getValue()!=null && d.isBefore(finishDate.getValue()),"Fecha de Inicio no puede ser posterior a la Fecha de Finalización")
-                .withValidator(d -> d.isAfter(dateSubscription.getValue()) ||  d.isEqual(dateSubscription.getValue()),"Fecha Inicio no puede ser anterior a la Fecha de Subscripción")
+                .withValidator(d -> d.isAfter(dateSubscription.getValue()) ||  d.isEqual(dateSubscription.getValue()),"Fecha Inicio no puede ser anterior a la Fecha de Suscripción")
                 .bind(Contract::getStartDate,Contract::setStartDate);
         binder.forField(finishDate)
 //                .withValidator(d -> startDate.getValue()!=null && d.isAfter(startDate.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Inicio")
@@ -384,7 +384,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
         FormLayout.FormItem supplierItem = form.addFormItem(supplier,"Proveedor");
         UIUtils.setColSpan(2,supplierItem);
-        form.addFormItem(dateSubscription,"Fecha de Subscripción");
+        form.addFormItem(dateSubscription,"Fecha de Suscripción");
         HorizontalLayout layoutAmount = new HorizontalLayout();
         layoutAmount.add(currency,amount);
         layoutAmount.setSpacing(true);
@@ -455,7 +455,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
                         return;
                     }
                     if(startDate.getValue().isBefore(dateSubscription.getValue())){
-                        UIUtils.showNotificationType("Fecha Inicio no puede ser anterior a la Fecha de Subscripción","alert");
+                        UIUtils.showNotificationType("Fecha Inicio no puede ser anterior a la Fecha de Suscripción","alert");
                         dateSubscription.setInvalid(true);
                         return;
                     }

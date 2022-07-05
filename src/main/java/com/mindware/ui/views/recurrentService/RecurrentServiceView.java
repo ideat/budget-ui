@@ -309,11 +309,13 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
             RecurrentService recurrentService = new RecurrentService();
             recurrentService.setId(recurrentServiceDto.getId());
             recurrentService.setState("FINALIZADO");
+            recurrentServiceRestTemplate.updateState(recurrentService);
+
             recurrentServiceDtoList.remove(recurrentServiceDto);
             recurrentServiceDto.setState("FINALIZADO");
             recurrentServiceDtoList.add(recurrentServiceDto);
             dataProvider.refreshItem(recurrentServiceDto);
-            recurrentServiceRestTemplate.updateState(recurrentService);
+
             UIUtils.showNotificationType("Servicio Finalizado","success");
         });
         return btn;

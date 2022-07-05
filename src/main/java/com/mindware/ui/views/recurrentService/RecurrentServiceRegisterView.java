@@ -177,12 +177,14 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         if(!param.get("id").get(0).equals("NUEVO")){
             recurrentServiceDto = recurrentServiceDtoRestTemplate.getById(param.get("id").get(0));
+
             title = "Proveedor: ".concat(recurrentServiceDto.getSupplierName());
             supplierSelected = supplierRestTemplate.getById(recurrentServiceDto.getIdSupplier().toString());
 
 
         }else{
             recurrentServiceDto = new RecurrentServiceDto();
+            recurrentServiceDto.setState("INICIADO");
             recurrentServiceDto.setExpenseDistribuite("[]");
             recurrentServiceDto.setInvoiceAuthorizer("[]");
             title = "Registro Nuevo ";
@@ -386,7 +388,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         ComboBox<String> typeDocumentReceived = new ComboBox<>();
         typeDocumentReceived.setWidthFull();
-        typeDocumentReceived.setItems("FACTURA","RECIBO");
+        typeDocumentReceived.setItems("FACTURA","RECIBO","CAABS");
         typeDocumentReceived.setRequired(true);
 
         IntegerField numberDocumentReceived = new IntegerField();

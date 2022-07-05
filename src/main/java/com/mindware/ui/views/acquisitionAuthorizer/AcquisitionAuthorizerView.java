@@ -242,6 +242,7 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
                     .filter(c -> c.getDescription().equals(event.getValue()))
                     .map(Concept::getCode2)
                     .findFirst().get();
+
             codeBranchOffice.setValue(Integer.valueOf(code2));
             userLdapDtoList = dataLdapRestTemplate.getByCodeBusinessUnit(Integer.valueOf(code2));
             fullName.clear();
