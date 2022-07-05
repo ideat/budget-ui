@@ -268,7 +268,9 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         grid.addColumn(new ComponentRenderer<>(this::createButtonSubAccount))
                 .setFlexGrow(1)
                 .setTextAlign(ColumnTextAlign.START);
-
+        grid.addColumn(new ComponentRenderer<>(this::createButtonDelete))
+                .setFlexGrow(1)
+                .setTextAlign(ColumnTextAlign.START);
 
         HeaderRow hr = grid.appendHeaderRow();
 
@@ -348,6 +350,24 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
             UI.getCurrent().navigate("subAccount",qp);
         });
 
+        return btn;
+    }
+
+    private Component createButtonDelete(Account account){
+        Button btn = new Button();
+        btn.setIcon(VaadinIcon.TRASH.create());
+        btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
+        Tooltips.getCurrent().setTooltip(btn,"Eliminar");
+        btn.addClickListener(event -> {
+            try {
+                restTemplate.delete(account.getId());
+                accountList.remove(account);
+                dataProvider.refreshAll();
+                UIUtils.showNotificationType("Cuenta borrada", "success");
+            }catch(Exception e){
+                UIUtils.showNotificationType(e.getMessage(),"alert");
+            }
+        });
         return btn;
     }
 

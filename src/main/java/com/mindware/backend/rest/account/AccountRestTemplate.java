@@ -11,10 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class AccountRestTemplate {
@@ -86,4 +83,12 @@ public class AccountRestTemplate {
         return Arrays.asList(response.getBody());
     }
 
+    public void delete(UUID id){
+        final String uri = url + "/v1/account/delete";
+        HttpHeaders headers = HeaderJwt.getHeader();
+        headers.set("id",id.toString());
+        HttpEntity<?> request = new HttpEntity<>(headers);
+        restTemplate.exchange(uri,HttpMethod.DELETE,request,Void.class);
+
+    }
 }
