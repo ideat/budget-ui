@@ -1,6 +1,7 @@
 package com.mindware.ui.views.reports.expenseAcquisitions;
 
 
+import com.mindware.backend.rest.reports.ExpenseAcquisitionsRestTemplate;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -41,6 +42,10 @@ public class ExpenseAcquisitionsReport extends ViewFrame implements RouterLayout
     @Autowired
     UtilValues utilValues;
 
+    @Autowired
+    private ExpenseAcquisitionsRestTemplate expenseAcquisitionsRestTemplate;
+
+//    private ComboBox<String> periods;
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
@@ -62,6 +67,7 @@ public class ExpenseAcquisitionsReport extends ViewFrame implements RouterLayout
     }
 
     private HorizontalLayout layoutResumeExpenseAcquisition(String originReport, String pathPage){
+        HorizontalLayout layout = new HorizontalLayout();
 
         ComboBox<String> periods = new ComboBox<>();
         periods.setWidth("200px");
@@ -90,17 +96,21 @@ public class ExpenseAcquisitionsReport extends ViewFrame implements RouterLayout
             paramExpenseAcquisition.put("origin",origin);
             paramExpenseAcquisition.put("path",path);
             paramExpenseAcquisition.put("period",period);
+
             QueryParameters qp = new QueryParameters(paramExpenseAcquisition);
             UI.getCurrent().navigate("report-preview", qp);
 
         });
 
-        HorizontalLayout layout = new HorizontalLayout();
+
+
+
         layout.setSpacing(true);
         layout.add(periods,print);
 
         return layout;
     }
+
 
     private Component createContent(){
         FlexBoxLayout content = new FlexBoxLayout(createOptionsReport());

@@ -1,5 +1,6 @@
 package com.mindware.backend.rest.reports;
 
+import com.mindware.backend.util.DownloadLink;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -12,13 +13,24 @@ import com.mindware.ui.views.SplitViewFrame;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
+import dev.mett.vaadin.tooltip.Tooltips;
+import dev.mett.vaadin.tooltip.util.TooltipsUtil;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +49,7 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
     private ExpenseServicesRestTemplate expenseServicesRestTemplate;
 
     private byte[] file;
+    private File  fileExcel;
     private String title;
     private String previousPage;
     private FlexBoxLayout contentReport;
@@ -45,6 +58,7 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
     private QueryParameters qp;
     private Map<String, List<String>> paramPrev;
     private boolean error;
+    private String pathfile;
 
     @Override
     public void setParameter(BeforeEvent beforeEvent,  @OptionalParameter String parameter) {
@@ -58,20 +72,26 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
         if(param.get("origin").get(0).equals("expense-acquisition")){
             String period = param.get("period").get(0);
             previousPage = param.get("path").get(0);
-            file = expenseAcquisitionsRestTemplate.reportExpenseAcquisition(period);
+            file = expenseAcquisitionsRestTemplate.reportExpenseAcquisition(period,"pdf");
             paramPrev.put("period",param.get("period"));
+            pathfile = expenseAcquisitionsRestTemplate.reportExpenseAcquisitionXls(period,"xls");
+            fileExcel = new File(pathfile.toString());
 
         }else  if(param.get("origin").get(0).equals("acquisition-detail")){
             String period = param.get("period").get(0);
             previousPage = param.get("path").get(0);
-            file = expenseAcquisitionsRestTemplate.reportAcquisitionDetail(period);
+            file = expenseAcquisitionsRestTemplate.reportAcquisitionDetail(period,"pdf");
             paramPrev.put("period",param.get("period"));
+            pathfile = expenseAcquisitionsRestTemplate.reportAcquisitionDetailXls(period,"xls");
+            fileExcel = new File(pathfile.toString());
 
         }else  if(param.get("origin").get(0).equals("basicrecurrent-detail")){
             String period = param.get("period").get(0);
             previousPage = param.get("path").get(0);
-            file = expenseAcquisitionsRestTemplate.reportBasicRecurrentService(period);
+            file = expenseAcquisitionsRestTemplate.reportBasicRecurrentService(period,"pdf");
             paramPrev.put("period",param.get("period"));
+            pathfile = expenseAcquisitionsRestTemplate.reportBasicRecurrentServiceXls(period,"xls");
+            fileExcel = new File(pathfile.toString());
         }else  if(param.get("origin").get(0).equals("investment-detail")){
             String year = param.get("year").get(0);
             String codefatherBusinessUnit = param.get("codefatherbusinessunit").get(0);
@@ -79,19 +99,25 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
             String nameBusinessUnit = param.get("namebusinessunit").get(0);
 
             previousPage = param.get("path").get(0);
-            file = investmentBudgetRestTemplate.reportInvestmentBudgetDetail(year,codefatherBusinessUnit,cutOffDate,nameBusinessUnit);
+            file = investmentBudgetRestTemplate.reportInvestmentBudgetDetail(year,codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"pdf");
+            pathfile = investmentBudgetRestTemplate.reportInvestmentBudgetDetailXls(year,codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"xls");
+            fileExcel = new File(pathfile.toString());
 //            paramPrev.put("year",param.get("year"));
         }else  if(param.get("origin").get(0).equals("investment-business-unit")){
             String cutOffDate = param.get("cutoffdate").get(0);
 
             previousPage = param.get("path").get(0);
-            file = investmentBudgetRestTemplate.reportInvestmentBudgetGroupedBusinessUnit(cutOffDate);
+            file = investmentBudgetRestTemplate.reportInvestmentBudgetGroupedBusinessUnit(cutOffDate,"pdf");
+            pathfile = investmentBudgetRestTemplate.reportInvestmentBudgetGroupedBusinessUnitXls(cutOffDate,"xls");
+            fileExcel = new File(pathfile.toString());
 
         }else  if(param.get("origin").get(0).equals("investment-resume")){
             String cutOffDate = param.get("cutoffdate").get(0);
 
             previousPage = param.get("path").get(0);
-            file = investmentBudgetRestTemplate.reportInvestmentBudgetExecutive(cutOffDate);
+            file = investmentBudgetRestTemplate.reportInvestmentBudgetExecutive(cutOffDate,"pdf");
+            pathfile = investmentBudgetRestTemplate.reportInvestmentBudgetExecutiveXls(cutOffDate,"xls");
+            fileExcel = new File(pathfile.toString());
 
         }else  if(param.get("origin").get(0).equals("expenses-service-resume-businessunit")){
             String codefatherBusinessUnit = param.get("codefatherbusinessunit").get(0);
@@ -99,7 +125,9 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
             String nameBusinessUnit = param.get("namebusinessunit").get(0);
 
             previousPage = param.get("path").get(0);
-            file = expenseServicesRestTemplate.reportExpensesServiceResume(codefatherBusinessUnit,cutOffDate,nameBusinessUnit);
+            file = expenseServicesRestTemplate.reportExpensesServiceResume(codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"pdf");
+            pathfile = expenseServicesRestTemplate.reportExpensesServiceResumeXls(codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"xls");
+            fileExcel = new File(pathfile.toString());
 
         }else  if(param.get("origin").get(0).equals("expense-service-father-business-unit")){
             String codefatherBusinessUnit = param.get("codefatherbusinessunit").get(0);
@@ -107,7 +135,9 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
             String nameBusinessUnit = param.get("namebusinessunit").get(0);
 
             previousPage = param.get("path").get(0);
-            file = expenseServicesRestTemplate.reportExpensesServiceBusinessUnit(codefatherBusinessUnit,cutOffDate,nameBusinessUnit);
+            file = expenseServicesRestTemplate.reportExpensesServiceBusinessUnit(codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"pdf");
+            pathfile = expenseServicesRestTemplate.reportExpensesServiceBusinessUnitXls(codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"xls");
+            fileExcel = new File(pathfile.toString());
 
         }else  if(param.get("origin").get(0).equals("expenses-service-detail")){
             String codefatherBusinessUnit = param.get("codefatherbusinessunit").get(0);
@@ -115,14 +145,17 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
             String nameBusinessUnit = param.get("namebusinessunit").get(0);
 
             previousPage = param.get("path").get(0);
-            file = expenseServicesRestTemplate.reportExpensesServiceDetail(codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"detail");
+            file = expenseServicesRestTemplate.reportExpensesServiceDetail(codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"detail","pdf");
+            pathfile = expenseServicesRestTemplate.reportExpensesServiceDetailXls(codefatherBusinessUnit,cutOffDate,nameBusinessUnit,"detail","xls");
+            fileExcel =  new File(pathfile.toString());
 
         }else  if(param.get("origin").get(0).equals("expenses-service-consolidated")){
             String cutOffDate = param.get("cutoffdate").get(0);
 
             previousPage = param.get("path").get(0);
-            file = expenseServicesRestTemplate.reportExpenseConsolidated(cutOffDate);
-
+            file = expenseServicesRestTemplate.reportExpenseConsolidated(cutOffDate,"pdf");
+            pathfile = expenseServicesRestTemplate.reportExpenseConsolidatedXls(cutOffDate,"xls");
+            fileExcel = new File(pathfile.toString());
         }
 
         if(!error) {
@@ -160,17 +193,47 @@ public class ReportPreview extends SplitViewFrame implements HasUrlParameter<Str
     }
 
     private DetailsDrawer createReportView(){
-        Div layout = new Div();
+        VerticalLayout layout = new VerticalLayout();
         layout.setHeightFull();
         ByteArrayInputStream bis = new ByteArrayInputStream(file);
         StreamResource s = new StreamResource("reporte.pdf", () -> bis);
-        layout.add(new EmbeddedPdfDocument(s));
+
+        Anchor export = createDownloadButton();
+        layout.add(export, new EmbeddedPdfDocument(s));
+
+        layout.setHorizontalComponentAlignment(FlexComponent.Alignment.END,export);
 
         DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
-        detailsDrawer.setHeight("90%");
+        detailsDrawer.setHeight("95%");
         detailsDrawer.setWidthFull();
+
         detailsDrawer.setContent(layout);
         return detailsDrawer;
 
+    }
+
+    private Anchor createDownloadButton() {
+
+        Anchor downloadLink =  new Anchor(getStreamResource(fileExcel.getName(), fileExcel), " Descargar Excel");
+        downloadLink.getElement().setAttribute("download", true);
+        downloadLink.removeAll();
+        Button export = new Button();
+        export.addThemeVariants(ButtonVariant.LUMO_SMALL,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        export.setIcon(VaadinIcon.TABLE.create());
+        Tooltips.getCurrent().setTooltip(export,"Exportar Excel");
+        downloadLink.add(export);
+
+        return downloadLink;
+    }
+
+    public StreamResource getStreamResource(String filename, File content) {
+        return new StreamResource(filename, () -> {
+            try {
+                return new ByteArrayInputStream(FileUtils.readFileToByteArray(content));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
     }
 }
