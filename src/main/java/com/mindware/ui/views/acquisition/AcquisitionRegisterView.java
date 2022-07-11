@@ -305,6 +305,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             current.setAdjudicationInformation("{}");
             current.setReceptionInformation("{}");
             current.setInvoiceInformation("[]");
+            current.setState("INICIADO");
 
             title = "Adquición";
 
@@ -517,7 +518,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 }
                 adjudicationInfomationBinder.forField(correspondsContract)
                         .bind(AdjudicationInfomation::getCorrespondsContract, AdjudicationInfomation::setCorrespondsContract);
-                adjudicationInfomationBinder.validate();
+
+                if(adjudicationInfomationBinder.validate().hasErrors()){
+                    return;
+                }
             }
 
             if(current.getAdjudicationInformation()!=null && !current.getAdjudicationInformation().equals("{}")){

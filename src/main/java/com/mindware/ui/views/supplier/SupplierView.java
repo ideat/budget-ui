@@ -49,7 +49,7 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
     private ListDataProvider<Supplier> dataProvider;
 
     private TextField nameFilter;
-    private IntegerField nitFilter;
+    private TextField nitFilter;
     private TextField locationFilter;
     private TextField areaWorkFilter;
     private TextField primaryActivityFilter;
@@ -154,7 +154,7 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
         });
         hr.getCell(grid.getColumnByKey("name")).setComponent(nameFilter);
 
-        nitFilter = new IntegerField();
+        nitFilter = new TextField();
         nitFilter.setValueChangeMode(ValueChangeMode.EAGER);
         nitFilter.setWidthFull();
         nitFilter.addValueChangeListener(e -> appplyFilter(dataProvider));
@@ -199,8 +199,8 @@ public class SupplierView extends SplitViewFrame implements RouterLayout {
         if(!nameFilter.getValue().trim().equals("")){
             dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getName(), nameFilter.getValue()));
         }
-        if(nitFilter.getValue()!=null){
-            dataProvider.addFilter(supplier -> Objects.equals(supplier.getNit(), nitFilter.getValue()));
+        if(!nitFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getNit(), nitFilter.getValue()));
         }
         if(!locationFilter.getValue().trim().equals("")){
             dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getLocation(), locationFilter.getValue()));

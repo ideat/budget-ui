@@ -585,7 +585,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         if(!nameBasicProviderFilter.getValue().trim().equals("")){
             dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getProvider(), nameBasicProviderFilter.getValue()));
         }
-        if(nitBasicProviderFilter.getValue()!=null){
+        if(!nitBasicProviderFilter.getValue().trim().equals("")){
             dataProvider.addFilter(supplier -> Objects.equals(supplier.getNit(), nitBasicProviderFilter.getValue()));
         }
         if(!descriptionBasicProviderFilter.getValue().trim().equals("")){

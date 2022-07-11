@@ -385,7 +385,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
                 if (currentShareHolder.getId()==null){
                     currentShareHolder.setId(UUID.randomUUID());
                 }else{
-                    shareHolderList.remove(initShareHolder);
+                    shareHolderList.remove(currentShareHolder);
                 }
                 shareHolderList.add(currentShareHolder);
                 gridShareHolder.getDataProvider().refreshAll();
