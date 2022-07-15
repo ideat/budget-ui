@@ -908,8 +908,10 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         Concept concept = conceptList.stream()
                 .filter(c -> String.valueOf(expenseDistribuiteList.get(0).getCodeBusinessUnit()).equals(c.getCode2()))
                 .findFirst().get();
+//        List<InvoiceAuthorizer> invoiceAuthorizerList = invoiceAuthorizerTemplate
+//                .getByCodeBranchOffice(Integer.valueOf(concept.getCode()));
         List<InvoiceAuthorizer> invoiceAuthorizerList = invoiceAuthorizerTemplate
-                .getByCodeBranchOffice(Integer.valueOf(concept.getCode()));
+                .getAll();
 
         TextField codePosition = new TextField();
         codePosition.setWidthFull();
