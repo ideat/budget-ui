@@ -1485,8 +1485,13 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             amountMax = amountCaabs.getValue();
         }
 
+//        List<AcquisitionAuthorizer> acquisitionAuthorizerList = acquisitionAuthorizerRestTemplate
+//                .getByCodeBranchOffice(Integer.valueOf(concept.getCode()))
+//                .stream()
+//                .filter(au -> au.getMaxAmount().doubleValue()>= amountMax)
+//                .collect(Collectors.toList());
         List<AcquisitionAuthorizer> acquisitionAuthorizerList = acquisitionAuthorizerRestTemplate
-                .getByCodeBranchOffice(Integer.valueOf(concept.getCode()))
+                .getAll()
                 .stream()
                 .filter(au -> au.getMaxAmount().doubleValue()>= amountMax)
                 .collect(Collectors.toList());
