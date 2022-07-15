@@ -238,8 +238,10 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                         recurrentServiceDto.setId(recurrentService.getId());
                         recurrentServiceDto.setInvoiceAuthorizer(recurrentService.getInvoiceAuthorizer());
 
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
+                    } catch (Exception e) {
+                        String[] arrMsg = e.getMessage().split(",");
+                        String[] msg = arrMsg[1].split(":");
+                        UIUtils.showNotificationType(msg[1].replaceAll("\"",""),"alert");
                     }
 //                    UI.getCurrent().navigate(RecurrentServiceView.class);
                     UIUtils.showNotificationType("Datos registrados", "success");
