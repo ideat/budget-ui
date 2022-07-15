@@ -51,7 +51,7 @@ public class LoginView extends VerticalLayout {
                 VaadinSession.getCurrent().setAttribute("sn", userData.getSn());
                 VaadinSession.getCurrent().setAttribute("department", userData.getDepartment());
                 VaadinSession.getCurrent().setAttribute("memberOf",userData.getMemberOf());
-                VaadinSession.getCurrent().setAttribute("version","Versión 1.0.6");
+                VaadinSession.getCurrent().setAttribute("version","Versión 1.0.9");
 
                 List<Rol> rolList = rolRestTemplate.getAllRols();
                 for(Rol rol:rolList){
@@ -84,9 +84,9 @@ public class LoginView extends VerticalLayout {
         i18n.getForm().setSubmit("Entrar");
         i18n.getForm().setPassword("Clave");
         i18n.getForm().setForgotPassword("");
-        i18n.getErrorMessage().setTitle("Usuario/clave invalida");
+        i18n.getErrorMessage().setTitle("Usuario/clave inválida");
         i18n.getErrorMessage()
-                .setMessage("Compruebe su usuario y contraseña y vuelva a intentarlo.");
+                .setMessage("Comprueba tu usuario y contraseña y vuelva a intentarlo.");
         i18n.setAdditionalInformation("");
         return i18n;
     }

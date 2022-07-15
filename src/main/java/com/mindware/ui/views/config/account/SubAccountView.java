@@ -8,6 +8,7 @@ import com.mindware.backend.entity.config.SubAccount;
 import com.mindware.backend.rest.account.AccountRestTemplate;
 import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
+import com.mindware.ui.components.DialogSweetAlert;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
@@ -33,6 +34,8 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.*;
+import com.wontlost.sweetalert2.Config;
+import com.wontlost.sweetalert2.SweetAlert2Vaadin;
 import dev.mett.vaadin.tooltip.Tooltips;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,11 +148,11 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
                         .filter(s -> s.getNumberSubAccount().equals(current.getNumberSubAccount()))
                         .findFirst();
                 if(searchNumberSubAccount.isPresent() && !searchNumberSubAccount.get().getId().equals(current.getId())){
-                    UIUtils.showNotificationType("Número Subcuenta ya se ecuentra registrada ","alert");
+                    UIUtils.showNotificationType("Número Subcuenta ya se ecuentra registrado ","alert");
                     return;
                 }
                 if(searchNameSubAccount.isPresent() && !searchNameSubAccount.get().getId().equals(current.getId())){
-                    UIUtils.showNotificationType("Nombre Subcuenta ya se ecuentra registrada ","alert");
+                    UIUtils.showNotificationType("Nombre Subcuenta ya se ecuentra registrado ","alert");
                     return;
                 }
 
@@ -194,9 +197,11 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
         binder = new BeanValidationBinder<>(SubAccount.class);
         binder.forField(numberSubAccount)
                 .asRequired("Número Subcuenta es requerido")
+                .withValidator(l -> l.trim().length()>0,"Nro. Subcuenta debe tener al menos 1 caracter")
                 .bind(SubAccount::getNumberSubAccount,SubAccount::setNumberSubAccount);
         binder.forField(nameSubAccount)
                 .asRequired("Nombre Subcuenta es requerido")
+                .withValidator(l -> l.trim().length()>0,"Nombre. Subuenta debe tener al menos 1 caracter")
                 .bind(SubAccount::getNameSubAccount,SubAccount::setNameSubAccount);
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
@@ -276,9 +281,17 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
         btn.setVisible(GrantOptions.grantedOptionWrite("Cuentas"));
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            subAccountList.remove(subAccount);
-            grid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Cuentas"));
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro","Deseas Eliminar la Subcuenta "+ subAccount.getNameSubAccount() + "?\"");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                subAccountList.remove(subAccount);
+                grid.getDataProvider().refreshAll();
+                footer.saveState(GrantOptions.grantedOptionWrite("Cuentas"));
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
         });
 
         return btn;

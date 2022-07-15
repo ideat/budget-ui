@@ -107,7 +107,7 @@ public class RolView extends ViewFrame implements RouterLayout {
                 .setResizable(true);
         grid.addColumn(Rol::getDescription)
                 .setFlexGrow(1)
-                .setHeader("Descripcion del ROL")
+                .setHeader("Descripción del ROL")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setTextAlign(ColumnTextAlign.CENTER)

@@ -215,7 +215,7 @@ public class RolRegisterView extends SplitViewFrame implements HasUrlParameter<S
         optionListDataProvider = new ListDataProvider<>(optionList);
         grid.setDataProvider(optionListDataProvider);
 
-        grid.addColumn(Option::getName).setFlexGrow(1).setResizable(true).setHeader("Opcion");
+        grid.addColumn(Option::getName).setFlexGrow(1).setResizable(true).setHeader("Opción");
         Grid.Column<Option> assignedColumn= grid.addColumn(new ComponentRenderer<>(this::createAssigned))
                 .setHeader("Habilitar").setFlexGrow(1).setResizable(true);
         Grid.Column<Option> readColumn= grid.addColumn(new ComponentRenderer<>(this::createReader))
@@ -288,15 +288,18 @@ public class RolRegisterView extends SplitViewFrame implements HasUrlParameter<S
                 .forEach(button -> button.setEnabled(!editor.isOpen())));
 
         Button save = new Button("Guardar", e -> editor.save());
+        save.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_PRIMARY);
         save.addClassName("save");
 
         Button cancel = new Button("Cancelar", e -> editor.cancel());
+        cancel.addThemeVariants(ButtonVariant.LUMO_SMALL);
         cancel.addClassName("cancel");
 
         grid.getElement().addEventListener("keyup", event -> editor.cancel())
                 .setFilter("event.key === 'Escape' || event.key === 'Esc'");
 
         Div buttons = new Div(save, cancel);
+
         editorColumn.setEditorComponent(buttons);
 
         layoutOptions.add(horizontalLayout,grid);

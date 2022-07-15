@@ -202,7 +202,7 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
         binder = new BeanValidationBinder<>(Period.class);
 
         binder.forField(year).asRequired("Gestion es requerida")
-                .withValidator(value -> value.intValue()>= LocalDate.now().getYear(),"La gestión no pude ser menor a la gestión actual ")
+                .withValidator(value -> value.intValue()>= LocalDate.now().getYear(),"La gestión no puede ser menor a la gestión actual ")
                 .bind(Period::getYear,Period::setYear);
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();

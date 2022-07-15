@@ -21,6 +21,7 @@ import com.mindware.backend.rest.supplier.SupplierRestTemplate;
 import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
+import com.mindware.ui.components.DialogSweetAlert;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
@@ -60,6 +61,7 @@ import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.VaadinSession;
+import com.wontlost.sweetalert2.SweetAlert2Vaadin;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -207,7 +209,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 if(obligationsDto.getInvoiceAuthorizer() !=null && !obligationsDto.getInvoiceAuthorizer().equals("[]") && GrantOptions.grantedOptionAccounting("Obligaciones")){
                     binder.forField(dateDeliveryAccounting)
                             .asRequired("Fecha entrega a contabilidad es requerida")
-                            .withValidator(d -> d.isAfter(paymentDate.getValue()),"Fecha entrega contabilidad no puede ser anterior a la fecha de pago")
+                            .withValidator(d -> d.isAfter(paymentDate.getValue()),"Fecha Entrega Contabilidad no puede ser anterior a la Fecha de Pago")
                             .bind(ObligationsDto::getDateDeliveryAccounting, ObligationsDto::setDateDeliveryAccounting);
                     binder.forField(accountingPerson)
                             .asRequired("Responsable de contabilidad es requerido")
@@ -225,7 +227,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                             e.printStackTrace();
                         }
                         UI.getCurrent().navigate(ObligationsView.class);
-                        UIUtils.showNotificationType("Datos registratos", "success");
+                        UIUtils.showNotificationType("Datos registrados", "success");
                     }else{
                         UIUtils.showNotificationType("Monto distribuido no coincide con factura , revisar","alert");
                     }
@@ -233,7 +235,10 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                     UIUtils.showNotificationType("Datos no completos, revisar", "alert");
                 }
             }catch (Exception e){
-                UIUtils.showNotificationType(e.getMessage(), "error");
+                String[] arrMsg = e.getMessage().split(",");
+                String[] msg = arrMsg[1].split(":");
+                UIUtils.showNotificationType(msg[1].replaceAll("\"",""),"alert");
+
             }
         });
 
@@ -254,13 +259,13 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         MainLayout.get().getAppBar().reset();
         AppBar appBar = MainLayout.get().getAppBar();
 
-        appBar.addTab("Registro Factura Obligacion");
+        appBar.addTab("Registro Factura Obligación");
         appBar.addTab("Autorización Factura");
         if(GrantOptions.grantedOptionAccounting("Obligaciones"))
             appBar.addTab("Entrega a Contabilidad");
 
         appBar.centerTabs();
-        currentTab = "Registro Factura Obligacion";
+        currentTab = "Registro Factura Obligación";
         hideContent();
         appBar.addTabSelectionListener(e -> {
             enabledSheets();
@@ -294,7 +299,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         contentCreateObligation.setVisible(true);
         contentInvoiceAuthorizer.setVisible(false);
         contentDeliveyAccounting.setVisible(false);
-        if(currentTab.equals("Registro Factura Obligacion")){
+        if(currentTab.equals("Registro Factura Obligación")){
             contentCreateObligation.setVisible(true);
             contentInvoiceAuthorizer.setVisible(false);
             contentDeliveyAccounting.setVisible(false);
@@ -334,7 +339,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                     .map(Parameter::getDetails)
                     .findFirst();
             if(frecuency.isEmpty()){
-                UIUtils.showNotificationType("Frecuencia no configurada en los parametros","alert");
+                UIUtils.showNotificationType("Frecuencia no configurada en los parámetros","alert");
                 return;
             }
             if(frecuency.get().equals("ANUAL") ){
@@ -362,6 +367,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         paymentDate.setWidthFull();
         paymentDate.setRequired(true);
         paymentDate.setLocale(new Locale("es","BO"));
+        paymentDate.setI18n(UIUtils.spanish());
 
         NumberField amount = new NumberField();
         amount.setWidthFull();
@@ -420,10 +426,10 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 .asRequired("Subcuenta es requerida")
                 .bind(ObligationsDto::getSubAccount,ObligationsDto::setSubAccount);
         binder.forField(typeDocumentReceived)
-                .asRequired("Tipo documento es requerido")
+                .asRequired("Tipo Documento es requerido")
                 .bind(ObligationsDto::getTypeDocumentReceived, ObligationsDto::setTypeDocumentReceived);
         binder.forField(numberDocumentReceived)
-                .asRequired("Numero de Factura/Recibo es requerido")
+                .asRequired("Nro de Factura/CAABS es requerido")
                 .bind(ObligationsDto::getNumberDocumentReceived,ObligationsDto::setNumberDocumentReceived);
 
         binder.addStatusChangeListener(event -> {
@@ -465,7 +471,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
         form.addFormItem(description,"Descripción");
         form.addFormItem(period,"Periodo");
-        form.addFormItem(paymentDate,"Fecha de pago");
+        form.addFormItem(paymentDate,"Fecha de Pago");
         form.addFormItem(amount,"Monto (Bs)");
         form.addFormItem(account,"Cuenta");
         form.addFormItem(subAccount,"Subcuenta");
@@ -650,10 +656,10 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
         expenseDistribuiteBinder = new BeanValidationBinder<>(ExpenseDistribuite.class);
         expenseDistribuiteBinder.forField(codeFatherBusinessUnit)
-                .asRequired("Codigo Unidad de Sucursal es requerido")
+                .asRequired("Código Unidad de Sucursal es requerido")
                 .bind(ExpenseDistribuite::getCodeFatherBusinessUnit,ExpenseDistribuite::setCodeFatherBusinessUnit);
         expenseDistribuiteBinder.forField(codeBusinessUnit)
-                .asRequired("Codigo Unidad negocio es requerido")
+                .asRequired("Código Unidad negocio es requerido")
                 .bind(ExpenseDistribuite::getCodeBusinessUnit,ExpenseDistribuite::setCodeBusinessUnit);
         expenseDistribuiteBinder.forField(nameBusinessUnit)
                 .asRequired("Nombre unidad negocio es requerido")
@@ -688,7 +694,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         FormLayout.FormItem unitBusinessItem = form.addFormItem(unitBusiness,"Unidad de Negocio");
         UIUtils.setColSpan(2,unitBusinessItem);
 
-        FormLayout.FormItem amountItem = form.addFormItem(amount,"Monto");
+        FormLayout.FormItem amountItem = form.addFormItem(amount,"Monto (Bs.)");
         UIUtils.setColSpan(2,amountItem);
 
         return form;
@@ -782,13 +788,24 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         btn.setEnabled(GrantOptions.grantedOptionWrite("Obligaciones"));
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            expenseDistribuiteList.remove(expenseDistribuite);
-            expenseDistribuiteGrid.getDataProvider().refreshAll();
-            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
-                footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
-            }else{
-                footer.saveState(false);
-            }
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar la Distribución? ");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                expenseDistribuiteList.remove(expenseDistribuite);
+                expenseDistribuiteGrid.getDataProvider().refreshAll();
+                if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+                    footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
+                }else{
+                    footer.saveState(false);
+                }
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
+
+
         });
 
         return btn;
@@ -1019,8 +1036,17 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         btn.setEnabled(GrantOptions.grantedOptionWrite("Obligaciones"));
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            selectedInvoiceAuthorizerList.remove(selectedInvoiceAuthorizer);
-            selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar al Autorizador? ");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                selectedInvoiceAuthorizerList.remove(selectedInvoiceAuthorizer);
+                selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
         });
 
         return btn;
@@ -1030,12 +1056,13 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
     private DetailsDrawer createDeliverAccounting(){
 
-        dateDeliveryAccounting = new DatePicker("Fecha de entrega a contabilidad");
+        dateDeliveryAccounting = new DatePicker("Fecha de Entrega a Contabilidad");
         dateDeliveryAccounting.setWidth("30%");
         dateDeliveryAccounting.setRequired(true);
         dateDeliveryAccounting.setClearButtonVisible(true);
         dateDeliveryAccounting.setRequiredIndicatorVisible(true);
         dateDeliveryAccounting.setLocale(new Locale("es","BO"));
+        dateDeliveryAccounting.setI18n(UIUtils.spanish());
 
         accountingPerson = new ComboBox<>("Entregado a");
         accountingPerson.setWidth("30%");

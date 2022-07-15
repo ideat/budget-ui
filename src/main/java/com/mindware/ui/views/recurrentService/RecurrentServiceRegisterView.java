@@ -23,6 +23,7 @@ import com.mindware.backend.rest.supplier.SupplierRestTemplate;
 import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
+import com.mindware.ui.components.DialogSweetAlert;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
@@ -64,6 +65,7 @@ import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.VaadinSession;
+import com.wontlost.sweetalert2.SweetAlert2Vaadin;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,7 +140,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private TextField locationSupplierFilter;
     private TextField primaryActivitySupplierFilter;
 
-    private TextField numberContractFilter;
+    private IntegerField numberContractFilter;
     private TextField objectContractFilter;
 
     private DatePicker dateDeliveryAccounting;
@@ -240,7 +242,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                         e.printStackTrace();
                     }
 //                    UI.getCurrent().navigate(RecurrentServiceView.class);
-                    UIUtils.showNotificationType("Datos registratos", "success");
+                    UIUtils.showNotificationType("Datos registrados", "success");
                 }else{
                     UIUtils.showNotificationType("Monto distribuido no cuadra con el monto del contrato","alert");
                 }
@@ -364,7 +366,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         paymentDate.setWidthFull();
         paymentDate.setRequired(true);
         paymentDate.setLocale(new Locale("es","BO"));
-
+        paymentDate.setI18n(UIUtils.spanish());
 
         NumberField amount = new NumberField();
         amount.setWidthFull();
@@ -405,8 +407,9 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         finishDate.setWidthFull();
         finishDate.setReadOnly(true);
         finishDate.setLocale(new Locale("es","BO"));
+        finishDate.setI18n(UIUtils.spanish());
 
-        tacitReductionClause = new Checkbox("Clausula tácita reconducción");
+        tacitReductionClause = new Checkbox("Cláusula tácita reconducción");
         tacitReductionClause.setReadOnly(true);
 
         paymentFrecuency = new TextField();
@@ -415,22 +418,22 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         binder = new BeanValidationBinder<>(RecurrentServiceDto.class);
         binder.forField(typeService)
-                .asRequired("Tipo de servicio es requerido")
+                .asRequired("Tipo de Servicio es requerido")
                 .bind(RecurrentServiceDto::getTypeService, RecurrentServiceDto::setTypeService);
         binder.forField(supplierName)
                 .asRequired("Proveedor es requerido")
                 .bind(RecurrentServiceDto::getSupplierName, RecurrentServiceDto::setSupplierName);
         binder.forField(nitSupplier)
-                .asRequired("Numero NIT es requerido")
+                .asRequired("NIT es requerido")
                 .bind(RecurrentServiceDto::getSupplierNit, RecurrentServiceDto::setSupplierNit);
         binder.forField(description)
-                .asRequired("Descripcion es requerida")
+                .asRequired("Descripción es requerida")
                 .bind(RecurrentServiceDto::getDescription,RecurrentServiceDto::setDescription);
         binder.forField(period)
                 .asRequired("Periodo es requerido")
                 .bind(RecurrentServiceDto::getPeriod,RecurrentServiceDto::setPeriod);
         binder.forField(paymentDate)
-                .asRequired("Fecha de pago es requerida")
+                .asRequired("Fecha de Pago es requerida")
                 .bind(RecurrentServiceDto::getPaymentDate,RecurrentServiceDto::setPaymentDate);
         binder.forField(amount)
                 .asRequired("Monto es requerido")
@@ -443,13 +446,13 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 .asRequired("Subcuenta es requerida")
                 .bind(RecurrentServiceDto::getSubAccount,RecurrentServiceDto::setSubAccount);
         binder.forField(typeDocumentReceived)
-                .asRequired("Tipo de documento es requerido")
+                .asRequired("Tipo de Documento es requerido")
                 .bind(RecurrentServiceDto::getTypeDocumentReceived,RecurrentServiceDto::setTypeDocumentReceived);
         binder.forField(numberDocumentReceived)
                 .asRequired("N° Factura/Recibo/CAABS es requerido")
                 .bind(RecurrentServiceDto::getNumberDocumentReceived,RecurrentServiceDto::setNumberDocumentReceived);
         binder.forField(contract)
-                .asRequired("N° contrato es requerido")
+                .asRequired("N° Contrato es requerido")
                 .bind(RecurrentServiceDto::getNumberContract,RecurrentServiceDto::setNumberContract);
         binder.forField(finishDate)
 //                .asRequired("Fecha vigencia contrato es requerido")
@@ -498,11 +501,11 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         form.addFormItem(description,"Descripción");
         form.addFormItem(period,"Periodo");
-        form.addFormItem(paymentDate,"Fecha de pago");
+        form.addFormItem(paymentDate,"Fecha de Pago");
         form.addFormItem(amount,"Monto Bs.");
         form.addFormItem(account,"Cuenta");
         form.addFormItem(subAccount,"Subcuenta");
-        form.addFormItem(typeDocumentReceived,"Tipo documento");
+        form.addFormItem(typeDocumentReceived,"Tipo Documento");
         form.addFormItem(numberDocumentReceived,"N° Factura/Recibo/CAABS");
 
         HorizontalLayout layoutContract = new HorizontalLayout();
@@ -517,13 +520,13 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 showSearchContract();
             }
         });
-        FormLayout.FormItem contractItem = form.addFormItem(layoutContract,"N° contrato");
+        FormLayout.FormItem contractItem = form.addFormItem(layoutContract,"N° Contrato");
         UIUtils.setColSpan(1,contractItem);
         layoutContract.add(contract,btnSearchContract);
 
-        form.addFormItem(finishDate,"Vigencia del contrato");
+        form.addFormItem(finishDate,"Vigencia del Contrato");
         form.addFormItem(tacitReductionClause,"");
-        form.addFormItem(paymentFrecuency,"Frecuencia pago");
+        form.addFormItem(paymentFrecuency,"Frecuencia Pago");
 
 
 
@@ -687,7 +690,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         HeaderRow hr = grid.appendHeaderRow();
 
-        numberContractFilter = new TextField();
+        numberContractFilter = new IntegerField();
         numberContractFilter.setWidthFull();
         numberContractFilter.setValueChangeMode(ValueChangeMode.EAGER);
         numberContractFilter.addValueChangeListener(e -> applyFilterContract(dataprovider));
@@ -722,8 +725,8 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         if(!supplierNameFilter.getValue().trim().equals("")){
             dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getName(),supplierNameFilter.getValue()));
         }
-        if(nitSupplierFilter.getValue()!=null){
-            dataProvider.addFilter(supplier -> Objects.equals(supplier.getNit(),nitSupplierFilter.getValue()));
+        if(!nitSupplierFilter.getValue().trim().equals("")){
+            dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getNit(),nitSupplierFilter.getValue()));
         }
         if(!locationSupplierFilter.getValue().trim().equals("")){
             dataProvider.addFilter(supplier -> StringUtils.containsIgnoreCase(supplier.getLocation(),locationSupplierFilter.getValue()));
@@ -734,8 +737,9 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     }
 
     private void applyFilterContract(ListDataProvider<Contract> dataProvider){
-        if(!numberContractFilter.getValue().trim().equals("")){
-            dataProvider.addFilter(contract -> StringUtils.containsIgnoreCase(contract.getNumberContract().toString(),numberContractFilter.getValue()));
+        dataProvider.clearFilters();
+        if(numberContractFilter.getValue()!=null ){
+            dataProvider.addFilter(contract -> contract.getNumberContract().intValue() >= numberContractFilter.getValue()  );
         }
         if(!objectContractFilter.getValue().trim().equals("")){
             dataProvider.addFilter(contract -> StringUtils.containsIgnoreCase(contract.getObjectContract(),objectContractFilter.getValue()));
@@ -832,7 +836,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         FormLayout.FormItem unitBusinessItem = form.addFormItem(unitBusiness,"Unidad de Negocio");
         UIUtils.setColSpan(2,unitBusinessItem);
 
-        FormLayout.FormItem amountItem = form.addFormItem(amount,"Monto");
+        FormLayout.FormItem amountItem = form.addFormItem(amount,"Monto (Bs.)");
         UIUtils.setColSpan(2,amountItem);
         expenseDistribuiteBinder.readBean(expenseDistribuite);
         return form;
@@ -921,9 +925,18 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            expenseDistribuiteList.remove(expenseDistribuite);
-            expenseDistribuiteGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes") && !recurrentServiceDto.getState().equals("FINALIZADO"));
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar la Distribución? ");
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                expenseDistribuiteList.remove(expenseDistribuite);
+                expenseDistribuiteGrid.getDataProvider().refreshAll();
+                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes") && !recurrentServiceDto.getState().equals("FINALIZADO"));
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
+
         });
         return btn;
     }
@@ -1148,8 +1161,18 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            selectedInvoiceAuthorizerList.remove(selectedInvoiceAuthorizer);
-            selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar al Autorizador? ");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                selectedInvoiceAuthorizerList.remove(selectedInvoiceAuthorizer);
+                selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
+
         });
 
         return btn;
@@ -1165,6 +1188,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         dateDeliveryAccounting.setClearButtonVisible(true);
         dateDeliveryAccounting.setRequiredIndicatorVisible(true);
         dateDeliveryAccounting.setLocale(new Locale("es","BO"));
+        dateDeliveryAccounting.setI18n(UIUtils.spanish());
 
         accountingPerson = new ComboBox<>("Entregado a");
         accountingPerson.setWidth("30%");

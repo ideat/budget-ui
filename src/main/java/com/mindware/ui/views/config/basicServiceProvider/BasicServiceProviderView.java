@@ -11,6 +11,7 @@ import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerHeader;
+import com.mindware.ui.components.navigation.bar.AppBar;
 import com.mindware.ui.layout.size.Horizontal;
 import com.mindware.ui.layout.size.Left;
 import com.mindware.ui.layout.size.Right;
@@ -19,10 +20,7 @@ import com.mindware.ui.util.LumoStyles;
 import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.util.css.BoxSizing;
 import com.mindware.ui.views.SplitViewFrame;
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.KeyModifier;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -86,13 +84,19 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
     @Override
     protected void onAttach(AttachEvent attachEvent){
         super.onAttach(attachEvent);
+
+
         getBasicServiceProvider();
         setViewHeader(createTopBar());
         setViewContent(createContent());
         setViewDetails(createDetailsDrawer());
+        AppBar appBar = MainLayout.get().getAppBar();
+        appBar.setTitle("Registro Proveedor Servicios Básicos y Obligaciones");
+//        UI.getCurrent().getPage().setTitle("Registro Proveedor Servicios Básicos y Obligaciones");
     }
 
     private FlexBoxLayout createTopBar(){
+
         btnNew = new Button("Nuevo Proveedor");
         btnNew.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         btnNew.setIcon(VaadinIcon.PLUS_CIRCLE.create());
@@ -160,7 +164,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         grid.addColumn(BasicServiceProvider::getCategoryService)
                 .setFlexGrow(1)
                 .setKey("categoryService")
-                .setHeader("Categoria Servicio")
+                .setHeader("Categoría Servicio")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
@@ -311,7 +315,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
                 .bind(BasicServiceProvider::getNit,BasicServiceProvider::setNit);
         binder.forField(state).asRequired("Estado del proveedor es requerido")
                 .bind(BasicServiceProvider::getState,BasicServiceProvider::setState);
-        binder.forField(categoryService).asRequired("Categoria Tipo Servicio es requerido")
+        binder.forField(categoryService).asRequired("Categoría Tipo Servicio es requerido")
                 .bind(BasicServiceProvider::getCategoryService,BasicServiceProvider::setCategoryService);
 
         binder.addStatusChangeListener(event -> {
@@ -334,7 +338,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         UIUtils.setColSpan(2,descriptionItem);
         form.addFormItem(nit,"NIT");
         form.addFormItem(state,"Estado");
-        form.addFormItem(categoryService,"Categoria Servicio");
+        form.addFormItem(categoryService,"Categoría Servicio");
 
         return form;
     }

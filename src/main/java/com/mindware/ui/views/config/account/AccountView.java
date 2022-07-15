@@ -7,6 +7,7 @@ import com.mindware.backend.rest.corebank.ConceptRestTemplate;
 import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
+import com.mindware.ui.components.DialogSweetAlert;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
@@ -40,9 +41,11 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
+import com.wontlost.sweetalert2.SweetAlert2Vaadin;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 
 import java.util.*;
 
@@ -360,10 +363,26 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
             try {
-                restTemplate.delete(account.getId());
-                accountList.remove(account);
-                dataProvider.refreshAll();
-                UIUtils.showNotificationType("Cuenta borrada", "success");
+                SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                        "Deseas Eliminar la Cuenta "+ account.getNameAccount() + "?\"");
+
+                sweetAlert2Vaadin.open();
+                sweetAlert2Vaadin.addConfirmListener(e -> {
+                    try {
+                        String result = restTemplate.delete(account.getId(), account.getPeriod(), account.getNameAccount());
+                        if (result.equals("Cuenta borrada")) {
+                            accountList.remove(account);
+                            dataProvider.refreshAll();
+                            UIUtils.showNotificationType("Cuenta eliminada", "success");
+                        } else {
+                            UIUtils.showNotificationType(result, "alert");
+                        }
+                    }catch(Exception ex){
+
+                    }
+                });
+                sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
             }catch(Exception e){
                 UIUtils.showNotificationType(e.getMessage(),"alert");
             }
@@ -404,6 +423,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
 
         TextField numberAccount = new TextField();
         numberAccount.setWidthFull();
+        numberAccount.setPreventInvalidInput(true);
         numberAccount.setRequired(true);
 
         TextField nameAccount = new TextField();
@@ -435,22 +455,24 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
                 .asRequired("Unidad de Negocio es requerida")
                 .bind(Account::getNameBusinessUnit,Account::setNameBusinessUnit);
         binder.forField(codeBusinessUnit)
-                .asRequired("Codigo Unidad de Negocio es requerido")
+                .asRequired("Código Unidad de Negocio es requerido")
                 .bind(Account::getCodeBusinessUnit,Account::setCodeBusinessUnit);
         binder.forField(codeFatherBusinessUnit)
                 .bind(Account::getCodeFatherBusinessUnit,Account::setCodeFatherBusinessUnit);
         binder.forField(numberAccount)
                 .asRequired("Número de Cuenta es requerido")
+                .withValidator(l -> l.trim().length()>0,"Nro. Cuenta debe tener al menos 1 caracter")
                 .bind(Account::getNumberAccount,Account::setNumberAccount);
         binder.forField(nameAccount)
                 .asRequired("Nombre Cuenta es requerido")
+                .withValidator(l -> l.trim().length()>0,"Nnombre Cuenta debe tener al menos 1 caracter")
                 .bind(Account::getNameAccount,Account::setNameAccount);
         binder.forField(currency)
                 .asRequired("Moneda es requerida")
                 .bind(Account::getCurrency,Account::setCurrency);
         binder.forField(budget)
                 .asRequired("Presupuesto Cuenta es requerido")
-                .withValidator(amount -> amount >0 , "Presupuesto tiene que ser mayor a 0")
+                .withValidator(amount -> amount.doubleValue() >=0 , "Presupuesto tiene que ser positivo")
                 .bind(Account::getBudget,Account::setBudget);
         binder.forField(typeAccount)
                 .asRequired("Tipo de Cuenta es requerido")

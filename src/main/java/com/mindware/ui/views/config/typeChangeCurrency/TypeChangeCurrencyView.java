@@ -227,7 +227,7 @@ public class TypeChangeCurrencyView extends SplitViewFrame implements RouterLayo
                 .asRequired("Moneda es requerida")
                 .bind(TypeChangeCurrency::getCurrency,TypeChangeCurrency::setCurrency);
         binder.forField(amountChange)
-                .asRequired("Valor tipo de cambio es requerido")
+                .asRequired("Tipo de Cambio es requerido")
                 .withValidator(a -> a.doubleValue()>0.0,"Tipo Cambio debe ser mayor a 0")
                 .bind(TypeChangeCurrency::getAmountChange,TypeChangeCurrency::setAmountChange);
         binder.forField(validityStart)

@@ -249,19 +249,19 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
 
         binder = new BeanValidationBinder<>(InvoiceAuthorizer.class);
         binder.forField(codeBranchOffice)
-                .asRequired("Codigo Unidad Negocio es requerido")
+                .asRequired("Código Unidad Negocio es requerido")
                 .bind(InvoiceAuthorizer::getCodeBranchOffice,InvoiceAuthorizer::setCodeBranchOffice);
         binder.forField(nameBranchOffice)
                 .asRequired("Nombre Unidad Negocio es requerido")
                 .bind(InvoiceAuthorizer::getNameBranchOffice, InvoiceAuthorizer::setNameBranchOffice);
         binder.forField(codePosition)
-                .asRequired("Codigo Cargo es Requerido")
+                .asRequired("Código Cargo es Requerido")
                 .bind(InvoiceAuthorizer::getCodePosition, InvoiceAuthorizer::setCodePosition);
         binder.forField(position)
                 .asRequired("Nombre Cargo es Requerido")
                 .bind(InvoiceAuthorizer::getPosition,InvoiceAuthorizer::setPosition);
         binder.forField(fullName)
-                .asRequired("Nombre funcionario es requerido")
+                .asRequired("Nombre Autorizador es requerido")
                 .bind(InvoiceAuthorizer::getFullName,InvoiceAuthorizer::setFullName);
         binder.forField(state)
                 .asRequired("Estado del Autorizador es requerido")
@@ -292,8 +292,8 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
         UIUtils.setColSpan(2,nameBranchOfficeItem);
         FormLayout.FormItem fullNameItem = form.addFormItem(fullName,"Nombre Autorizador");
         UIUtils.setColSpan(2,fullNameItem);
-        form.addFormItem(codeBranchOffice,"Codigo Unidad Negocio");
-        form.addFormItem(codePosition,"Codigo Cargo");
+        form.addFormItem(codeBranchOffice,"Código Unidad Negocio");
+        form.addFormItem(codePosition,"Código Cargo");
         FormLayout.FormItem positionItem =  form.addFormItem(position,"Nombre Cargo");
         UIUtils.setColSpan(2,positionItem);
         form.addFormItem(email,"Correo Empleado");

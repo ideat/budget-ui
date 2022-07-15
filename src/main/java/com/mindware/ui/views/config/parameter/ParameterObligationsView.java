@@ -120,7 +120,7 @@ public class ParameterObligationsView extends SplitViewFrame implements RouterLa
         detailsDrawerHeader.setTitle("Tipo Obligación: ".concat(parameter.getValue()==null?"Nuevo":parameter.getValue()));
         detailsDrawer.setContent(createDetails(parameter));
         detailsDrawer.show();
-        binder.readBean(parameter);
+
     }
 
     private DetailsDrawer createDetailsDrawer(){
@@ -235,6 +235,7 @@ public class ParameterObligationsView extends SplitViewFrame implements RouterLa
         txtCategory.setValue("TIPO OBLIGACION");
         txtCategory.setReadOnly(true);
 
+
         TextField txtNameTypeObligation = new TextField();
         txtNameTypeObligation.setRequired(true);
         txtNameTypeObligation.setWidth("100%");
@@ -247,8 +248,8 @@ public class ParameterObligationsView extends SplitViewFrame implements RouterLa
         binder = new BeanValidationBinder<>(Parameter.class);
 
         binder.forField(txtCategory).asRequired("Categoría es requerida").bind(Parameter::getCategory,Parameter::setCategory);
-        binder.forField(txtNameTypeObligation).asRequired("Nombre tipo obligacion es requerido").bind(Parameter::getValue,Parameter::setValue);
-        binder.forField(cmbFrecuency).asRequired("Descripción es requerida").bind(Parameter::getDetails,Parameter::setDetails);
+        binder.forField(txtNameTypeObligation).asRequired("Nombre tipo Obligación es requerido").bind(Parameter::getValue,Parameter::setValue);
+        binder.forField(cmbFrecuency).asRequired("Frecuencia es requerida").bind(Parameter::getDetails,Parameter::setDetails);
 
 
         binder.addStatusChangeListener(event ->{
@@ -266,9 +267,11 @@ public class ParameterObligationsView extends SplitViewFrame implements RouterLa
                 new FormLayout.ResponsiveStep("21em", 2,
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
         form.addFormItem(txtCategory,"Categoría");
-        form.addFormItem(txtNameTypeObligation,"Nombre Tipo obligación");
+        form.addFormItem(txtNameTypeObligation,"Nombre Tipo Obligación");
         FormLayout.FormItem descriptionItem = form.addFormItem(cmbFrecuency,"Frecuencia");
         UIUtils.setColSpan(2,descriptionItem);
+        binder.readBean(parameter);
+        txtCategory.setValue("TIPO OBLIGACION");
         return form;
 
     }

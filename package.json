@@ -67,6 +67,7 @@
     "lit-element": "2.5.1",
     "lit-html": "1.4.1",
     "retry": "0.12.0",
+    "sweetalert2": "^11.4.4",
     "tippy.js": "6.3.1"
   },
   "devDependencies": {
@@ -160,6 +161,7 @@
       "lit-element": "2.5.1",
       "lit-html": "1.4.1",
       "retry": "0.12.0",
+      "sweetalert2": "^11.4.4",
       "tippy.js": "6.3.1"
     },
     "devDependencies": {
@@ -182,6 +184,6 @@
       "webpack-dev-server": "3.11.0",
       "webpack-merge": "4.2.2"
     },
-    "hash": "947b162b1228bde998256b6a87fd84d0ee0e197f61c6d4e579840a92a4a8fcd1"
+    "hash": "f5be28acde5355fabcc9273e46f6d393f068766d02d2699eb124b4b75f72c6fd"
   }
 }

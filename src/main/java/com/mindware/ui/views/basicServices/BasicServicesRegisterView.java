@@ -21,6 +21,7 @@ import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
+import com.mindware.ui.components.DialogSweetAlert;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
@@ -62,6 +63,7 @@ import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.VaadinSession;
+import com.wontlost.sweetalert2.SweetAlert2Vaadin;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -223,7 +225,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                         }
 
 //                        UI.getCurrent().navigate(BasicServicesView.class);
-                        UIUtils.showNotificationType("Datos registratos", "success");
+                        UIUtils.showNotificationType("Datos registrados", "success");
                     }else{
                         UIUtils.showNotificationType("Monto distribuido no cuadra con el monto del contrato","alert");
                     }
@@ -231,7 +233,11 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                     UIUtils.showNotificationType("Datos no completos, revisar","alert");
                 }
             }catch (Exception e){
-                UIUtils.showNotificationType(e.getMessage(), "error");
+
+                String[] re = e.getMessage().split(",");
+                String[] msg = re[1].split(":");
+                UIUtils.showNotificationType(msg[1],"alert");
+
             }
         });
 
@@ -253,13 +259,13 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         MainLayout.get().getAppBar().reset();
         AppBar appBar = MainLayout.get().getAppBar();
 
-        appBar.addTab("Registro Factura Servicio Basico");
+        appBar.addTab("Registro Factura Servicio Básico");
         appBar.addTab("Autorización Factura");
         if(GrantOptions.grantedOptionAccounting("Servicios Básicos"))
             appBar.addTab("Entrega a Contabilidad");
 
         appBar.centerTabs();
-        currentTab = "Registro Factura Servicio Basico";
+        currentTab = "Registro Factura Servicio Básico";
         hideContent();
         appBar.addTabSelectionListener(e -> {
             enabledSheets();
@@ -293,7 +299,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         contentCreateBasicService.setVisible(true);
         contentInvoiceAuthorizer.setVisible(false);
         contentDeliveyAccounting.setVisible(false);
-        if(currentTab.equals("Registro Factura Servicio Basico")){
+        if(currentTab.equals("Registro Factura Servicio Básico")){
             contentCreateBasicService.setVisible(true);
             contentInvoiceAuthorizer.setVisible(false);
             contentDeliveyAccounting.setVisible(false);
@@ -384,21 +390,22 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
         binder = new BeanValidationBinder<>(BasicServicesDto.class);
         binder.forField(typeService)
-                .asRequired("Tipo de servicio es requerido")
+                .asRequired("Tipo de Servicio es requerido")
                 .bind(BasicServicesDto::getTypeBasicService,BasicServicesDto::setTypeBasicService);
         binder.forField(nameBasicServiceProvider)
                 .asRequired("Nombre Proveedor es requerido")
                 .bind(BasicServicesDto::getNameBasicServiceProvider,BasicServicesDto::setNameBasicServiceProvider);
         binder.forField(description)
-                .asRequired("Descripcion es requerida")
+                .asRequired("Descripción es requerida")
                 .bind(BasicServicesDto::getDescription,BasicServicesDto::setDescription);
         binder.forField(instance)
+                .asRequired("Instancia es requerida")
                 .bind(BasicServicesDto::getInstance,BasicServicesDto::setInstance);
         binder.forField(period)
                 .asRequired("Periodo es requerido")
                 .bind(BasicServicesDto::getPeriod,BasicServicesDto::setPeriod);
         binder.forField(paymentDate)
-                .asRequired("Fecha de pago es requerida")
+                .asRequired("Fecha de Pago es requerida")
                 .bind(BasicServicesDto::getPaymentDate,BasicServicesDto::setPaymentDate);
         binder.forField(amount)
                 .asRequired("Monto es requerido")
@@ -411,13 +418,13 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                 .asRequired("Subcuenta es requerida")
                 .bind(BasicServicesDto::getSubAccount,BasicServicesDto::setSubAccount);
         binder.forField(typeDocumentReceived)
-                .asRequired("Tipo documento es requerido")
+                .asRequired("Tipo Documento es requerido")
                 .bind(BasicServicesDto::getTypeDocumentReceived, BasicServicesDto::setTypeDocumentReceived);
         binder.forField(categoryTypeDocumentReceived)
-                .asRequired("Categoria Tipo Documento es requerido")
+                .asRequired("Estado es requerido")
                 .bind(BasicServicesDto::getCategoryTypeDocumentReceived, BasicServicesDto::setCategoryTypeDocumentReceived);
         binder.forField(numberDocumentReceived)
-                .asRequired("Numero de Factura/Recibo es requerido")
+                .asRequired("Número de Factura/Recibo es requerido")
                 .bind(BasicServicesDto::getNumberDocumentReceived, BasicServicesDto::setNumberDocumentReceived);
 
 
@@ -520,7 +527,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                 .setAutoWidth(true)
                 .setFlexGrow(1)
                 .setKey("description")
-                .setHeader("Descripcion Servicio");
+                .setHeader("Descripción Servicio");
         grid.addColumn(new ComponentRenderer<>(this::createActive))
                 .setSortable(true)
                 .setAutoWidth(true)
@@ -678,7 +685,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         FormLayout.FormItem unitBusinessItem = form.addFormItem(unitBusiness,"Unidad de Negocio");
         UIUtils.setColSpan(2,unitBusinessItem);
 
-        FormLayout.FormItem amountItem = form.addFormItem(amount,"Monto");
+        FormLayout.FormItem amountItem = form.addFormItem(amount,"Monto (Bs.)");
         UIUtils.setColSpan(2,amountItem);
 
         return form;
@@ -770,10 +777,21 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.setEnabled(GrantOptions.grantedOptionWrite("Servicios Básicos"));
         btn.addClickListener(event -> {
-            expenseDistribuiteList.remove(expenseDistribuite);
-            expenseDistribuiteGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos")
-                    && !basicServicesDto.getState().equals("FINALIZADO"));
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar el Registro? ");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                expenseDistribuiteList.remove(expenseDistribuite);
+                expenseDistribuiteGrid.getDataProvider().refreshAll();
+                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos")
+                        && !basicServicesDto.getState().equals("FINALIZADO"));
+                UIUtils.showNotificationType("Distribuicion retirada", "success");
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
+
         });
 
         return btn;
@@ -1006,8 +1024,19 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.setEnabled(GrantOptions.grantedOptionWrite("Servicios Básicos"));
         btn.addClickListener(event -> {
-           selectedInvoiceAuthorizerList.remove(selectedInvoiceAuthorizer);
-           selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar al Autorizador ?");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                selectedInvoiceAuthorizerList.remove(selectedInvoiceAuthorizer);
+                selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
+
+
         });
 
         return btn;
@@ -1023,6 +1052,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
         dateDeliveryAccounting.setClearButtonVisible(true);
         dateDeliveryAccounting.setRequiredIndicatorVisible(true);
         dateDeliveryAccounting.setLocale(new Locale("es","BO"));
+        dateDeliveryAccounting.setI18n(UIUtils.spanish());
 
         accountingPerson = new ComboBox<>("Entregado a");
         accountingPerson.setWidth("30%");

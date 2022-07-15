@@ -20,6 +20,7 @@ import com.mindware.backend.rest.typeChangeCurrency.TypeChangeCurrencyRestTempla
 import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
+import com.mindware.ui.components.DialogSweetAlert;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
@@ -66,6 +67,7 @@ import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.VaadinSession;
+import com.wontlost.sweetalert2.SweetAlert2Vaadin;
 import dev.mett.vaadin.tooltip.Tooltips;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
@@ -440,11 +442,11 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
                 binder.forField(quotationRequestDate)
                         .asRequired("Fecha solicitud cotización es requerida")
-                        .withValidator(f -> f.isAfter(receptionDate.getValue()),"Fecha solicitud de cotizacion no puede ser anterior a la fecha de recepción de la Solicitude Compra")
+                        .withValidator(f -> f.isAfter(receptionDate.getValue()) || f.isEqual(receptionDate.getValue()),"Fecha solicitud de cotización no puede ser anterior a la fecha de recepción de la Solicitude Compra")
                         .bind(Acquisition::getQuotationRequestDate, Acquisition::setQuotationRequestDate);
                 binder.forField(quotationReceptionDate)
                         .asRequired(("Fecha de recepción de contizaciones es requerida"))
-                        .withValidator(f -> f.isAfter(quotationRequestDate.getValue() ) || f.isEqual(quotationRequestDate.getValue()),"Fecha recepcion no puede ser anterior a la fechade solicitud")
+                        .withValidator(f -> f.isAfter(quotationRequestDate.getValue() ) || f.isEqual(quotationRequestDate.getValue()),"Fecha recepción no puede ser anterior a la fechade solicitud")
                         .bind(Acquisition::getQuotationReceptionDate, Acquisition::setQuotationReceptionDate);
             }
 
@@ -459,6 +461,16 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         .asRequired("Monto es requerido")
                         .withValidator(a -> a.doubleValue()>0.0,"Monto tiene que se mayor a 0")
                         .bind(Acquisition::getAmount,Acquisition::setAmount);
+
+                if(selectedAuthorizerList.size()==0){
+                    UIUtils.showNotificationType("Adicione Autorizaodr de la Adquisición","alert");
+                    return;
+                }
+                Double maxAmount = (current.getCurrency().equals("$us"))?amountMaxLevel1Sus:amountMaxLevel1Bs;
+                if( current.getAmount()!=null && current.getAmount()> maxAmount){
+                    UIUtils.showNotificationType("Adicione Revisor de la Adquisición","alert");
+                    return;
+                }
             }
 
             if(current.getCaabsNumber()!=null && !current.getCaabsNumber().isEmpty()){
@@ -586,8 +598,13 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 //                        contentInformationQuote = (FlexBoxLayout) createContent(createInformationQuote(current));
 //                        setViewContent(contentInformationQuote);
                     }
+                    if(itemList.size()==0){
+                        UIUtils.showNotificationType("Complete datos, Items no ingresados","alert");
+                        return;
+                    }
                     String jsonItems = mapper.writeValueAsString(itemList);
                     current.setItems(jsonItems);
+
                     String jsonAcquisitionAuthorizerLevel1 = mapper.writeValueAsString(selectedAuthorizerList);
                     String jsonAcquisitionAuthorizerLevel2 = "";
 
@@ -603,7 +620,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     try {
                         current = acquisitionRestTemplate.add(current);
                     }catch(Exception e){
-                        UIUtils.showNotificationType(e.getMessage(),"alert");
+                        String[] arrMsg = e.getMessage().split(",");
+                        String[] msg = arrMsg[1].split(":");
+                        UIUtils.showNotificationType(msg[1].replaceAll("\"",""),"alert");
                         return;
                     }
 
@@ -847,10 +866,11 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         receptionDate.setWidthFull();
         receptionDate.setRequired(true);
         receptionDate.setLocale(new Locale("es","BO"));
+        receptionDate.setI18n(UIUtils.spanish());
 
         binder = new BeanValidationBinder<>(Acquisition.class);
         binder.forField(numberRequest)
-                .asRequired("Numero de solicitud es requerido")
+                .asRequired("Número de solicitud es requerido")
                 .withValidator(n -> n.intValue()>0,"Número de solicitud debe ser positivo")
                 .bind(Acquisition::getAcquisitionNumber,Acquisition::setAcquisitionNumber);
         binder.forField(codeBusinessUnit)
@@ -865,10 +885,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .asRequired("Solicitante es requerido")
                 .bind(Acquisition::getApplicant,Acquisition::setApplicant);
         binder.forField(areaApplicant)
-                .asRequired("Área de trabajo del solicitante es requerida")
+                .asRequired("Área Solicitante es requerida")
                 .bind(Acquisition::getAreaApplicant,Acquisition::setAreaApplicant);
         binder.forField(typeRequest)
-                .asRequired("Tipo de solicitud es requerido")
+                .asRequired("Tipo  Adquisición es requerida")
                 .bind(Acquisition::getTypeRequest,Acquisition::setTypeRequest);
         binder.forField(receptionDate)
                 .asRequired("Fecha de Recepción es requerida")
@@ -931,8 +951,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         form.addFormItem(areaApplicant,"Área Solicitante");
 //        footer = new DetailsDrawerFooter();
 
-        form.addFormItem(typeRequest,"Tipo adquisición");
-        form.addFormItem(receptionDate,"Fecha de recepción");
+        form.addFormItem(typeRequest,"Tipo Adquisición");
+        form.addFormItem(receptionDate,"Fecha de Recepción");
 
         DetailsDrawer detailsDrawer = new DetailsDrawer(DetailsDrawer.Position.BOTTOM);
         detailsDrawer.setWidthFull();
@@ -1228,7 +1248,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .setAutoWidth(true)
                 .setResizable(true)
                 .setFlexGrow(1)
-                .setHeader("Descripcion");
+                .setHeader("Descripción");
         itemGrid.addColumn(new ComponentRenderer<>(this::createButtonDeleteItem))
                 .setFlexGrow(0)
                 .setAutoWidth(true);
@@ -1248,9 +1268,20 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            itemList.remove(item);
-            itemGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO") );
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar Item "+ item.getDescription() + "?\"");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+
+                itemList.remove(item);
+                itemGrid.getDataProvider().refreshAll();
+                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO") );
+                UIUtils.showNotificationType("Item eliminado", "success");
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
         });
 
         return btn;
@@ -1337,6 +1368,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         currency.setAutoOpen(true);
         currency.setRequired(true);
         currency.setItems(utilValues.getValueParameterByCategory("MONEDA"));
+        currency.setErrorMessage("Moneda es requerida");
         currency.addValueChangeListener(event -> {
             if(amountCaabs.getValue()!=null || !amountCaabs.isEmpty()) {
                 if (event.getValue().equals("$us")) {
@@ -1362,6 +1394,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         amountCaabs.setRequiredIndicatorVisible(true);
         amountCaabs.addValueChangeListener(event -> {
             if(event.getValue()!=null) {
+                if(currency.getValue()==null){
+                    currency.setInvalid(true);
+                    return;
+                }
                 if (currency.getValue().equals("$us")) {
                     if (event.getValue().doubleValue() > amountMaxLevel1Sus) {
                         layoutAuthorizerLevel2.setVisible(true);
@@ -1443,11 +1479,12 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         amountMax = 0.0;
         TypeChangeCurrency typeChangeCurrency = typeChangeCurrencyRestTemplate.getCurrentTypeChangeCurrencyByValidityStart("CONTABLE",quotationReceptionDate.getValue().toString(),"$us");
 
-        if(currency.getValue().equals("Bs")){
-            amountMax = amountCaabs.getValue()/typeChangeCurrency.getAmountChange();
-        }else{
+        if (currency.getValue().equals("Bs")) {
+            amountMax = amountCaabs.getValue() / typeChangeCurrency.getAmountChange();
+        } else {
             amountMax = amountCaabs.getValue();
         }
+
         List<AcquisitionAuthorizer> acquisitionAuthorizerList = acquisitionAuthorizerRestTemplate
                 .getByCodeBranchOffice(Integer.valueOf(concept.getCode()))
                 .stream()
@@ -1588,6 +1625,10 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         Button btnAdd = new Button("Adicionar");
         btnAdd.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
         btnAdd.addClickListener(event -> {
+            if(currency.getValue()==null){
+                currency.setInvalid(true);
+                return;
+            }
             if(!amountCaabs.isEmpty()) {
                 setViewDetailsPosition(Position.RIGHT);
                 setViewDetails(createDetailsDrawerSelectedAuthorizer());
@@ -1664,8 +1705,19 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            selectedAuthorizerList.remove(selectedAuthorizer);
-            selectedAuthorizerGrid.getDataProvider().refreshAll();
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar al Autorizador?");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                selectedAuthorizerList.remove(selectedAuthorizer);
+                selectedAuthorizerGrid.getDataProvider().refreshAll();
+
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
+
 //            footerSelectedAuthorizer.saveState(true);
         });
 
@@ -1796,8 +1848,17 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            selectedAuthorizerLevel2List.remove(selectedAuthorizer);
-            selectedAuthorizerLevel2Grid.getDataProvider().refreshAll();
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar al Autorizador?");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                selectedAuthorizerLevel2List.remove(selectedAuthorizer);
+                selectedAuthorizerLevel2Grid.getDataProvider().refreshAll();
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
+
 //            footerSelectedAuthorizer.saveState(true);
         });
 
@@ -2148,9 +2209,19 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            invoiceInformationList.remove(invoiceInformation);
-            invoiceInformationGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones") && !current.getState().equals("FINALIZADO"));
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar la Factura?");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                invoiceInformationList.remove(invoiceInformation);
+                invoiceInformationGrid.getDataProvider().refreshAll();
+                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones") && !current.getState().equals("FINALIZADO"));
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
+
         });
 
         return btn;
@@ -2727,9 +2798,19 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            expenseDistribuiteList.remove(expenseDistribuite);
-            expenseDistribuiteGrid.getDataProvider().refreshAll();
-            footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar la Distribución? ");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                expenseDistribuiteList.remove(expenseDistribuite);
+                expenseDistribuiteGrid.getDataProvider().refreshAll();
+                footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
+
         });
 
         return btn;

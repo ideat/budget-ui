@@ -268,25 +268,25 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
 
         binder = new BeanValidationBinder<>(AcquisitionAuthorizer.class);
         binder.forField(codeBranchOffice)
-                .asRequired("Codigo Unidad Negocio es requerido")
+                .asRequired("Código Unidad Negocio es requerido")
                 .bind(AcquisitionAuthorizer::getCodeBranchOffice,AcquisitionAuthorizer::setCodeBranchOffice);
         binder.forField(nameBranchOffice)
                 .asRequired("Nombre Unidad Negocio es requerido")
                 .bind(AcquisitionAuthorizer::getNameBranchOffice, AcquisitionAuthorizer::setNameBranchOffice);
         binder.forField(codePosition)
-                .asRequired("Codigo Cargo es Requerido")
+                .asRequired("Código Cargo es requerido")
                 .bind(AcquisitionAuthorizer::getCodePosition, AcquisitionAuthorizer::setCodePosition);
         binder.forField(position)
                 .asRequired("Nombre Cargo es Requerido")
                 .bind(AcquisitionAuthorizer::getPosition,AcquisitionAuthorizer::setPosition);
         binder.forField(fullName)
-                .asRequired("Nombre funcionario es requerido")
+                .asRequired("Nombre Autorizador es requerido")
                 .bind(AcquisitionAuthorizer::getFullName,AcquisitionAuthorizer::setFullName);
         binder.forField(state)
                 .asRequired("Estado del Autorizador es requerido")
                 .bind(AcquisitionAuthorizer::getState,AcquisitionAuthorizer::setState);
         binder.forField(maxAmount)
-                .asRequired("Monto maximo es requerido")
+                .asRequired("Monto máximo es requerido")
                 .withValidator(m -> m.doubleValue()>0.0,"Monto debe ser mayor a 0")
                 .bind(AcquisitionAuthorizer::getMaxAmount,AcquisitionAuthorizer::setMaxAmount);
         binder.forField(email)

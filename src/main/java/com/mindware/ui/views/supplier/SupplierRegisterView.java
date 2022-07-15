@@ -9,6 +9,7 @@ import com.mindware.backend.rest.supplier.SupplierRestTemplate;
 import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
+import com.mindware.ui.components.DialogSweetAlert;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerFooter;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawerHeader;
@@ -40,6 +41,7 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.validator.EmailValidator;
 import com.vaadin.flow.router.*;
+import com.wontlost.sweetalert2.SweetAlert2Vaadin;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -269,10 +271,16 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
+                try {
+                    restTemplate.add(suppplier);
+                    UIUtils.showNotificationType("Proveedor registrado","success");
+                    UI.getCurrent().navigate(SupplierView.class);
+                }catch(Exception e){
+                    String[] arrMsg = e.getMessage().split(",");
+                    String[] msg = arrMsg[1].split(":");
+                    UIUtils.showNotificationType(msg[1].replaceAll("\"",""),"alert");
+                }
 
-                restTemplate.add(suppplier);
-                UIUtils.showNotificationType("Proveedor registrado","success");
-                UI.getCurrent().navigate(SupplierView.class);
             }
         });
 
@@ -354,9 +362,18 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         btn.addThemeVariants(ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
-            shareHolderList.remove(shareHolder);
-            shareHolderListDataProvider.refreshAll();
-            footerSupplier.saveState(GrantOptions.grantedOptionWrite("Proveedores"));
+
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
+                    "Deseas Eliminar al Accionista? ");
+
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                shareHolderList.remove(shareHolder);
+                shareHolderListDataProvider.refreshAll();
+                footerSupplier.saveState(GrantOptions.grantedOptionWrite("Proveedores"));
+            });
+            sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
+
         });
 
         return btn;

@@ -83,12 +83,15 @@ public class AccountRestTemplate {
         return Arrays.asList(response.getBody());
     }
 
-    public void delete(UUID id){
+    public String delete(UUID id, Integer period, String nameAccount){
         final String uri = url + "/v1/account/delete";
         HttpHeaders headers = HeaderJwt.getHeader();
         headers.set("id",id.toString());
-        HttpEntity<?> request = new HttpEntity<>(headers);
-        restTemplate.exchange(uri,HttpMethod.DELETE,request,Void.class);
+        headers.set("period",period.toString());
+        headers.set("nameaccount",nameAccount);
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        ResponseEntity<String> response = restTemplate.exchange(uri,HttpMethod.DELETE,request,String.class);
+        return response.getBody();
 
     }
 }

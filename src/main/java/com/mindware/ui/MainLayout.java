@@ -391,7 +391,11 @@ public class MainLayout extends FlexBoxLayout
 	private void afterNavigationWithoutTabs(AfterNavigationEvent e) {
 		NaviItem active = getActiveItem(e);
 		if (active != null) {
-			getAppBar().setTitle(active.getText());
+			if(active.getText().equals("Prov. Básicos y Obliga.")){
+				getAppBar().setTitle("Registro Proveedor Servicios Básicos y Obligaciones");
+			}else {
+				getAppBar().setTitle(active.getText());
+			}
 		}
 	}
 
