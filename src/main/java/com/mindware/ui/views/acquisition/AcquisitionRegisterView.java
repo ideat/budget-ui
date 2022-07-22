@@ -461,12 +461,17 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         .asRequired("Monto es requerido")
                         .withValidator(a -> a.doubleValue()>0.0,"Monto tiene que se mayor a 0")
                         .bind(Acquisition::getAmount,Acquisition::setAmount);
-
                 if(selectedAuthorizerList.size()==0){
                     UIUtils.showNotificationType("Adicione Autorizaodr de la Adquisición","alert");
                     return;
                 }
-                Double maxAmount = (current.getCurrency().equals("$us"))?amountMaxLevel1Sus:amountMaxLevel1Bs;
+                Double maxAmount=0.0;
+                if(currency.getValue()!=null) {
+                    maxAmount = (currency.getValue().equals("$US")) ? amountMaxLevel1Sus : amountMaxLevel1Bs;
+                }else{
+                    UIUtils.showNotificationType("Seleccione Moneda","alert");
+                    return;
+                }
                 if( current.getAmount()!=null && current.getAmount()> maxAmount){
                     UIUtils.showNotificationType("Adicione Revisor de la Adquisición","alert");
                     return;
@@ -608,7 +613,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     String jsonAcquisitionAuthorizerLevel1 = mapper.writeValueAsString(selectedAuthorizerList);
                     String jsonAcquisitionAuthorizerLevel2 = "";
 
-                    Double maxAmount = (current.getCurrency()==null ||current.getCurrency().equals("$us"))?amountMaxLevel1Sus:amountMaxLevel1Bs;
+                    Double maxAmount = (current.getCurrency()==null ||current.getCurrency().equals("$US"))?amountMaxLevel1Sus:amountMaxLevel1Bs;
                     if( current.getAmount()==null || current.getAmount()<= maxAmount){
                         jsonAcquisitionAuthorizerLevel2 = "[]";
                     }else {
@@ -1371,17 +1376,19 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         currency.setErrorMessage("Moneda es requerida");
         currency.addValueChangeListener(event -> {
             if(amountCaabs.getValue()!=null || !amountCaabs.isEmpty()) {
-                if (event.getValue().equals("$us")) {
-                    if (amountCaabs.getValue().doubleValue() > amountMaxLevel1Sus) {
-                        layoutAuthorizerLevel2.setVisible(true);
-                    } else {
-                        layoutAuthorizerLevel2.setVisible(false);
-                    }
-                } else if (event.getValue().equals("Bs")) {
-                    if (amountCaabs.getValue().doubleValue() > amountMaxLevel1Bs) {
-                        layoutAuthorizerLevel2.setVisible(true);
-                    } else {
-                        layoutAuthorizerLevel2.setVisible(false);
+                if(event.getValue()!=null) {
+                    if (event.getValue().equals("$US")) {
+                        if (amountCaabs.getValue().doubleValue() > amountMaxLevel1Sus) {
+                            layoutAuthorizerLevel2.setVisible(true);
+                        } else {
+                            layoutAuthorizerLevel2.setVisible(false);
+                        }
+                    } else if (event.getValue().equals("BS")) {
+                        if (amountCaabs.getValue().doubleValue() > amountMaxLevel1Bs) {
+                            layoutAuthorizerLevel2.setVisible(true);
+                        } else {
+                            layoutAuthorizerLevel2.setVisible(false);
+                        }
                     }
                 }
             }
@@ -1398,13 +1405,13 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     currency.setInvalid(true);
                     return;
                 }
-                if (currency.getValue().equals("$us")) {
+                if (currency.getValue().equals("$US")) {
                     if (event.getValue().doubleValue() > amountMaxLevel1Sus) {
                         layoutAuthorizerLevel2.setVisible(true);
                     } else {
                         layoutAuthorizerLevel2.setVisible(false);
                     }
-                } else if (currency.getValue().equals("Bs")) {
+                } else if (currency.getValue().equals("BS")) {
                     if (event.getValue().doubleValue() > amountMaxLevel1Bs) {
                         layoutAuthorizerLevel2.setVisible(true);
                     } else {
@@ -1460,7 +1467,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         detailsDrawer.setPadding(Left.S, Right.S, Top.S);
 //        Label title2 = UIUtils.createLabel(FontSize.M, TextColor.SECONDARY,"Esta solicitud debe ser revisada por:");
 
-        Double maxAmount = (current.getCurrency()==null ||current.getCurrency().equals("$us"))?amountMaxLevel1Sus:amountMaxLevel1Bs;
+        Double maxAmount = (current.getCurrency()==null ||current.getCurrency().equals("$US"))?amountMaxLevel1Sus:amountMaxLevel1Bs;
         if(amountCaabs.isEmpty() || amountCaabs.getValue().doubleValue()< maxAmount){
             layoutAuthorizerLevel2.setVisible(false);
         }
@@ -1477,9 +1484,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .filter(c -> String.valueOf(current.getCodeFatherBusinessUnit()).equals(c.getCode())) //TODO: authorizer is from  codefatherbusiness or codebusiness?
                 .findFirst().get();
         amountMax = 0.0;
-        TypeChangeCurrency typeChangeCurrency = typeChangeCurrencyRestTemplate.getCurrentTypeChangeCurrencyByValidityStart("CONTABLE",quotationReceptionDate.getValue().toString(),"$us");
+        TypeChangeCurrency typeChangeCurrency = typeChangeCurrencyRestTemplate.getCurrentTypeChangeCurrencyByValidityStart("CONTABLE",quotationReceptionDate.getValue().toString(),"$US");
 
-        if (currency.getValue().equals("Bs")) {
+        if (currency.getValue().equals("BS")) {
             amountMax = amountCaabs.getValue() / typeChangeCurrency.getAmountChange();
         } else {
             amountMax = amountCaabs.getValue();
@@ -2557,6 +2564,22 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         quantity.setRequiredIndicatorVisible(true);
         quantity.setClearButtonVisible(true);
 
+        ComboBox<String> subAccount = new ComboBox<>();
+        subAccount.setWidthFull();
+        subAccount.setAutoOpen(true);
+        subAccount.setRequired(true);
+        subAccount.setRequiredIndicatorVisible(true);
+
+        ComboBox<String> account = new ComboBox<>();
+        account.setWidthFull();
+        account.setAutoOpen(true);
+        account.setRequired(true);
+        account.setAllowCustomValue(false);
+//        account.setItems(utilValues.getNameAccountsByCodeUnit(codeBusinessUnit.getValue()));
+        account.addValueChangeListener(event -> {
+            subAccount.clear();
+            subAccount.setItems(utilValues.getNameSubAccounts(event.getValue()));
+        });
 
         ComboBox<Concept> unitBusiness = new ComboBox<>();
         unitBusiness.setWidthFull();
@@ -2574,14 +2597,18 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         codeBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode2()));
                         nameBusinessUnit.setValue(event.getValue().getDescription());
                         codeFatherBusinessUnit.setValue(Integer.valueOf(event.getValue().getCode()));
+                        account.clear();
+                        account.setItems(utilValues.getNameAccountsByCodeUnit(codeBusinessUnit.getValue()));
                     } else {
                         UIUtils.showNotificationType("Unidad de Negocio e Item ya fue agregada", "alert");
                         unitBusiness.clear();
                         codeBusinessUnit.clear();
                         nameBusinessUnit.clear();
                         codeFatherBusinessUnit.clear();
+                        account.clear();
                     }
                 }else{
+                    account.setItems(utilValues.getNameAccountsByCodeUnit(expenseDistribuite.getCodeBusinessUnit()));
                     isFirsLoadExpenseDistribuite = false;
                 }
             }
@@ -2593,23 +2620,6 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     .filter(f -> f.getCode2().equals(String.valueOf(expenseDistribuite.getCodeBusinessUnit()))).findFirst().get());
 
         }
-        ComboBox<String> subAccount = new ComboBox<>();
-        subAccount.setWidthFull();
-        subAccount.setAutoOpen(true);
-        subAccount.setRequired(true);
-        subAccount.setRequiredIndicatorVisible(true);
-
-
-        ComboBox<String> account = new ComboBox<>();
-        account.setWidthFull();
-        account.setAutoOpen(true);
-        account.setRequired(true);
-        account.setAllowCustomValue(false);
-        account.setItems(utilValues.getNameAccounts());
-        account.addValueChangeListener(event -> {
-           subAccount.clear();
-           subAccount.setItems(utilValues.getNameSubAccounts(event.getValue()));
-        });
 
 
         expenseDistribuiteBinder = new BeanValidationBinder<>(ExpenseDistribuiteAcquisition.class);
@@ -2648,7 +2658,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             footer.saveState(GrantOptions.grantedOptionWrite("Adquisiciones")  && !current.getState().equals("FINALIZADO"));
         });
 
-        expenseDistribuiteBinder.readBean(currentExpenseDistribuite);
+
         FormLayout form = new FormLayout();
         form.addClassNames(LumoStyles.Padding.Bottom.L,
                 LumoStyles.Padding.Horizontal.S, LumoStyles.Padding.Top.S);
@@ -2669,6 +2679,8 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         UIUtils.setColSpan(2,accountItem);
         FormLayout.FormItem subAccountItem = form.addFormItem(subAccount,"Sub Cuenta");
         UIUtils.setColSpan(2,subAccountItem);
+
+        expenseDistribuiteBinder.readBean(currentExpenseDistribuite);
 
         return form;
     }

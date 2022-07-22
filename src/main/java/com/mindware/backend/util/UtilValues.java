@@ -90,6 +90,18 @@ public class UtilValues {
     public List<String> getNameAccounts(){
         List<Account> accounts = accountRestTemplate.getAllByPeriod(getActivePeriod());
         List<String> accountNumberList = accounts.stream()
+//                .filter(f -> f.getTypeAccount().equals("GASTO"))
+                .map(Account::getNameAccount)
+                .map(String::trim)
+                .sorted()
+                .distinct()
+                .collect(Collectors.toList());
+        return accountNumberList;
+    }
+
+    public List<String> getNameAccountsByCodeUnit(Integer codeBusiness){
+        List<Account> accounts = accountRestTemplate.getByCodeBusinessAndPeriod(codeBusiness,getActivePeriod());
+        List<String> accountNumberList = accounts.stream()
                 .map(Account::getNameAccount)
                 .distinct()
                 .collect(Collectors.toList());

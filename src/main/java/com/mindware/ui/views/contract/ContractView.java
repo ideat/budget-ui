@@ -22,10 +22,7 @@ import com.mindware.ui.util.LumoStyles;
 import com.mindware.ui.util.UIUtils;
 import com.mindware.ui.util.css.BoxSizing;
 import com.mindware.ui.views.SplitViewFrame;
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.KeyModifier;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -57,6 +54,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -170,6 +168,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
                 , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                 .setKey("dateSubscription")
                 .setHeader("Fecha Suscripción")
+                .setComparator(ContractDto::getDateSubscription)
                 .setFlexGrow(1)
                 .setAutoWidth(true)
                 .setSortable(true);
@@ -404,6 +403,9 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
         form.addFormItem(typeChangeCurrency,"Categoría Tipo Cambio");
         form.addFormItem(amountTypeChange,"Tipo Cambio");
+
+        binder.readBean(contract);
+
         return form;
     }
 
@@ -423,7 +425,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         detailsDrawer.setContent(createDetails(contract));
         detailsDrawerHeader.setTitle("Contrato: ".concat(supplier.getValue()==null?"Nuevo":supplier.getValue().getName()));
         detailsDrawer.show();
-        binder.readBean(contract);
+
     }
 
     private DetailsDrawer createDetailsDrawer(){
@@ -438,7 +440,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         footer.addSaveListener(e ->{
 
             if (current !=null && binder.writeBeanIfValid(current)){
-                if(current.getCurrency().equals("$us") && (current.getTypeChangeCurrency()==null || current.getTypeChangeCurrency().isEmpty())){
+                if(current.getCurrency().equals("$US") && (current.getTypeChangeCurrency()==null || current.getTypeChangeCurrency().isEmpty())){
                     typeChangeCurrency.setInvalid(true);
 
                     return;
@@ -469,8 +471,16 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
                     contractDtoList.add(dto);
                     grid.getDataProvider().refreshAll();
                 }else{
+
                     ContractDto dto = contractDtoRestTemplate.getByIdContract(result.getId().toString());
-                    grid.getDataProvider().refreshItem(dto);
+                    contractDtoList.removeIf(contract -> contract.getIdContract().equals(dto.getIdContract()));
+                    contractDtoList.add(dto);
+//                    contractDtoList = contractDtoList.stream()
+//                            .sorted(Comparator.comparing(ContractDto::getDateSubscription))
+//                            .collect(Collectors.toList());
+                    grid.getDataProvider().refreshAll();
+//                    UI.getCurrent().getPage().reload();
+
                 }
                 detailsDrawer.hide();
                 UIUtils.showNotificationType("Datos guardados","success");
@@ -491,6 +501,9 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
     private void getContracts(){
         contractDtoList = new ArrayList<>(contractDtoRestTemplate.getAll()) ;
+        contractDtoList = contractDtoList.stream()
+                .sorted(Comparator.comparing(ContractDto::getDateSubscription))
+                .collect(Collectors.toList());
         supplierList = supplierRestTemplate.getAll();
         dataProviderContractDto = new ListDataProvider<>(contractDtoList);
     }

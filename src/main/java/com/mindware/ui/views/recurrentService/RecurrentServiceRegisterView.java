@@ -140,7 +140,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private TextField locationSupplierFilter;
     private TextField primaryActivitySupplierFilter;
 
-    private IntegerField numberContractFilter;
+    private TextField numberContractFilter;
     private TextField objectContractFilter;
 
     private DatePicker dateDeliveryAccounting;
@@ -692,7 +692,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         HeaderRow hr = grid.appendHeaderRow();
 
-        numberContractFilter = new IntegerField();
+        numberContractFilter = new TextField();
         numberContractFilter.setWidthFull();
         numberContractFilter.setValueChangeMode(ValueChangeMode.EAGER);
         numberContractFilter.addValueChangeListener(e -> applyFilterContract(dataprovider));
@@ -740,8 +740,8 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
     private void applyFilterContract(ListDataProvider<Contract> dataProvider){
         dataProvider.clearFilters();
-        if(numberContractFilter.getValue()!=null ){
-            dataProvider.addFilter(contract -> contract.getNumberContract().intValue() >= numberContractFilter.getValue()  );
+        if(!numberContractFilter.getValue().trim().equals("") ){
+            dataProvider.addFilter(contract -> contract.getNumberContract().toString().equals(numberContractFilter.getValue())  );
         }
         if(!objectContractFilter.getValue().trim().equals("")){
             dataProvider.addFilter(contract -> StringUtils.containsIgnoreCase(contract.getObjectContract(),objectContractFilter.getValue()));
