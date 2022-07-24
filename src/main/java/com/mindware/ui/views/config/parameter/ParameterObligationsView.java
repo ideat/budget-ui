@@ -134,14 +134,19 @@ public class ParameterObligationsView extends SplitViewFrame implements RouterLa
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
             if (current !=null && binder.writeBeanIfValid(current)){
-                Parameter result = restTemplate.add(current);
-                if (current.getId()==null){
-                    parameterList.add(result);
-                    grid.getDataProvider().refreshAll();
-                }else{
-                    grid.getDataProvider().refreshItem(current);
+                try {
+                    Parameter result = restTemplate.add(current);
+                    if (current.getId() == null) {
+                        parameterList.add(result);
+                        grid.getDataProvider().refreshAll();
+                    } else {
+                        grid.getDataProvider().refreshItem(current);
+                    }
+                    detailsDrawer.hide();
+                }catch (Exception ex){
+                    UIUtils.showNotificationType(String.format("Tipo Obligacion '%s', ya se encuentra registrada",current.getValue()),"alert");
+                    return;
                 }
-                detailsDrawer.hide();
             }else{
                 UIUtils.dialog("Datos incorrectos, verifique nuevamente","alert").open();
             }

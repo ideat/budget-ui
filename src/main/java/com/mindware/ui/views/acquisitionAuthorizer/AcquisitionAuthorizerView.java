@@ -222,6 +222,11 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
         fullName.setRequired(true);
         fullName.setAllowCustomValue(false);
         fullName.addValueChangeListener(event -> {
+            if(event.getValue()==null){
+                UIUtils.showNotificationType("Seleccione Nombre Autorizador","alert");
+                fullName.focus();
+                return;
+            }
             UserLdapDto userLdapDto = userLdapDtoList.stream()
                     .filter(c -> c.getCn().equals(event.getValue()))
                     .findFirst().get();
@@ -238,6 +243,11 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
                 .map(Concept::getDescription)
                 .collect(Collectors.toList()));
         nameBranchOffice.addValueChangeListener(event -> {
+            if(event.getValue()==null){
+                UIUtils.showNotificationType("Seleccione un dato en Unidad de Negocio","alert");
+                nameBranchOffice.focus();
+                return;
+            }
             String code2 = conceptList.stream()
                     .filter(c -> c.getDescription().equals(event.getValue()))
                     .map(Concept::getCode2)
@@ -348,14 +358,21 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
             if (current !=null && binder.writeBeanIfValid(current)){
-                AcquisitionAuthorizer result = restTemplate.add(current);
-                if(current.getId()==null){
-                    acquisitionAuthorizerList.add(result);
-                    grid.getDataProvider().refreshAll();
-                }else{
-                    grid.getDataProvider().refreshAll();
+                try {
+                    AcquisitionAuthorizer result = restTemplate.add(current);
+                    if (current.getId() == null) {
+                        acquisitionAuthorizerList.add(result);
+                        grid.getDataProvider().refreshAll();
+                    } else {
+                        grid.getDataProvider().refreshAll();
+                    }
+                    detailsDrawer.hide();
+                }catch (Exception ex){
+                    String[] re = ex.getMessage().split(",");
+                    String[] msg = re[1].split(":");
+                    UIUtils.showNotificationType(msg[1],"alert");
+                    return;
                 }
-                detailsDrawer.hide();
             }else{
                 UIUtils.dialog("Datos incorrectos, verifique nuevamente","alert").open();
             }

@@ -128,12 +128,15 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
             if (current !=null && binder.writeBeanIfValid(current)){
+
                 Period result=null;
                 try {
                     result = restTemplate.add(current);
                 }
                 catch(Exception ex){
-                    UIUtils.showNotificationType(ex.getMessage(),"alert");
+                    String[] re = ex.getMessage().split(",");
+                    String[] msg = re[1].split(":");
+                    UIUtils.showNotificationType(msg[1],"alert");
                     return;
                 }
                 if (current.getId()==null){

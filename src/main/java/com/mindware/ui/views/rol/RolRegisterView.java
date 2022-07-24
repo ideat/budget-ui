@@ -228,6 +228,8 @@ public class RolRegisterView extends SplitViewFrame implements HasUrlParameter<S
                 .setHeader("Observar").setFlexGrow(1).setResizable(true);
         Grid.Column<Option> finishColumn = grid.addColumn(new ComponentRenderer<>(this::createFinish))
                 .setHeader("Finalizar").setFlexGrow(1).setResizable(true);
+        Grid.Column<Option> deleteColumn = grid.addColumn(new ComponentRenderer<>(this::createDelete))
+                .setHeader("Borrar").setFlexGrow(1).setResizable(true);
         Grid.Column<Option> accountingColumn = grid.addColumn(new ComponentRenderer<>(this::createAccounting))
                 .setHeader("Contabilidad").setFlexGrow(1).setResizable(true);
 
@@ -259,6 +261,10 @@ public class RolRegisterView extends SplitViewFrame implements HasUrlParameter<S
         Checkbox finish = new Checkbox();
         binderOption.forField(finish).bind(Option::isFinish,Option::setFinish);
         finishColumn.setEditorComponent(finish);
+
+        Checkbox delete = new Checkbox();
+        binderOption.forField(delete).bind(Option::isDelete,Option::setDelete);
+        deleteColumn.setEditorComponent(delete);
 
         Checkbox accounting = new Checkbox();
         binderOption.forField(accounting).bind(Option::isAccounting,Option::setAccounting);
@@ -393,6 +399,16 @@ public class RolRegisterView extends SplitViewFrame implements HasUrlParameter<S
     private Component createFinish(Option option){
         Icon icon;
         if(option.isFinish()){
+            icon = UIUtils.createPrimaryIcon(VaadinIcon.CHECK);
+        }else{
+            icon = UIUtils.createDisabledIcon(VaadinIcon.CLOSE);
+        }
+        return icon;
+    }
+
+    private Component createDelete(Option option){
+        Icon icon;
+        if(option.isDelete()){
             icon = UIUtils.createPrimaryIcon(VaadinIcon.CHECK);
         }else{
             icon = UIUtils.createDisabledIcon(VaadinIcon.CLOSE);

@@ -6,6 +6,7 @@ import com.mindware.backend.rest.acquisition.AcquisitionDtoRestTemplate;
 import com.mindware.backend.rest.acquisition.AcquisitionRestTemplate;
 import com.mindware.backend.util.GrantOptions;
 import com.mindware.ui.MainLayout;
+import com.mindware.ui.components.DialogSweetAlert;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.layout.size.Horizontal;
 import com.mindware.ui.layout.size.Top;
@@ -31,6 +32,7 @@ import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.VaadinSession;
+import com.wontlost.sweetalert2.SweetAlert2Vaadin;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -171,6 +173,9 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
                 .setFlexGrow(1)
                 .setAutoWidth(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonFinish))
+                .setFlexGrow(1)
+                .setAutoWidth(true);
+        grid.addColumn(new ComponentRenderer<>(this::createButtonDelete))
                 .setFlexGrow(1)
                 .setAutoWidth(true);
 
@@ -334,6 +339,27 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
             grid.getDataProvider().refreshAll();
             UIUtils.showNotificationType("Adquisición Observada","alert");
         });
+        return btn;
+    }
+
+    private Component createButtonDelete(AcquisitionDto acquisitionDto){
+        Button btn = new Button();
+        Tooltips.getCurrent().setTooltip(btn,"Borrar");
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        btn.setIcon(VaadinIcon.TRASH.create());
+        btn.setVisible(GrantOptions.grantedOptionDelete("Adquisiciones"));
+        btn.addClickListener(event -> {
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro","Deseas Eliminar la Adquisicón "+ acquisitionDto.getAcquisitionNumber() + "?\"");
+            sweetAlert2Vaadin.open();
+            sweetAlert2Vaadin.addConfirmListener(e -> {
+                acquisitionRestTemplate.delete(acquisitionDto.getId().toString());
+                acquisitionDtoList.remove(acquisitionDto);
+                grid.getDataProvider().refreshAll();
+                UIUtils.showNotificationType("Adquisición Eliminada","success");
+            });
+
+        });
+
         return btn;
     }
 

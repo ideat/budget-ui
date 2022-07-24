@@ -11,6 +11,9 @@ import com.mindware.backend.rest.dataLdap.DataLdapRestTemplate;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.rest.period.PeriodRestTemplate;
 import com.mindware.backend.rest.typeChangeCurrency.TypeChangeCurrencyRestTemplate;
+import com.vaadin.flow.data.binder.Result;
+import com.vaadin.flow.data.binder.ValueContext;
+import com.vaadin.flow.data.converter.Converter;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -219,4 +222,21 @@ public class UtilValues {
     public List<TypeChangeCurrency> getAllTypeChangeCurrency(){
         return typeChangeCurrencyRestTemplate.getAll();
     }
+
+    public static class StringTrimValue implements Converter<String, String> {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public Result<String> convertToModel(String presentation, ValueContext valueContext) {
+            return Result.ok(presentation.trim());
+        }
+
+        @Override
+        public String convertToPresentation(String model, ValueContext valueContext) {
+            return model == null?"":model.trim();
+        }
+
+    }
+
 }

@@ -210,6 +210,11 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
         fullName.setRequired(true);
         fullName.setAllowCustomValue(false);
         fullName.addValueChangeListener(event -> {
+            if(event.getValue()==null){
+                UIUtils.showNotificationType("Seleccione Nombre Autorizador","alert");
+                fullName.focus();
+                return;
+            }
             UserLdapDto userLdapDto = userLdapDtoList.stream()
                     .filter(c -> c.getCn().equals(event.getValue()))
                     .findFirst().get();
@@ -226,6 +231,11 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
                 .map(Concept::getDescription)
                 .collect(Collectors.toList()));
         nameBranchOffice.addValueChangeListener(event -> {
+            if(event.getValue()==null){
+                UIUtils.showNotificationType("Seleccione un dato en Unidad de Negocio","alert");
+                nameBranchOffice.focus();
+                return;
+            }
             String code2 = conceptList.stream()
                     .filter(c -> c.getDescription().equals(event.getValue()))
                     .map(Concept::getCode2)
@@ -288,7 +298,7 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
                 new FormLayout.ResponsiveStep("21em", 2,
                         FormLayout.ResponsiveStep.LabelsPosition.TOP));
 
-        FormLayout.FormItem nameBranchOfficeItem = form.addFormItem(nameBranchOffice,"Unidad Negocio");
+        FormLayout.FormItem nameBranchOfficeItem = form.addFormItem(nameBranchOffice,"Unidad de Negocio");
         UIUtils.setColSpan(2,nameBranchOfficeItem);
         FormLayout.FormItem fullNameItem = form.addFormItem(fullName,"Nombre Autorizador");
         UIUtils.setColSpan(2,fullNameItem);
@@ -326,7 +336,9 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
                 try {
                     result = restTemplate.add(current);
                 }catch (Exception ex){
-                    UIUtils.showNotificationType(ex.getMessage(),"alert");
+                    String[] re = ex.getMessage().split(",");
+                    String[] msg = re[1].split(":");
+                    UIUtils.showNotificationType(msg[1],"alert");
                     return;
                 }
                 if(current.getId()==null){

@@ -56,4 +56,12 @@ public class GrantOptions {
         return options.get(0).isAccounting();
     }
 
+    public static boolean grantedOptionDelete(String option){
+
+        List<Option> options =   MainLayout.get().optionList.stream().filter(value -> value.getName().equals(option))
+                .collect(Collectors.toList());
+
+        return options.get(0).isDelete();
+    }
+
 }

@@ -3,6 +3,7 @@ package com.mindware.ui.views.config.parameter;
 import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.util.GrantOptions;
+import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -134,14 +135,21 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
             if (current !=null && binder.writeBeanIfValid(current)){
-                Parameter result = restTemplate.add(current);
-                if (current.getId()==null){
-                    parameterList.add(result);
-                    grid.getDataProvider().refreshAll();
-                }else{
-                    grid.getDataProvider().refreshItem(current);
+                try {
+                    Parameter result = restTemplate.add(current);
+                    if (current.getId() == null) {
+                        parameterList.add(result);
+                        grid.getDataProvider().refreshAll();
+                    } else {
+                        grid.getDataProvider().refreshItem(current);
+                    }
+                    detailsDrawer.hide();
+                }catch (Exception ex){
+                    String[] re = ex.getMessage().split(",");
+                    String[] msg = re[1].split(":");
+                    UIUtils.showNotificationType(msg[1],"alert");
+                    return;
                 }
-                detailsDrawer.hide();
             }else{
                 UIUtils.dialog("Datos incorrectos, verifique nuevamente","alert").open();
             }
@@ -244,9 +252,18 @@ public class ParameterView extends SplitViewFrame implements RouterLayout {
 
         binder = new BeanValidationBinder<>(Parameter.class);
 
-        binder.forField(cmbCategory).asRequired("Categoría es requerida").bind(Parameter::getCategory,Parameter::setCategory);
-        binder.forField(txtValue).asRequired("Valor es requerido").bind(Parameter::getValue,Parameter::setValue);
-        binder.forField(txtDescription).asRequired("Descripción es requerida").bind(Parameter::getDetails,Parameter::setDetails);
+        binder.forField(cmbCategory)
+                .asRequired("Categoría es requerida")
+                .bind(Parameter::getCategory,Parameter::setCategory);
+        binder.forField(txtValue).asRequired("Valor es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
+                .withValidator(l -> l.trim().length()>0,"Valor tiene que tener al menos 1 caracter")
+                .bind(Parameter::getValue,Parameter::setValue);
+        binder.forField(txtDescription)
+                .asRequired("Descripción es requerida")
+                .withConverter(new UtilValues.StringTrimValue())
+                .withValidator(l -> l.trim().length()>0,"Descripción tiene que tener al menos 1 caracter")
+                .bind(Parameter::getDetails,Parameter::setDetails);
 
 
         binder.addStatusChangeListener(event ->{

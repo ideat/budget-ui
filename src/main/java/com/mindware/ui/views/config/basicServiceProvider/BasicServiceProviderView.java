@@ -308,6 +308,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         binder.forField(typeService).asRequired("Tipo de Servicio es requerido")
                 .bind(BasicServiceProvider::getTypeService,BasicServiceProvider::setTypeService);
         binder.forField(provider).asRequired("Proveedor es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(BasicServiceProvider::getProvider,BasicServiceProvider::setProvider);
         binder.forField(description).asRequired("Descripción del proveedor es requerida")
                 .bind(BasicServiceProvider::getDescription,BasicServiceProvider::setDescription);

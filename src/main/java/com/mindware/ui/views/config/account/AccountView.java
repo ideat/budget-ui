@@ -32,6 +32,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.Autocapitalize;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
@@ -418,17 +419,19 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         cmbPeriod = new ComboBox<>();
         cmbPeriod.setPlaceholder("Seleccione Periodo");
         cmbPeriod.setWidth("220px");
-        cmbPeriod.setItems(utilValues.getPeriods());
+        cmbPeriod.setItems(utilValues.getActivePeriod());
         cmbPeriod.setAutoOpen(true);
 
         TextField numberAccount = new TextField();
         numberAccount.setWidthFull();
         numberAccount.setPreventInvalidInput(true);
         numberAccount.setRequired(true);
+        numberAccount.setAutocapitalize(Autocapitalize.CHARACTERS);
 
         TextField nameAccount = new TextField();
         nameAccount.setWidthFull();
         nameAccount.setRequired(true);
+        nameAccount.setAutocapitalize(Autocapitalize.CHARACTERS);
 
         ComboBox<String> currency = new ComboBox<>();
         currency.setWidthFull();
@@ -461,11 +464,13 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
                 .bind(Account::getCodeFatherBusinessUnit,Account::setCodeFatherBusinessUnit);
         binder.forField(numberAccount)
                 .asRequired("Número de Cuenta es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .withValidator(l -> l.trim().length()>0,"Nro. Cuenta debe tener al menos 1 caracter")
                 .bind(Account::getNumberAccount,Account::setNumberAccount);
         binder.forField(nameAccount)
                 .asRequired("Nombre Cuenta es requerido")
-                .withValidator(l -> l.trim().length()>0,"Nnombre Cuenta debe tener al menos 1 caracter")
+                .withConverter(new UtilValues.StringTrimValue())
+                .withValidator(l -> l.trim().length()>0,"Nombre Cuenta debe tener al menos 1 caracter")
                 .bind(Account::getNameAccount,Account::setNameAccount);
         binder.forField(currency)
                 .asRequired("Moneda es requerida")

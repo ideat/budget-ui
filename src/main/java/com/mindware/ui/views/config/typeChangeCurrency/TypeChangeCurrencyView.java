@@ -127,14 +127,21 @@ public class TypeChangeCurrencyView extends SplitViewFrame implements RouterLayo
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
             if (current !=null && binder.writeBeanIfValid(current)){
-                TypeChangeCurrency result = restTemplate.add(current);
-                if (current.getId()==null){
-                    typeChangeCurrencyList.add(result);
-                    grid.getDataProvider().refreshAll();
-                }else{
-                    grid.getDataProvider().refreshItem(current);
+                try {
+                    TypeChangeCurrency result = restTemplate.add(current);
+                    if (current.getId() == null) {
+                        typeChangeCurrencyList.add(result);
+                        grid.getDataProvider().refreshAll();
+                    } else {
+                        grid.getDataProvider().refreshItem(current);
+                    }
+                    detailsDrawer.hide();
+                }catch (Exception ex){
+                    String[] re = ex.getMessage().split(",");
+                    String[] msg = re[1].split(":");
+                    UIUtils.showNotificationType(msg[1],"alert");
+                    return;
                 }
-                detailsDrawer.hide();
             }else{
                 UIUtils.dialog("Datos incorrectos, verifique nuevamente","alert").open();
             }

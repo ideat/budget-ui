@@ -25,6 +25,8 @@ public class Option {
 
     private boolean accounting;
 
+    private boolean delete;
+
     private String description;
 
 }

@@ -176,15 +176,19 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         binder = new BeanValidationBinder<>(Supplier.class);
         binder.forField(nit)
                 .asRequired("NIT es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(Supplier::getNit,Supplier::setNit);
         binder.forField(name)
                 .asRequired("Nombre o Razón Social es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(Supplier::getName, Supplier::setName);
         binder.forField(idCardLegalRepresentative)
                 .asRequired("Carnet Identidad Representante Legal es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(Supplier::getIdCardLegalRepresentative,Supplier::setIdCardLegalRepresentative);
         binder.forField(legalRepresentative)
                 .asRequired("Nombre Representante Legal es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(Supplier::getLegalRepresentative,Supplier::setLegalRepresentative);
         binder.forField(areaWork)
                 .asRequired("Rubro es requerido")

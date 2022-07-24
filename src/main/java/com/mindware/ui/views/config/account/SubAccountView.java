@@ -7,6 +7,7 @@ import com.mindware.backend.entity.config.Account;
 import com.mindware.backend.entity.config.SubAccount;
 import com.mindware.backend.rest.account.AccountRestTemplate;
 import com.mindware.backend.util.GrantOptions;
+import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.DialogSweetAlert;
 import com.mindware.ui.components.FlexBoxLayout;
@@ -197,10 +198,12 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
         binder = new BeanValidationBinder<>(SubAccount.class);
         binder.forField(numberSubAccount)
                 .asRequired("Número Subcuenta es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .withValidator(l -> l.trim().length()>0,"Nro. Subcuenta debe tener al menos 1 caracter")
                 .bind(SubAccount::getNumberSubAccount,SubAccount::setNumberSubAccount);
         binder.forField(nameSubAccount)
                 .asRequired("Nombre Subcuenta es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .withValidator(l -> l.trim().length()>0,"Nombre. Subuenta debe tener al menos 1 caracter")
                 .bind(SubAccount::getNameSubAccount,SubAccount::setNameSubAccount);
         binder.addStatusChangeListener(event -> {

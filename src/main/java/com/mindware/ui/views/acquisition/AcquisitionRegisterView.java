@@ -462,7 +462,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         .withValidator(a -> a.doubleValue()>0.0,"Monto tiene que se mayor a 0")
                         .bind(Acquisition::getAmount,Acquisition::setAmount);
                 if(selectedAuthorizerList.size()==0){
-                    UIUtils.showNotificationType("Adicione Autorizaodr de la Adquisición","alert");
+                    UIUtils.showNotificationType("Adicione Autorizador de la Adquisición","alert");
                     return;
                 }
                 Double maxAmount=0.0;
@@ -628,16 +628,19 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         String[] arrMsg = e.getMessage().split(",");
                         String[] msg = arrMsg[1].split(":");
                         UIUtils.showNotificationType(msg[1].replaceAll("\"",""),"alert");
+                        current.setAcquisitionNumber(null);
                         return;
                     }
 
                     numberRequest.setValue(current.getAcquisitionNumber());
                     UIUtils.showNotificationType("Registro Guardado","success");
+                    numberRequest.setReadOnly(true);
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
             }else{
                 UIUtils.showNotificationType("Datos no completados, revise los campos","alert");
+
             }
         });
         footer.addCancelListener(event -> UI.getCurrent().navigate(AcquisitionView.class));
@@ -837,6 +840,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
     private DetailsDrawer createPurchaseRequest(Acquisition acquisition){
         numberRequest = new IntegerField();
         numberRequest.setWidthFull();
+        numberRequest.setReadOnly(current.getAcquisitionNumber()==null?false:true);
 //        numberRequest.setReadOnly(true);
 
         codeBusinessUnit = new IntegerField();
