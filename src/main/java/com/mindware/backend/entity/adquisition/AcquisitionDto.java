@@ -37,4 +37,6 @@ public class AcquisitionDto {
     private String accountingPerson;
 
     private String createdBy;
+
+    private String expenseDistribuite;
 }

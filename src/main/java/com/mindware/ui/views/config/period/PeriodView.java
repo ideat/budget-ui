@@ -184,10 +184,10 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
                 .setFlexGrow(0)
                 .setAutoWidth(true)
                 .setResizable(true);
-        grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
-                .setFlexGrow(0)
-                .setAutoWidth(true)
-                .setResizable(true);
+//        grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
+//                .setFlexGrow(0)
+//                .setAutoWidth(true)
+//                .setResizable(true);
 
         return grid;
 

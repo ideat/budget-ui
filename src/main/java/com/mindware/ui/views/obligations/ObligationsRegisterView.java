@@ -828,7 +828,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
     private boolean validateAmountExpenseDistribuite(){
         Double result = expenseDistribuiteList.stream()
                 .mapToDouble(e -> e.getAmount()).sum();
-        return (result.doubleValue() == obligationsDto.getAmount().doubleValue());
+        return (Math.round(result.doubleValue()*100.0)/100.0 == obligationsDto.getAmount().doubleValue());
     }
 
     private Obligations fillObligations() throws JsonProcessingException {

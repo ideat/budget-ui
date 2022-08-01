@@ -68,6 +68,9 @@ import dev.mett.vaadin.tooltip.Tooltips;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -842,7 +845,15 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
     private boolean validateAmountExpenseDistribuite(){
         Double result = expenseDistribuiteList.stream()
                 .mapToDouble(e -> e.getAmount()).sum();
-        return (result.doubleValue() == basicServicesDto.getAmount().doubleValue());
+
+//        BigDecimal res = expenseDistribuiteList.stream()
+//                .map(ExpenseDistribuite::getAmount)
+//                .map(BigDecimal::new)
+////                .map(x -> x.round(new MathContext.DECIMAL32(2, RoundingMode.HALF_UP)))
+//                .reduce(BigDecimal.ZERO,BigDecimal::add);
+
+        return (Math.round(result.doubleValue()*100.0)/100.0 == basicServicesDto.getAmount().doubleValue());
+//        return res.doubleValue() == basicServicesDto.getAmount().doubleValue();
     }
 
     // Invoice Authorizer

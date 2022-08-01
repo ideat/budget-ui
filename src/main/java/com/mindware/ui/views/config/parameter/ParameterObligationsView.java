@@ -144,7 +144,7 @@ public class ParameterObligationsView extends SplitViewFrame implements RouterLa
                     }
                     detailsDrawer.hide();
                 }catch (Exception ex){
-                    UIUtils.showNotificationType(String.format("Tipo Obligacion '%s', ya se encuentra registrada",current.getValue()),"alert");
+                    UIUtils.showNotificationType(String.format("Tipo Obligación '%s', ya se encuentra registrada",current.getValue()),"alert");
                     return;
                 }
             }else{

@@ -472,7 +472,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     UIUtils.showNotificationType("Seleccione Moneda","alert");
                     return;
                 }
-                if( current.getAmount()!=null && current.getAmount()> maxAmount){
+                if( /*amountCaabs.getValue()!=null &&*/ amountCaabs.getValue()> maxAmount && selectedAuthorizerLevel2List.size()==0){
                     UIUtils.showNotificationType("Adicione Revisor de la Adquisición","alert");
                     return;
                 }
@@ -537,6 +537,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                         .bind(AdjudicationInfomation::getCorrespondsContract, AdjudicationInfomation::setCorrespondsContract);
 
                 if(adjudicationInfomationBinder.validate().hasErrors()){
+                    UIUtils.showNotificationType("Completa datos Adjudicacion","alert");
                     return;
                 }
             }
@@ -576,7 +577,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                     Double totalInvoice = invoiceInformationList.stream()
                             .mapToDouble(InvoiceInformation::getAmount)
                             .sum();
-                    if(totalDistribuite.doubleValue()!= totalInvoice.doubleValue() ){
+                    if(Math.round(totalDistribuite.doubleValue()*100.)/100.0!= Math.round(totalInvoice.doubleValue() *100.0)/100.0){
                         UIUtils.showNotificationType("Total facturas no coincide con el monto distrituido","alert");
                         return;
                     }
@@ -670,7 +671,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         appBar.addTab("Información CAABS");
         appBar.addTab("Información Adjudicación");
         appBar.addTab("Recepción del Bien o Servicio");
-        appBar.addTab("Información de la Factura");
+        appBar.addTab("Información de la Factura/Recibo");
         appBar.addTab("Distribución del Gasto");
         if(GrantOptions.grantedOptionAccounting("Adquisiciones"))
             appBar.addTab("Entrega a Contabilidad y a la AAAF");
@@ -786,7 +787,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             contentInvoiceInformation.setVisible(false);
             contentExpenseDistribuite.setVisible(false);
             contentDeliveyAccounting.setVisible(false);
-        }else if(currentTab.equals("Información de la Factura")){
+        }else if(currentTab.equals("Información de la Factura/Recibo")){
             contentPurchaseRequest.setVisible(false);
             contentInformationQuote.setVisible(false);
             contentInformationCaabs.setVisible(false);
@@ -1504,14 +1505,21 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         List<AcquisitionAuthorizer> acquisitionAuthorizerList = acquisitionAuthorizerRestTemplate
                 .getAll()
                 .stream()
-                .filter(au -> au.getMaxAmount().doubleValue()>= amountMax)
+//                .filter(au -> au.getMaxAmount().doubleValue()>= amountMax)
                 .collect(Collectors.toList());
 
         if(level.equals("level2")) {
-            List<AcquisitionAuthorizer> acquisitionAuthorizerLevel2 = new ArrayList<>(acquisitionAuthorizerRestTemplate.getAll());
-            for (AcquisitionAuthorizer ac : acquisitionAuthorizerList) {
-                acquisitionAuthorizerLevel2.removeIf(a -> a.getId().equals(ac.getId()));
-            }
+            List<AcquisitionAuthorizer> acquisitionAuthorizerLevel2 = new ArrayList<>(acquisitionAuthorizerList); //new ArrayList<>(acquisitionAuthorizerRestTemplate.getAll());
+//            if(selectedAuthorizerList.size()>0) {
+//                for (AcquisitionAuthorizer ac : acquisitionAuthorizerLevel2) {
+//                    if(selectedAuthorizerList.get(0).getCodePosition().equals(ac.getCodePosition())
+//                     && selectedAuthorizerList.get(0).getFullName().equals(ac.getFullName())) {
+//                        acquisitionAuthorizerLevel2.remove(ac);
+//                        break;
+//                    }
+//                }
+//            }
+
             acquisitionAuthorizerList.clear();
             acquisitionAuthorizerList.addAll(acquisitionAuthorizerLevel2);
         }
@@ -1536,15 +1544,21 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         fullName.setWidthFull();
         fullName.setAllowCustomValue(false);
         fullName.setItems(acquisitionAuthorizerList.stream()
+//                .filter(a -> a.getMaxAmount().doubleValue() >= amountMax)
                 .map(AcquisitionAuthorizer::getFullName)
                 .collect(Collectors.toList()));
         fullName.addValueChangeListener(event -> {
-            AcquisitionAuthorizer acquisitionAuthorizer = acquisitionAuthorizerList.stream()
-                    .filter(a -> event.getValue().equals(a.getFullName()))
-                    .findFirst().get();
-            codePosition.setValue(acquisitionAuthorizer.getCodePosition());
-            nameBranchOffice.setValue(acquisitionAuthorizer.getNameBranchOffice());
-            priorityLevel.setValue(acquisitionAuthorizer.getPriorityLevel());
+            if(event.getValue()!=null) {
+                AcquisitionAuthorizer acquisitionAuthorizer = acquisitionAuthorizerList.stream()
+                        .filter(a -> event.getValue().equals(a.getFullName()))
+                        .findFirst().get();
+                codePosition.setValue(acquisitionAuthorizer.getCodePosition());
+                nameBranchOffice.setValue(acquisitionAuthorizer.getNameBranchOffice());
+                priorityLevel.setValue(acquisitionAuthorizer.getPriorityLevel());
+            }else{
+                fullName.focus();
+                UIUtils.showNotificationType("Seleccione Autorizador","alert");
+            }
         });
 
         DatePicker deliverDate = new DatePicker();
@@ -1734,7 +1748,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
 
 
-//            footerSelectedAuthorizer.saveState(true);
+//            footerSelectedAuthorizer.saveState(true);f
         });
 
         return btn;
@@ -2183,14 +2197,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .setAutoWidth(true)
                 .setResizable(true)
                 .setFlexGrow(1)
-                .setHeader("Número Factura");
+                .setHeader("Número Factura/Recibo");
         invoiceInformationGrid.addColumn(new LocalDateRenderer<>(InvoiceInformation::getDateInvoice
                 , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true)
                 .setFlexGrow(1)
-                .setHeader("Fecha Factura");
+                .setHeader("Fecha Factura/Recibo");
         invoiceInformationGrid.addColumn(new NumberRenderer<>(InvoiceInformation::getAmount
                 , " %(,.2f",
                 Locale.US, "0.00"))
@@ -2261,7 +2275,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         setViewDetails(createDetailsDrawerInvoiceInformation());
         setViewDetailsPosition(Position.RIGHT);
         currentInvoiceInformation = invoiceInformation;
-        detailsDrawerHeaderInvoiceInformation.setTitle("Factura Nro: "
+        detailsDrawerHeaderInvoiceInformation.setTitle("Factura/Recibo Nro: "
                 .concat(invoiceInformation.getInvoiceNumber()==null?"Nuevo":invoiceInformation.getInvoiceNumber().toString()));
         detailsDrawerInvoiceInformation.setContent(layoutInvoiceInformation(currentInvoiceInformation));
         detailsDrawerInvoiceInformation.show();
@@ -2344,14 +2358,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .asRequired("Razon social del proveedor es requerida")
                 .bind(InvoiceInformation::getNameSupplier,InvoiceInformation::setNameSupplier);
         invoiceInformationBinder.forField(dateInvoice)
-                .asRequired("Fecha factura es requerida")
+                .asRequired("Fecha factura/recibo es requerida")
                 .bind(InvoiceInformation::getDateInvoice,InvoiceInformation::setDateInvoice);
         invoiceInformationBinder.forField(amount)
-                .asRequired("Monto factura es requerida")
+                .asRequired("Monto factura/recibo es requerida")
                 .withValidator(a -> a.doubleValue()>0.0,"Monto factura debe ser mayor a cero")
                 .bind(InvoiceInformation::getAmount,InvoiceInformation::setAmount);
         invoiceInformationBinder.forField(invoiceNumber)
-                .asRequired("Número factura es requerido")
+                .asRequired("Número factura/recibo es requerido")
                 .withValidator(n -> n.intValue()>0,"Número factura debe ser mayor a cero")
                 .bind(InvoiceInformation::getInvoiceNumber,InvoiceInformation::setInvoiceNumber);
         invoiceInformationBinder.forField(typeCurrencyChange)
@@ -2381,11 +2395,11 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         FormLayout.FormItem nameSupplierItem = form.addFormItem(nameSupplierInvoiceInformation,"Nombre Proveedor");
         UIUtils.setColSpan(2,nameSupplierItem);
-        form.addFormItem(dateInvoice,"Fecha factura");
-        form.addFormItem(amount,"Monto factura");
+        form.addFormItem(dateInvoice,"Fecha factura/recibo");
+        form.addFormItem(amount,"Monto factura/recibo");
         form.addFormItem(typeCurrencyChange,"Tipo Cambio");
         form.addFormItem(amountTypeChange,"Monto Tipo Cambio");
-        form.addFormItem(invoiceNumber,"Número factura");
+        form.addFormItem(invoiceNumber,"Número factura/recibo");
 
         btnNit.addClickListener(event -> {
             if(!nit.isEmpty()){

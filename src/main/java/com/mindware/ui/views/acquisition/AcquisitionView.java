@@ -114,7 +114,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
 
     private Grid createGridAcquisitionDto(){
         grid = new Grid<>();
-        grid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setMultiSort(true);
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);
@@ -124,7 +124,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
                 .setKey("acquisitionNumber")
                 .setHeader("Nro. Adquisición")
                 .setSortable(true)
-                .setAutoWidth(true)
+                .setWidth("120px")
                 .setTextAlign(ColumnTextAlign.CENTER)
                 .setResizable(true);
         grid.addColumn(AcquisitionDto::getSupplier)
@@ -132,7 +132,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
                 .setKey("supplier")
                 .setHeader("Proveedor")
                 .setSortable(true)
-                .setAutoWidth(true)
+                .setWidth("180px")
                 .setResizable(true);
         grid.addColumn(AcquisitionDto::getNameBusinessUnit)
                 .setFlexGrow(1)
@@ -161,7 +161,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
                 .setKey("state")
                 .setHeader("Estado")
                 .setSortable(true)
-                .setAutoWidth(true)
+                .setWidth("130px")
                 .setResizable(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
                 .setFlexGrow(1)
@@ -244,7 +244,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     private Component createButtonEdit(AcquisitionDto acquisitionDto){
         Button btn = new Button();
         Tooltips.getCurrent().setTooltip(btn,"Editar Registro");
-        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS);
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SUCCESS,ButtonVariant.LUMO_SMALL);
         btn.setIcon(VaadinIcon.EDIT.create());
         btn.addClickListener(event -> {
             Map<String, List<String>> param = new HashMap<>();
@@ -264,12 +264,12 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     private Component createButtonSend(AcquisitionDto acquisitionDto){
         Button btn = new Button();
         Tooltips.getCurrent().setTooltip(btn,"Enviar");
-        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY,ButtonVariant.LUMO_SMALL);
         btn.setIcon(VaadinIcon.THUMBS_UP.create());
         btn.setVisible(GrantOptions.grantedOptionSend("Adquisiciones"));
         btn.addClickListener(event -> {
-            if(acquisitionDto.getDateDeliveryAccounting()==null){
-                UIUtils.showNotificationType("Registre fecha de envio a contabilidad","alert");
+            if(acquisitionDto.getExpenseDistribuite()==null || acquisitionDto.getExpenseDistribuite().equals("[]")){
+                UIUtils.showNotificationType("Registre la Distribución de Gasto antes de Enviar","alert");
                 return;
             }
             Acquisition acquisition = new Acquisition();
@@ -293,7 +293,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     private Component createButtonFinish(AcquisitionDto acquisitionDto){
         Button btn = new Button();
         Tooltips.getCurrent().setTooltip(btn,"Finalizar");
-        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST);
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_CONTRAST,ButtonVariant.LUMO_SMALL);
         btn.setIcon(VaadinIcon.LOCK.create());
         btn.setVisible(GrantOptions.grantedOptionFinish("Adquisiciones"));
         btn.addClickListener(event -> {
@@ -324,7 +324,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     private Component createButtonRegard(AcquisitionDto acquisitionDto){
         Button btn = new Button();
         Tooltips.getCurrent().setTooltip(btn,"Observado");
-        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_SMALL);
         btn.setIcon(VaadinIcon.THUMBS_DOWN_O.create());
         btn.setVisible(GrantOptions.grantedOptionObserved("Adquisiciones"));
         btn.addClickListener(event -> {
@@ -345,7 +345,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
     private Component createButtonDelete(AcquisitionDto acquisitionDto){
         Button btn = new Button();
         Tooltips.getCurrent().setTooltip(btn,"Borrar");
-        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR);
+        btn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_ERROR,ButtonVariant.LUMO_SMALL);
         btn.setIcon(VaadinIcon.TRASH.create());
         btn.setVisible(GrantOptions.grantedOptionDelete("Adquisiciones"));
         btn.addClickListener(event -> {

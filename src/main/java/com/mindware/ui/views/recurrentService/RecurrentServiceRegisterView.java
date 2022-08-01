@@ -990,7 +990,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     private boolean validateAmountExpenseDistribuite(){
         Double result = expenseDistribuiteList.stream()
                 .mapToDouble(e -> e.getAmount()).sum();
-       return (result.doubleValue() == recurrentServiceDto.getAmount().doubleValue());
+       return (Math.round(result.doubleValue()*100.0)/100.0 == recurrentServiceDto.getAmount().doubleValue());
     }
 
     //Invoice Authorizer

@@ -163,6 +163,7 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
                 Locale.US, "0.00"))
                 .setFlexGrow(1)
                 .setHeader("Monto $us")
+                .setComparator(AcquisitionAuthorizer::getMaxAmount)
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
