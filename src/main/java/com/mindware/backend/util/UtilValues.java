@@ -145,6 +145,25 @@ public class UtilValues {
         return subAccountNameList;
     }
 
+    @SneakyThrows
+    public List<String> getNameSubAccountsByCodeBusinessUnit(String nameAccount, Integer codeBusinessUnit)  {
+        List<Account> accounts = accountRestTemplate.getAllByPeriod(getActivePeriod());
+        Optional<Account> account = accounts.stream()
+                .filter(p -> p.getNameAccount().equals(nameAccount) && p.getCodeBusinessUnit().equals(codeBusinessUnit))
+                .findFirst();
+        List<SubAccount> subAccounts=new ArrayList<>();
+        List<String> subAccountNameList = new ArrayList<>();
+        if(account.isPresent()) {
+            ObjectMapper mapper = new ObjectMapper();
+            subAccounts = mapper.readValue(account.get().getSubAccount(), new TypeReference<List<SubAccount>>() {
+            });
+            subAccountNameList = subAccounts.stream()
+                    .map(SubAccount::getNameSubAccount)
+                    .collect(Collectors.toList());
+        }
+        return subAccountNameList;
+    }
+
     public List<String> generatePeriods(){
         String year = String.valueOf(getActivePeriod());
         List<String> periods = new ArrayList<>();

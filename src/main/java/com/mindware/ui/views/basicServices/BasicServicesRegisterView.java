@@ -352,6 +352,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
 
         paymentDate = new DatePicker();
         paymentDate.setWidthFull();
+        paymentDate.setPlaceholder("DD/MM/AAAA");
         paymentDate.setRequired(true);
         paymentDate.setLocale(new Locale("es","BO"));
 
@@ -409,6 +410,7 @@ public class BasicServicesRegisterView extends SplitViewFrame implements HasUrlP
                 .bind(BasicServicesDto::getPeriod,BasicServicesDto::setPeriod);
         binder.forField(paymentDate)
                 .asRequired("Fecha de Pago es requerida")
+                .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                 .bind(BasicServicesDto::getPaymentDate,BasicServicesDto::setPaymentDate);
         binder.forField(amount)
                 .asRequired("Monto es requerido")

@@ -253,6 +253,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         dateSubscription = new DatePicker();
         dateSubscription.setLocale(new Locale("es","BO"));
         dateSubscription.setRequired(true);
+        dateSubscription.setPlaceholder("DD/MM/AAAA");
         dateSubscription.setI18n(UIUtils.spanish());
         dateSubscription.setWidth("90%");
         dateSubscription.setErrorMessage("Fecha Inicio no puede ser anterior a la Fecha de Suscripción");
@@ -280,6 +281,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
         startDate = new DatePicker();
         startDate.setLocale(new Locale("es","BO"));
+        startDate.setPlaceholder("DD/MM/AAAA");
         startDate.setRequired(true);
         startDate.setWidthFull();
         startDate.setI18n(UIUtils.spanish());
@@ -288,6 +290,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         finishDate = new DatePicker();
         finishDate.setLocale(new Locale("es","BO"));
         finishDate.setWidthFull();
+        finishDate.setPlaceholder("DD/MM/AAAA");
         finishDate.setI18n(UIUtils.spanish());
         finishDate.setClearButtonVisible(true);
         finishDate.setErrorMessage("Fecha de Inicio no puede ser posterior o igual a la Fecha de Finalización");
@@ -333,6 +336,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.forField(dateSubscription)
                 .asRequired("Fecha de Suscripción es requerida")
 //                .withValidator(d -> (startDate.getValue()!=null && d.isBefore(startDate.getValue())),"Fecha de subscripción no puede ser posterior a la fecha de inicio")
+                .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                 .bind(Contract::getDateSubscription,Contract::setDateSubscription);
         binder.forField(currency).asRequired("Moneda es requerida")
                 .bind(Contract::getCurrency,Contract::setCurrency);
@@ -346,6 +350,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
                 .asRequired("Fecha de Inicio es requerida")
 //                .withValidator(d ->  finishDate.getValue()!=null && d.isBefore(finishDate.getValue()),"Fecha de Inicio no puede ser posterior a la Fecha de Finalización")
                 .withValidator(d -> d.isAfter(dateSubscription.getValue()) ||  d.isEqual(dateSubscription.getValue()),"Fecha Inicio no puede ser anterior a la Fecha de Suscripción")
+                .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                 .bind(Contract::getStartDate,Contract::setStartDate);
         binder.forField(finishDate)
 //                .withValidator(d -> startDate.getValue()!=null && d.isAfter(startDate.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Inicio")
@@ -439,6 +444,19 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         footer = new DetailsDrawerFooter();
         footer.addSaveListener(e ->{
 
+            if(finishDate.getValue()!=null){
+                binder.forField(finishDate)
+                .withValidator(d -> startDate.getValue()!=null && d.isAfter(startDate.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Inicio")
+                .withValidator(d -> dateSubscription.getValue()!=null && d.isAfter(dateSubscription.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Subscripción")
+                .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
+                .bind(Contract::getFinishDate,Contract::setFinishDate);
+
+            }else{
+                binder.forField(finishDate)
+//                .withValidator(d -> startDate.getValue()!=null && d.isAfter(startDate.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Inicio")
+//                .withValidator(d -> dateSubscription.getValue()!=null && d.isAfter(dateSubscription.getValue()),"Fecha de Finalización no puede ser anterior a la Fecha de Subscripción")
+                        .bind(Contract::getFinishDate,Contract::setFinishDate);
+            }
             if (current !=null && binder.writeBeanIfValid(current)){
                 if(current.getCurrency().equals("$US") && (current.getTypeChangeCurrency()==null || current.getTypeChangeCurrency().isEmpty())){
                     typeChangeCurrency.setInvalid(true);
@@ -461,7 +479,6 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
                         dateSubscription.setInvalid(true);
                         return;
                     }
-
 
                 }
                 current.setIdSupplier(supplier.getValue().getId());

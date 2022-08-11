@@ -366,6 +366,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         paymentDate = new DatePicker();
         paymentDate.setWidthFull();
+        paymentDate.setPlaceholder("DD/MM/AAAA");
         paymentDate.setRequired(true);
         paymentDate.setLocale(new Locale("es","BO"));
         paymentDate.setI18n(UIUtils.spanish());
@@ -407,6 +408,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         finishDate = new DatePicker();
         finishDate.setWidthFull();
+        finishDate.setPlaceholder("DD/MM/AAAA");
         finishDate.setReadOnly(true);
         finishDate.setLocale(new Locale("es","BO"));
         finishDate.setI18n(UIUtils.spanish());
@@ -436,6 +438,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 .bind(RecurrentServiceDto::getPeriod,RecurrentServiceDto::setPeriod);
         binder.forField(paymentDate)
                 .asRequired("Fecha de Pago es requerida")
+                .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                 .bind(RecurrentServiceDto::getPaymentDate,RecurrentServiceDto::setPaymentDate);
         binder.forField(amount)
                 .asRequired("Monto es requerido")

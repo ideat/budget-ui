@@ -443,10 +443,12 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 binder.forField(quotationRequestDate)
                         .asRequired("Fecha solicitud cotización es requerida")
                         .withValidator(f -> f.isAfter(receptionDate.getValue()) || f.isEqual(receptionDate.getValue()),"Fecha solicitud de cotización no puede ser anterior a la fecha de recepción de la Solicitude Compra")
+                        .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                         .bind(Acquisition::getQuotationRequestDate, Acquisition::setQuotationRequestDate);
                 binder.forField(quotationReceptionDate)
                         .asRequired(("Fecha de recepción de contizaciones es requerida"))
                         .withValidator(f -> f.isAfter(quotationRequestDate.getValue() ) || f.isEqual(quotationRequestDate.getValue()),"Fecha recepción no puede ser anterior a la fechade solicitud")
+                        .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                         .bind(Acquisition::getQuotationReceptionDate, Acquisition::setQuotationReceptionDate);
             }
 
@@ -482,6 +484,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 adjudicationInfomationBinder.forField(purchaseOrder)
                         .asRequired("Fecha de envio de la orden de compra es requerido")
                         .withValidator(d -> d.isAfter(quotationReceptionDate.getValue()) ||  d.isEqual(quotationReceptionDate.getValue()),"Fecha Envio compra no puede ser menor a la Fecha de Recepción de Cotizaciones")
+                        .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                         .bind(AdjudicationInfomation::getPurchaseOrder,AdjudicationInfomation::setPurchaseOrder);
                 adjudicationInfomationBinder.forField(deliverTime)
                         .asRequired("Tiempo de entrega es requerido")
@@ -504,6 +507,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                             .asRequired("Fecha es requerida")
                             .withValidator(d -> d.isEqual(purchaseOrder.getValue()) ||
                                     d.isAfter(purchaseOrder.getValue()), "Fecha Solicitud Actualización no puede ser anterior a la Orden de Compra")
+                            .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                             .bind(AdjudicationInfomation::getRequireUpdateDoc, AdjudicationInfomation::setRequireUpdateDoc);
                     adjudicationInfomationBinder.forField(contractRequestDateToLegal)
                             .asRequired("Fecha solicitud contrato es requerida")
@@ -511,6 +515,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                                     d.isAfter(purchaseOrder.getValue()), "Fecha Solicitud Contrato no puede ser anterior a la Orden de Compra")
                             .withValidator(d -> d.isAfter(contractRequestDateToLegal.getValue()) ||
                                     d.isEqual(contractRequestDateToLegal.getValue()), "Fecha Solicitud Contrato no puede ser anterior a la Solicitud Actualizacion")
+                            .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                             .bind(AdjudicationInfomation::getContractRequestDateToLegal, AdjudicationInfomation::setContractRequestDateToLegal);
                     adjudicationInfomationBinder.forField(contractDeliverContractFromLegal)
                             .asRequired("Fecha Entrega Contrato es Requerida")
@@ -520,6 +525,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                                     d.isEqual(contractRequestDateToLegal.getValue()), "Fecha Entrega Contrato no puede ser anterior a la Solicitud Actualizacion")
                             .withValidator(d -> d.isAfter(requireUpdateDoc.getValue()) ||
                                     d.isEqual(requireUpdateDoc.getValue()), "Fecha Entrega Contrato no puede ser anterior a la Solicitud Contrato Legal")
+                            .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                             .bind(AdjudicationInfomation::getContractDeliverContractFromLegal, AdjudicationInfomation::setContractDeliverContractFromLegal);
                     adjudicationInfomationBinder.forField(dateSignature)
                             .asRequired("Fecha de Firmas es Requerida")
@@ -531,6 +537,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                                     d.isEqual(requireUpdateDoc.getValue()), "Fecha Firma Contrato no puede ser anterior a la Solicitud Contrato Legal")
                             .withValidator(d -> d.isAfter(contractDeliverContractFromLegal.getValue()) ||
                                     d.isEqual(contractDeliverContractFromLegal.getValue()), "Fecha Firma Contrato no puede ser anterior a la Entrega Contrato por Legal")
+                            .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                             .bind(AdjudicationInfomation::getDateSignature, AdjudicationInfomation::setDateSignature);
                 }
                 adjudicationInfomationBinder.forField(correspondsContract)
@@ -545,6 +552,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             if(current.getAdjudicationInformation()!=null && !current.getAdjudicationInformation().equals("{}")){
                 receptionInformationBinder.forField(dateReception)
                         .asRequired("Fecha de recepción es requerida")
+                        .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                         .bind(ReceptionInformation::getDateReception,ReceptionInformation::setDateReception);
                 receptionInformationBinder.forField(nameBusinessUnitReceptionInformation)
                         .asRequired("Unidad Negocio es requerido")
@@ -560,12 +568,14 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
             if(current.getExpenseDistribuite()!=null && !current.getExpenseDistribuite().equals("[]") && GrantOptions.grantedOptionAccounting("Adquisiciones")) {
                 binder.forField(dateDeliveryAccounting)
                         .asRequired("Fecha entrega a contabilidad es requerida")
+                        .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                         .bind(Acquisition::getDateDeliveryAccounting, Acquisition::setDateDeliveryAccounting);
                 binder.forField(accountingPerson)
                         .asRequired("Responsable de contabilidad es requerido")
                         .bind(Acquisition::getAccountingPerson, Acquisition::setAccountingPerson);
                 binder.forField(dateDeliveryAaaf)
                         .asRequired("Fecha de entrega a AAAF es requerida")
+                        .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                         .bind(Acquisition::getDateDeliveryAaaf, Acquisition::setDateDeliveryAaaf);
             }
 
@@ -874,6 +884,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         receptionDate = new DatePicker();
         receptionDate.setWidthFull();
+        receptionDate.setPlaceholder("DD/MM/AAAA");
         receptionDate.setRequired(true);
         receptionDate.setLocale(new Locale("es","BO"));
         receptionDate.setI18n(UIUtils.spanish());
@@ -902,6 +913,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .bind(Acquisition::getTypeRequest,Acquisition::setTypeRequest);
         binder.forField(receptionDate)
                 .asRequired("Fecha de Recepción es requerida")
+                .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                 .bind(Acquisition::getReceptionDate,Acquisition::setReceptionDate);
 
         binder.addStatusChangeListener(event -> {
@@ -1563,13 +1575,17 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         DatePicker deliverDate = new DatePicker();
         deliverDate.setRequired(true);
+        deliverDate.setPlaceholder("DD/MM/AAAA");
         deliverDate.setWidthFull();
         deliverDate.setLocale(new Locale("es","BO"));
+        deliverDate.setI18n(UIUtils.spanish());
 
         DatePicker receptionDate = new DatePicker();
         receptionDate.setRequired(true);
+        receptionDate.setPlaceholder("DD/MM/AAAA");
         receptionDate.setWidthFull();
         receptionDate.setLocale(new Locale("es","BO"));
+        receptionDate.setI18n(UIUtils.spanish());
 
         selectedAuthorizerBinder = new BeanValidationBinder<>(SelectedAuthorizer.class);
         selectedAuthorizerBinder.forField(fullName)
@@ -1583,8 +1599,11 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .bind(SelectedAuthorizer::getNameBranchOffice,SelectedAuthorizer::setNameBranchOffice);
         selectedAuthorizerBinder.forField(deliverDate)
                 .asRequired("Fecha de Entrega es requerida")
+                .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                 .bind(SelectedAuthorizer::getDeliverDate,SelectedAuthorizer::setDeliverDate);
         selectedAuthorizerBinder.forField(receptionDate)
+                .asRequired("Fecha Recepción es requerida")
+                .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                 .bind(SelectedAuthorizer::getReceptionDate,SelectedAuthorizer::setReceptionDate);
         selectedAuthorizerBinder.forField(priorityLevel)
                 .asRequired("Nivel Autorización es requerido")
@@ -1907,6 +1926,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         purchaseOrder = new DatePicker();
         purchaseOrder.setWidthFull();
+        purchaseOrder.setPlaceholder("DD/MM/AAAA");
         purchaseOrder.setRequired(true);
         purchaseOrder.setLocale(new Locale("es","BO"));
 
@@ -1920,22 +1940,30 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         requireUpdateDoc = new DatePicker();
         requireUpdateDoc.setWidthFull();
+        requireUpdateDoc.setPlaceholder("DD/MM/AAAA");
         requireUpdateDoc.setLocale(new Locale("es","BO"));
+        requireUpdateDoc.setI18n(UIUtils.spanish());
         requireUpdateDoc.setErrorMessage("Fecha solicitud actualizacion documentos es requerido");
 
         contractRequestDateToLegal = new DatePicker();
         contractRequestDateToLegal.setWidthFull();
+        contractRequestDateToLegal.setPlaceholder("DD/MM/AAAA");
         contractRequestDateToLegal.setLocale(new Locale("es","BO"));
+        contractRequestDateToLegal.setI18n(UIUtils.spanish());
         contractRequestDateToLegal.setErrorMessage("Fecha solicitud contrato es requerida");
 
         contractDeliverContractFromLegal = new DatePicker();
         contractDeliverContractFromLegal.setWidthFull();
+        contractDeliverContractFromLegal.setPlaceholder("DD/MM/AAAA");
         contractDeliverContractFromLegal.setLocale(new Locale("es","BO"));
+        contractDeliverContractFromLegal.setI18n(UIUtils.spanish());
         contractDeliverContractFromLegal.setErrorMessage("Fecha entrega contrato es requerida");
 
         dateSignature = new DatePicker();
         dateSignature.setWidthFull();
+        dateSignature.setPlaceholder("DD/MM/AAAA");
         dateSignature.setLocale(new Locale("es","BO"));
+        dateSignature.setI18n(UIUtils.spanish());
         dateSignature.setErrorMessage("Fecha firmas es requerida");
 
 //        requiresAdvance(Boolean.TRUE,Boolean.FALSE);
@@ -2062,7 +2090,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         dateReception = new DatePicker();
         dateReception.setWidthFull();
+        dateReception.setPlaceholder("DD/MM/AAAA");
         dateReception.setRequired(true);
+        dateReception.setI18n(UIUtils.spanish());
         dateReception.setLocale(new Locale("es","BO"));
 
         nameBusinessUnitReceptionInformation = new TextField();
@@ -2324,7 +2354,9 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 
         DatePicker dateInvoice = new DatePicker();
         dateInvoice.setWidthFull();
+        dateInvoice.setPlaceholder("DD/MM/AAAA");
         dateInvoice.setRequired(true);
+        dateInvoice.setI18n(UIUtils.spanish());
         dateInvoice.setLocale(new Locale("es","BO"));
 
         NumberField amountTypeChange = new NumberField();
@@ -2359,6 +2391,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
                 .bind(InvoiceInformation::getNameSupplier,InvoiceInformation::setNameSupplier);
         invoiceInformationBinder.forField(dateInvoice)
                 .asRequired("Fecha factura/recibo es requerida")
+                .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                 .bind(InvoiceInformation::getDateInvoice,InvoiceInformation::setDateInvoice);
         invoiceInformationBinder.forField(amount)
                 .asRequired("Monto factura/recibo es requerida")
@@ -2596,7 +2629,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
 //        account.setItems(utilValues.getNameAccountsByCodeUnit(codeBusinessUnit.getValue()));
         account.addValueChangeListener(event -> {
             subAccount.clear();
-            subAccount.setItems(utilValues.getNameSubAccounts(event.getValue()));
+            subAccount.setItems(utilValues.getNameSubAccountsByCodeBusinessUnit(event.getValue(),codeBusinessUnit.getValue()));
         });
 
         ComboBox<Concept> unitBusiness = new ComboBox<>();
@@ -2874,6 +2907,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         dateDeliveryAccounting.setRequired(true);
         dateDeliveryAccounting.setClearButtonVisible(true);
         dateDeliveryAccounting.setRequiredIndicatorVisible(true);
+        dateDeliveryAccounting.setI18n(UIUtils.spanish());
         dateDeliveryAccounting.setLocale(new Locale("es","BO"));
 
         accountingPerson = new ComboBox<>("Entregado a");
@@ -2894,6 +2928,7 @@ public class AcquisitionRegisterView extends SplitViewFrame implements RouterLay
         dateDeliveryAaaf.setRequired(true);
         dateDeliveryAaaf.setClearButtonVisible(true);
         dateDeliveryAaaf.setRequiredIndicatorVisible(true);
+        dateDeliveryAaaf.setI18n(UIUtils.spanish());
         dateDeliveryAaaf.setLocale(new Locale("es","BO"));
 
 //        if(current.getExpenseDistribuite()!=null && !current.getExpenseDistribuite().equals("[]")) {

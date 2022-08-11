@@ -365,6 +365,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
         paymentDate = new DatePicker();
         paymentDate.setWidthFull();
+        paymentDate.setPlaceholder("DD/MM/AAAA");
         paymentDate.setRequired(true);
         paymentDate.setLocale(new Locale("es","BO"));
         paymentDate.setI18n(UIUtils.spanish());
@@ -414,6 +415,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 .bind(ObligationsDto::getPeriod,ObligationsDto::setPeriod);
         binder.forField(paymentDate)
                 .asRequired("Fecha de Pago es requerida")
+                .withValidator(d -> d.getYear()>= 2000,"Año incorrecto, ingrese 4 dígitos")
                 .bind(ObligationsDto::getPaymentDate,ObligationsDto::setPaymentDate);
         binder.forField(amount)
                 .asRequired("Monto es requerido")
