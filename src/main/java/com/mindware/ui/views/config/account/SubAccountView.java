@@ -26,6 +26,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -149,11 +150,11 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
                         .filter(s -> s.getNumberSubAccount().equals(current.getNumberSubAccount()))
                         .findFirst();
                 if(searchNumberSubAccount.isPresent() && !searchNumberSubAccount.get().getId().equals(current.getId())){
-                    UIUtils.showNotificationType("Número Subcuenta ya se ecuentra registrado ","alert");
+                    UIUtils.showNotificationType("Número Subcuenta ya se encuentra registrado ","alert");
                     return;
                 }
                 if(searchNameSubAccount.isPresent() && !searchNameSubAccount.get().getId().equals(current.getId())){
-                    UIUtils.showNotificationType("Nombre Subcuenta ya se ecuentra registrado ","alert");
+                    UIUtils.showNotificationType("Nombre Subcuenta ya se encuentra registrado ","alert");
                     return;
                 }
 
@@ -241,6 +242,7 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
     private Grid createGridSubAccount(){
         grid = new Grid<>();
 //        grid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(this::showDetails));
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setDataProvider(dataProvider);
         grid.setSizeFull();
 
@@ -285,7 +287,7 @@ public class SubAccountView extends SplitViewFrame implements HasUrlParameter<St
         Tooltips.getCurrent().setTooltip(btn,"Eliminar");
         btn.addClickListener(event -> {
 
-            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro","Deseas Eliminar la Subcuenta "+ subAccount.getNameSubAccount() + "?\"");
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro","¿Deseas Eliminar la Subcuenta "+ subAccount.getNameSubAccount() + "?\"");
 
             sweetAlert2Vaadin.open();
             sweetAlert2Vaadin.addConfirmListener(e -> {

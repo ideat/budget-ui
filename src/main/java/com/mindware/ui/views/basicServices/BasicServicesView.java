@@ -104,6 +104,7 @@ public class BasicServicesView extends ViewFrame implements RouterLayout {
 
     private Grid createGridBasicServicesDto(){
         Grid<BasicServicesDto> grid = new Grid<>();
+
         grid.setMultiSort(true);
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);

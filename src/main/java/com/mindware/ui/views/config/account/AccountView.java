@@ -316,7 +316,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         hr.getCell(grid.getColumnByKey("typeaccount")).setComponent(typeAccountFilter);
 
         periodFilter = new ComboBox<>();
-        periodFilter.setItems( utilValues.getValueIntParameterByCategory("PERIODO"));
+        periodFilter.setItems( utilValues.getPeriods());
         periodFilter.setWidthFull();
         periodFilter.addValueChangeListener(e -> applyFilter(dataProvider));
         hr.getCell(grid.getColumnByKey("period")).setComponent(periodFilter);
@@ -365,7 +365,7 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
         btn.addClickListener(event -> {
             try {
                 SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
-                        "Deseas Eliminar la Cuenta "+ account.getNameAccount() + "?\"");
+                        "¿Deseas Eliminar la Cuenta "+ account.getNameAccount() + "?\"");
 
                 sweetAlert2Vaadin.open();
                 sweetAlert2Vaadin.addConfirmListener(e -> {
@@ -527,19 +527,19 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
     private VerticalLayout createFormCloneAccount(){
         VerticalLayout layout = new VerticalLayout();
 
-        ComboBox<String> cmbPosting = new ComboBox<>("Periodo Destino");
+        ComboBox<Integer> cmbPosting = new ComboBox<>("Periodo Destino");
         cmbPosting.setAutoOpen(true);
         cmbPosting.setErrorMessage("Seleccione Periodo Destino");
         cmbPosting.setWidthFull();
         cmbPosting.addValueChangeListener(event -> cmbPosting.setInvalid(false));
 
-        ComboBox<String> cmbOriginal = new ComboBox<>("Periodo Origen");
+        ComboBox<Integer> cmbOriginal = new ComboBox<>("Periodo Origen");
         cmbOriginal.setAutoOpen(true);
         cmbOriginal.setErrorMessage("Seleccione Periodo Origen");
         cmbOriginal.setWidthFull();
-        cmbOriginal.setItems(utilValues.getValueParameterByCategory("PERIODO"));
+        cmbOriginal.setItems( utilValues.getPeriods());
         cmbOriginal.addValueChangeListener(event ->{
-           List<String> listPosting =  utilValues.getValueParameterByCategory("PERIODO");
+           List<Integer> listPosting =  utilValues.getPeriods();
            listPosting.remove(event.getValue());
            cmbPosting.clear();
            cmbPosting.setItems(listPosting);
@@ -560,15 +560,15 @@ public class AccountView extends SplitViewFrame implements RouterLayout {
                 return;
             }
 
-            List<Account> existDestiny = restTemplate.getAllByPeriod(Integer.parseInt(cmbPosting.getValue()));
+            List<Account> existDestiny = restTemplate.getAllByPeriod(cmbPosting.getValue());
             if(existDestiny.size() > 0){
                 UIUtils.showNotificationType( String.format("Periodo Destino '%s' ya tiene cuentas creadas, seleccione otro periodo",cmbPosting.getValue()),"alert");
                 return;
             }
 
             try {
-                List<Account> list = restTemplate.cloneAccount(Integer.parseInt(cmbOriginal.getValue()),
-                        Integer.parseInt(cmbPosting.getValue()));
+                List<Account> list = restTemplate.cloneAccount(cmbOriginal.getValue(),
+                        cmbPosting.getValue());
                 accountList.addAll(list);
                 dataProvider.refreshAll();
                 detailsDrawerCloneAccount.hide();

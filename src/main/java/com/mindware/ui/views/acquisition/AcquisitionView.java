@@ -349,7 +349,7 @@ public class AcquisitionView   extends ViewFrame implements RouterLayout {
         btn.setIcon(VaadinIcon.TRASH.create());
         btn.setVisible(GrantOptions.grantedOptionDelete("Adquisiciones"));
         btn.addClickListener(event -> {
-            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro","Deseas Eliminar la Adquisicón "+ acquisitionDto.getAcquisitionNumber() + "?\"");
+            SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro","¿Deseas Eliminar la Adquisicón "+ acquisitionDto.getAcquisitionNumber() + "?\"");
             sweetAlert2Vaadin.open();
             sweetAlert2Vaadin.addConfirmListener(e -> {
                 acquisitionRestTemplate.delete(acquisitionDto.getId().toString());

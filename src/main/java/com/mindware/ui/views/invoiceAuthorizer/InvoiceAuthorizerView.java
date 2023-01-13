@@ -1,6 +1,5 @@
 package com.mindware.ui.views.invoiceAuthorizer;
 
-import com.mindware.backend.entity.acquisitionAuthorizer.AcquisitionAuthorizer;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.invoiceAuthorizer.InvoiceAuthorizer;
 import com.mindware.backend.entity.user.UserLdapDto;
@@ -30,6 +29,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -131,6 +131,7 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
     private Grid createGridInvoiceAuthorizer(){
 
         grid = new Grid();
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setMultiSort(true);
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);
@@ -266,12 +267,15 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
                 .bind(InvoiceAuthorizer::getNameBranchOffice, InvoiceAuthorizer::setNameBranchOffice);
         binder.forField(codePosition)
                 .asRequired("Código Cargo es Requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(InvoiceAuthorizer::getCodePosition, InvoiceAuthorizer::setCodePosition);
         binder.forField(position)
                 .asRequired("Nombre Cargo es Requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(InvoiceAuthorizer::getPosition,InvoiceAuthorizer::setPosition);
         binder.forField(fullName)
                 .asRequired("Nombre Autorizador es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(InvoiceAuthorizer::getFullName,InvoiceAuthorizer::setFullName);
         binder.forField(state)
                 .asRequired("Estado del Autorizador es requerido")
@@ -306,7 +310,7 @@ public class InvoiceAuthorizerView extends SplitViewFrame implements RouterLayou
         form.addFormItem(codePosition,"Código Cargo");
         FormLayout.FormItem positionItem =  form.addFormItem(position,"Nombre Cargo");
         UIUtils.setColSpan(2,positionItem);
-        form.addFormItem(email,"Correo Empleado");
+        form.addFormItem(email,"Correo Autorizador");
         form.addFormItem(state,"Estado Autorizador");
         form.addFormItem(priorityLevel,"Nivel Autorización");
 

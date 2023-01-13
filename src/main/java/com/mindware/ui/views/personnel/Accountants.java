@@ -5,6 +5,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -63,6 +64,7 @@ public class Accountants extends SplitViewFrame {
 
 	private Grid createGrid() {
 		grid = new Grid<>();
+		grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
 		grid.addSelectionListener(event -> event.getFirstSelectedItem()
 				.ifPresent(this::showDetails));
 		dataProvider = DataProvider.ofCollection(DummyData.getPersons());

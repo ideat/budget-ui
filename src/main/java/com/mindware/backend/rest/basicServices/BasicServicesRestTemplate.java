@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class BasicServicesRestTemplate {
 
@@ -31,5 +34,14 @@ public class BasicServicesRestTemplate {
         HttpEntity<BasicServices> entity = new HttpEntity<>(basicServices,HeaderJwt.getHeader());
         restTemplate.exchange(uri, HttpMethod.PUT,entity,BasicServices.class);
 
+    }
+
+    public BasicServices getById(String id){
+        final String uri = url + "/v1/basicservices/getById/{id}";
+        Map<String,String> params = new HashMap<>();
+        params.put("id",id);
+        HttpEntity<BasicServices> entity = new HttpEntity<>(HeaderJwt.getHeader());
+        ResponseEntity<BasicServices> response = restTemplate.exchange(uri, HttpMethod.GET,entity,BasicServices.class,params);
+        return response.getBody();
     }
 }

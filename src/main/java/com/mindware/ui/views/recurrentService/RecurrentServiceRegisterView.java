@@ -8,6 +8,7 @@ import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.contract.Contract;
 import com.mindware.backend.entity.corebank.Concept;
 import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
+import com.mindware.backend.entity.historyEndedOperations.HistoryEndedOperations;
 import com.mindware.backend.entity.invoiceAuthorizer.InvoiceAuthorizer;
 import com.mindware.backend.entity.invoiceAuthorizer.SelectedInvoiceAuthorizer;
 import com.mindware.backend.entity.recurrentService.RecurrentService;
@@ -15,6 +16,7 @@ import com.mindware.backend.entity.recurrentService.RecurrentServiceDto;
 import com.mindware.backend.entity.supplier.Supplier;
 import com.mindware.backend.rest.contract.ContractRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
+import com.mindware.backend.rest.historyEndedOperations.HistoryEndedOperationsRestTemplate;
 import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.rest.recurrentService.RecurrentServiceDtoRestTemplate;
@@ -46,6 +48,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -104,6 +107,8 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
     @Autowired
     private ParameterRestTemplate parameterRestTemplate;
 
+    @Autowired
+    private HistoryEndedOperationsRestTemplate historyEndedOperationsRestTemplate;
     private Supplier supplierSelected;
 
     private ListDataProvider<ExpenseDistribuite> expenseDistribuiteDataProvider;
@@ -223,6 +228,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                         .bind(RecurrentServiceDto::getDateDeliveryAccounting, RecurrentServiceDto::setDateDeliveryAccounting);
                 binder.forField(accountingPerson)
                         .asRequired("Responsable de contabilidad es requerido")
+                        .withConverter(new UtilValues.StringTrimValue())
                         .bind(RecurrentServiceDto::getAccountingPerson, RecurrentServiceDto::setAccountingPerson);
 
             }
@@ -234,7 +240,34 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                         if(recurrentServiceDto.getId()==null){
                             recurrentServiceDto.setState("INICIADO");
                         }
-                        RecurrentService recurrentService = recurrentServiceRestTemplate.add(fillRecurrentService());
+
+                        RecurrentService recurrentService = null;
+                        if(recurrentServiceDto.getState().equals("FINALIZADO")){
+
+                            RecurrentService previousRecurrentService = recurrentServiceRestTemplate.getById(recurrentServiceDto.getId().toString());
+
+                            String previous = mapper.writeValueAsString(previousRecurrentService);
+                            recurrentService = recurrentServiceRestTemplate.add(fillRecurrentService());
+                            String current = mapper.writeValueAsString(recurrentService);
+
+                            try {
+                                HistoryEndedOperations historyEndedOperations = new HistoryEndedOperations();
+                                historyEndedOperations.setIdOperation(recurrentService.getId());
+                                historyEndedOperations.setTypeEntity(RecurrentService.class.getSimpleName());
+                                historyEndedOperations.setDateChanged(LocalDate.now());
+                                historyEndedOperations.setChangedBy(VaadinSession.getCurrent().getAttribute("login").toString());
+                                historyEndedOperations.setOriginalDataEntity(previous);
+                                historyEndedOperations.setChangedDataEntity(current);
+
+                                historyEndedOperationsRestTemplate.add(historyEndedOperations);
+                            }catch (Exception ex){
+                                UIUtils.showNotificationType("Fallo al crear el historico","alert");
+                            }
+
+                        }else{
+                            recurrentService = recurrentServiceRestTemplate.add(fillRecurrentService());
+                        }
+
                         recurrentServiceDto.setId(recurrentService.getId());
                         recurrentServiceDto.setInvoiceAuthorizer(recurrentService.getInvoiceAuthorizer());
 
@@ -426,12 +459,15 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 .bind(RecurrentServiceDto::getTypeService, RecurrentServiceDto::setTypeService);
         binder.forField(supplierName)
                 .asRequired("Proveedor es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(RecurrentServiceDto::getSupplierName, RecurrentServiceDto::setSupplierName);
         binder.forField(nitSupplier)
                 .asRequired("NIT es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(RecurrentServiceDto::getSupplierNit, RecurrentServiceDto::setSupplierNit);
         binder.forField(description)
                 .asRequired("Descripción es requerida")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(RecurrentServiceDto::getDescription,RecurrentServiceDto::setDescription);
         binder.forField(period)
                 .asRequired("Periodo es requerido")
@@ -470,8 +506,12 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         binder.addStatusChangeListener(event -> {
            boolean isValid = !event.hasValidationErrors();
            boolean hasChanges = binder.hasChanges();
-           footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Recurrentes")
-           && !recurrentServiceDto.getState().equals("FINALIZADO"));
+            if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+            }else {
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Recurrentes")
+                        && !recurrentServiceDto.getState().equals("FINALIZADO"));
+            }
         });
 
 
@@ -569,6 +609,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         List<Supplier> supplierList = supplierRestTemplate.getAll();
         ListDataProvider<Supplier> dataProvider = new ListDataProvider<>(supplierList);
         Grid<Supplier> grid = new Grid<>();
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setWidthFull();
         grid.setDataProvider(dataProvider);
 
@@ -589,7 +630,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 .setAutoWidth(true)
                 .setFlexGrow(1)
                 .setKey("location")
-                .setHeader("Ubicacion");
+                .setHeader("Ubicación");
         grid.addColumn(Supplier::getPrimaryActivity)
                 .setSortable(true)
                 .setAutoWidth(true)
@@ -807,13 +848,14 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
 
         expenseDistribuiteBinder = new BeanValidationBinder<>(ExpenseDistribuite.class);
         expenseDistribuiteBinder.forField(codeFatherBusinessUnit)
-                .asRequired("Codigo Unidad de Sucursal es requerido")
+                .asRequired("Código Unidad de Sucursal es requerido")
                 .bind(ExpenseDistribuite::getCodeFatherBusinessUnit,ExpenseDistribuite::setCodeFatherBusinessUnit);
         expenseDistribuiteBinder.forField(codeBusinessUnit)
-                .asRequired("Codigo Unidad negocio es requerido")
+                .asRequired("Código Unidad negocio es requerido")
                 .bind(ExpenseDistribuite::getCodeBusinessUnit,ExpenseDistribuite::setCodeBusinessUnit);
         expenseDistribuiteBinder.forField(nameBusinessUnit)
                 .asRequired("Nombre unidad negocio es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(ExpenseDistribuite::getNameBusinessUnit,ExpenseDistribuite::setNameBusinessUnit);
         expenseDistribuiteBinder.forField(amount)
                 .asRequired("Monto es requerido")
@@ -824,8 +866,12 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = expenseDistribuiteBinder.hasChanges();
 //            footer.saveState(hasChanges && isValid && GrantOptions.grantedOption("Parametros"));
-            footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Servicios Recurrentes")
-                    && !recurrentServiceDto.getState().equals("FINALIZADO"));
+            if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+            }else {
+                footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Servicios Recurrentes")
+                        && !recurrentServiceDto.getState().equals("FINALIZADO"));
+            }
         });
 
 
@@ -871,8 +917,13 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 expenseDistribuiteList.add(currentExpenseDistribuite);
                 detailsDrawerExpenseDistribuite.hide();
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
-                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes") && !recurrentServiceDto.getState().equals("FINALIZADO"));
 
+                if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
+                    footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+                }else {
+                    footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes")
+                            && !recurrentServiceDto.getState().equals("FINALIZADO"));
+                }
             }
         });
         footerExpenseDistribuite.addCancelListener(e -> detailsDrawerExpenseDistribuite.hide());
@@ -932,12 +983,17 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         btn.addClickListener(event -> {
 
             SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
-                    "Deseas Eliminar la Distribución? ");
+                    "¿Deseas Eliminar la Distribución? ");
             sweetAlert2Vaadin.open();
             sweetAlert2Vaadin.addConfirmListener(e -> {
                 expenseDistribuiteList.remove(expenseDistribuite);
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
-                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes") && !recurrentServiceDto.getState().equals("FINALIZADO"));
+                if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
+                    footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+                }else {
+                    footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes")
+                            && !recurrentServiceDto.getState().equals("FINALIZADO"));
+                }
             });
             sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
 
@@ -1024,7 +1080,12 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 detailsDrawerSelectedInvoiceAuthorizer.hide();
                 selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
                 footerInvoiceAuthorizer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
-                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes") && !recurrentServiceDto.getState().equals("FINALIZADO"));
+                if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
+                    footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+                }else {
+                    footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes")
+                            && !recurrentServiceDto.getState().equals("FINALIZADO"));
+                }
             }
         });
 
@@ -1081,7 +1142,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
                 .asRequired("Autorizador es requerido")
                 .bind(SelectedInvoiceAuthorizer::getFullName,SelectedInvoiceAuthorizer::setFullName);
         selectedInvoiceAuthorizerBinder.forField(codePosition)
-                .asRequired("Codigo Cargo es requerido")
+                .asRequired("Código Cargo es requerido")
                 .bind(SelectedInvoiceAuthorizer::getCodePosition,SelectedInvoiceAuthorizer::setCodePosition);
         selectedInvoiceAuthorizerBinder.forField(nameBranchOffice)
                 .asRequired("Unidad Negocio es requerida")
@@ -1170,7 +1231,7 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         btn.addClickListener(event -> {
 
             SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
-                    "Deseas Eliminar al Autorizador? ");
+                    "¿Deseas Eliminar al Autorizador? ");
 
             sweetAlert2Vaadin.open();
             sweetAlert2Vaadin.addConfirmListener(e -> {
@@ -1222,8 +1283,12 @@ public class RecurrentServiceRegisterView extends SplitViewFrame implements HasU
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            footer.saveState(isValid && hasChanges  && GrantOptions.grantedOptionWrite("Servicios Recurrentes")
-                    && !recurrentServiceDto.getState().equals("FINALIZADO"));
+            if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
+                footer.saveState(GrantOptions.grantedOptionWrite("Servicios Recurrentes"));
+            }else {
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Recurrentes")
+                        && !recurrentServiceDto.getState().equals("FINALIZADO"));
+            }
         });
 //        }
         VerticalLayout layout = new VerticalLayout();

@@ -3,6 +3,7 @@ package com.mindware.ui.views.config.parameter;
 import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.rest.parameter.ParameterRestTemplate;
 import com.mindware.backend.util.GrantOptions;
+import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -24,6 +25,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -164,6 +166,7 @@ public class ParameterObligationsView extends SplitViewFrame implements RouterLa
     private Grid createGridParameter(){
 
         grid = new Grid<>();
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setId("parameter");
         grid.setMultiSort(true);
         grid.setHeightFull();
@@ -252,9 +255,18 @@ public class ParameterObligationsView extends SplitViewFrame implements RouterLa
 
         binder = new BeanValidationBinder<>(Parameter.class);
 
-        binder.forField(txtCategory).asRequired("Categoría es requerida").bind(Parameter::getCategory,Parameter::setCategory);
-        binder.forField(txtNameTypeObligation).asRequired("Nombre tipo Obligación es requerido").bind(Parameter::getValue,Parameter::setValue);
-        binder.forField(cmbFrecuency).asRequired("Frecuencia es requerida").bind(Parameter::getDetails,Parameter::setDetails);
+        binder.forField(txtCategory)
+                .asRequired("Categoría es requerida")
+                .withConverter(new UtilValues.StringTrimValue())
+                .bind(Parameter::getCategory,Parameter::setCategory);
+        binder.forField(txtNameTypeObligation)
+                .asRequired("Nombre Tipo Obligación es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
+                .bind(Parameter::getValue,Parameter::setValue);
+        binder.forField(cmbFrecuency)
+                .asRequired("Frecuencia es requerida")
+                .withConverter(new UtilValues.StringTrimValue())
+                .bind(Parameter::getDetails,Parameter::setDetails);
 
 
         binder.addStatusChangeListener(event ->{

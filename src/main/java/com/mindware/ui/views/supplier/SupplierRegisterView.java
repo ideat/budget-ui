@@ -207,7 +207,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         binder.forField(phoneNumber)
                 .bind(Supplier::getPhoneNumber,Supplier::setPhoneNumber);
         binder.forField(location)
-                .asRequired("Ubicacion Oficina es requerida")
+                .asRequired("Ubicación Oficina es requerida")
                 .bind(Supplier::getLocation,Supplier::setLocation);
         binder.forField(pendingCompleting)
                 .asRequired("Indicar el estado de los datos es requerido")
@@ -246,7 +246,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         form.addFormItem(address,"Dirección Negocio");
         form.addFormItem(phoneNumber,"Teléfonos");
         form.addFormItem(location,"Oficina");
-        form.addFormItem(pendingCompleting,"Información completa?");
+        form.addFormItem(pendingCompleting,"¿Información completa?");
 
 //        footerShareHolder = new DetailsDrawerFooter();
         footerSupplier = new DetailsDrawerFooter();
@@ -368,7 +368,7 @@ public class SupplierRegisterView extends SplitViewFrame implements HasUrlParame
         btn.addClickListener(event -> {
 
             SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
-                    "Deseas Eliminar al Accionista? ");
+                    "¿Deseas Eliminar al Accionista? ");
 
             sweetAlert2Vaadin.open();
             sweetAlert2Vaadin.addConfirmListener(e -> {

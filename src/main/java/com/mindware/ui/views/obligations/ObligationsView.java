@@ -16,6 +16,7 @@ import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -104,6 +105,7 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
 
     private Grid createGridObligationsDto(){
         Grid<ObligationsDto> grid = new Grid<>();
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setMultiSort(true);
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);
@@ -113,25 +115,25 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
                 .setKey("nameSupplier")
                 .setHeader("Proveedor")
                 .setSortable(true)
-                .setAutoWidth(true)
+//                .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(ObligationsDto::getTypeObligation)
                 .setFlexGrow(1)
                 .setKey("typeObligation")
                 .setHeader("Tipo Obligación")
                 .setSortable(true)
-                .setAutoWidth(true)
+//                .setAutoWidth(true)
                 .setResizable(true);
 
         grid.addColumn(ObligationsDto::getPeriod)
-                .setFlexGrow(1)
+                .setFlexGrow(0)
                 .setKey("period")
                 .setHeader("Periodo Pago")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(ObligationsDto::getTypeDocumentReceived)
-                .setFlexGrow(1)
+                .setFlexGrow(0)
                 .setKey("typeDocumentReceived")
                 .setHeader("Tipo Documento")
                 .setSortable(true)
@@ -146,29 +148,29 @@ public class ObligationsView   extends ViewFrame implements RouterLayout {
         grid.addColumn(new NumberRenderer<>(ObligationsDto::getAmount,
                 " %(,.2f",
                 Locale.US, "0.00") )
-                .setFlexGrow(1)
+                .setFlexGrow(0)
                 .setHeader("Monto (Bs)")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(ObligationsDto::getState)
-                .setFlexGrow(1)
+                .setFlexGrow(0)
                 .setKey("state")
                 .setHeader("Estado")
                 .setSortable(true)
                 .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
-                .setFlexGrow(1)
+                .setFlexGrow(0)
                 .setAutoWidth(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonSend))
-                .setFlexGrow(1)
+                .setFlexGrow(0)
                 .setAutoWidth(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonRegard))
-                .setFlexGrow(1)
+                .setFlexGrow(0)
                 .setAutoWidth(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonFinish))
-                .setFlexGrow(1)
+                .setFlexGrow(0)
                 .setAutoWidth(true);
 
         HeaderRow hr = grid.appendHeaderRow();

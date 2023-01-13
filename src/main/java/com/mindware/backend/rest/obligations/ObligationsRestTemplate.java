@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class ObligationsRestTemplate {
 
@@ -30,6 +33,15 @@ public class ObligationsRestTemplate {
         final String uri = url + "/v1/obligations/updateState";
         HttpEntity<Obligations> entity = new HttpEntity<>(obligations,HeaderJwt.getHeader());
         restTemplate.exchange(uri, HttpMethod.PUT,entity,Obligations.class);
+    }
+
+    public Obligations getById(String id){
+        final String uri = url + "/v1/obligations/getById/{id}";
+        Map<String,String> params = new HashMap<>();
+        params.put("id",id);
+        HttpEntity<Obligations> entity = new HttpEntity<>(HeaderJwt.getHeader());
+        ResponseEntity<Obligations> response = restTemplate.exchange(uri,HttpMethod.GET,entity,Obligations.class,params);
+        return response.getBody();
     }
 
 }

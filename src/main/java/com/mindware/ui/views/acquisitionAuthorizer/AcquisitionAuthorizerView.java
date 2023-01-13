@@ -29,6 +29,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -133,6 +134,7 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
     private Grid createGridAcquisitionAuthorizer(){
 
         grid = new Grid();
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setMultiSort(true);
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);
@@ -286,12 +288,15 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
                 .bind(AcquisitionAuthorizer::getNameBranchOffice, AcquisitionAuthorizer::setNameBranchOffice);
         binder.forField(codePosition)
                 .asRequired("Código Cargo es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(AcquisitionAuthorizer::getCodePosition, AcquisitionAuthorizer::setCodePosition);
         binder.forField(position)
                 .asRequired("Nombre Cargo es Requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(AcquisitionAuthorizer::getPosition,AcquisitionAuthorizer::setPosition);
         binder.forField(fullName)
                 .asRequired("Nombre Autorizador es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(AcquisitionAuthorizer::getFullName,AcquisitionAuthorizer::setFullName);
         binder.forField(state)
                 .asRequired("Estado del Autorizador es requerido")
@@ -325,8 +330,8 @@ public class AcquisitionAuthorizerView  extends SplitViewFrame implements Router
         UIUtils.setColSpan(2,nameBranchOfficeItem);
         FormLayout.FormItem fullNameItem = form.addFormItem(fullName,"Nombre Autorizador");
         UIUtils.setColSpan(2,fullNameItem);
-        form.addFormItem(codeBranchOffice,"Codigo Unidad Negocio");
-        form.addFormItem(codePosition,"Codigo Cargo");
+        form.addFormItem(codeBranchOffice,"Código Unidad Negocio");
+        form.addFormItem(codePosition,"Código Cargo");
         FormLayout.FormItem positionItem =  form.addFormItem(position,"Nombre Cargo");
         UIUtils.setColSpan(2,positionItem);
         FormLayout.FormItem emailItem = form.addFormItem(email,"Correo Autorizador");

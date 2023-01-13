@@ -30,6 +30,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -153,6 +154,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
 
     private Grid createGridContract(){
         grid = new Grid();
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setMultiSort(true);
         grid.setSizeFull();
         grid.setDataProvider(dataProviderContractDto);
@@ -162,7 +164,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
                 .setKey("name")
                 .setHeader("Proveedor")
                 .setSortable(true)
-                .setAutoWidth(true)
+//                .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(new LocalDateRenderer<>(ContractDto::getDateSubscription
                 , DateTimeFormatter.ofPattern("dd/MM/yyyy")))
@@ -170,13 +172,13 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
                 .setHeader("Fecha Suscripción")
                 .setComparator(ContractDto::getDateSubscription)
                 .setFlexGrow(1)
-                .setAutoWidth(true)
+//                .setAutoWidth(true)
                 .setSortable(true);
         grid.addColumn(ContractDto::getObjectContract)
                 .setKey("objectContract")
                 .setHeader("Objeto del Contrato")
                 .setFlexGrow(1)
-                .setAutoWidth(true)
+//                .setAutoWidth(true)
                 .setSortable(true);
         grid.addColumn(new ComponentRenderer<>(this::buttonEdit))
                 .setAutoWidth(true);
@@ -296,7 +298,7 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         finishDate.setErrorMessage("Fecha de Inicio no puede ser posterior o igual a la Fecha de Finalización");
         finishDate.addValueChangeListener(event -> binder.validate());
 
-        Checkbox tacitReductionClause = new Checkbox("Clausula Tácita Reducción");
+        Checkbox tacitReductionClause = new Checkbox("Cláusula Tácita Reducción");
         tacitReductionClause.setWidthFull();
         tacitReductionClause.setValue(false);
 
@@ -343,7 +345,9 @@ public class ContractView extends SplitViewFrame implements RouterLayout {
         binder.forField(amount).asRequired("Monto es requerido")
                 .withValidator(mnt -> mnt.doubleValue()>0, "Monto debe ser mayor a 0")
                 .bind(Contract::getAmount,Contract::setAmount);
-        binder.forField(objectContract).asRequired("Objeto del Contrato es requerido")
+        binder.forField(objectContract)
+                .asRequired("Objeto del Contrato es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(Contract::getObjectContract,Contract::setObjectContract);
         binder.forField(observation).bind(Contract::getObservation,Contract::setObservation);
         binder.forField(startDate)

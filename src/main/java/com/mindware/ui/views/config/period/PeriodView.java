@@ -1,6 +1,5 @@
 package com.mindware.ui.views.config.period;
 
-import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.config.Period;
 import com.mindware.backend.rest.period.PeriodRestTemplate;
 import com.mindware.backend.util.GrantOptions;
@@ -28,7 +27,6 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.ListDataProvider;
@@ -40,12 +38,10 @@ import com.vaadin.flow.router.RouterLayout;
 import dev.mett.vaadin.tooltip.Tooltips;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.imageio.plugins.tiff.BaselineTIFFTagSet;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Route(value = "period", layout = MainLayout.class)
 @ParentLayout(MainLayout.class)
@@ -204,7 +200,7 @@ public class PeriodView extends SplitViewFrame implements RouterLayout {
 
         binder = new BeanValidationBinder<>(Period.class);
 
-        binder.forField(year).asRequired("Gestion es requerida")
+        binder.forField(year).asRequired("Gestión es requerida")
                 .withValidator(value -> value.intValue()>= LocalDate.now().getYear(),"La gestión no puede ser menor a la gestión actual ")
                 .bind(Period::getYear,Period::setYear);
         binder.addStatusChangeListener(event -> {

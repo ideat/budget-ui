@@ -9,6 +9,7 @@ import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.page.Page;
@@ -63,6 +64,7 @@ public class Accounts extends ViewFrame {
 
 	private Grid createGrid() {
 		grid = new Grid<>();
+		grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
 		grid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(this::viewDetails));
 		grid.addThemeName("mobile");
 		grid.setDataProvider(DataProvider.ofCollection(DummyData.getBankAccounts()));

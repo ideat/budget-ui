@@ -86,7 +86,7 @@ public class RolView extends ViewFrame implements RouterLayout {
 
     private Grid createGridRol(){
         Grid<Rol> grid = new Grid();
-        grid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setMultiSort(true);
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);

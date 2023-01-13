@@ -26,6 +26,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
@@ -128,6 +129,7 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
     private Grid createGrid(){
         grid = new Grid();
         grid.setSizeFull();
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setDataProvider(dataProvider);
 
 //        grid.addSelectionListener(event -> event.getFirstSelectedItem()
@@ -307,16 +309,21 @@ public class BasicServiceProviderView extends SplitViewFrame implements RouterLa
         binder = new BeanValidationBinder<>(BasicServiceProvider.class);
         binder.forField(typeService).asRequired("Tipo de Servicio es requerido")
                 .bind(BasicServiceProvider::getTypeService,BasicServiceProvider::setTypeService);
-        binder.forField(provider).asRequired("Proveedor es requerido")
+        binder.forField(provider)
+                .asRequired("Proveedor es requerido")
                 .withConverter(new UtilValues.StringTrimValue())
                 .bind(BasicServiceProvider::getProvider,BasicServiceProvider::setProvider);
-        binder.forField(description).asRequired("Descripción del proveedor es requerida")
+        binder.forField(description)
+                .asRequired("Descripción del proveedor es requerida")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(BasicServiceProvider::getDescription,BasicServiceProvider::setDescription);
         binder.forField(nit)
                 .bind(BasicServiceProvider::getNit,BasicServiceProvider::setNit);
-        binder.forField(state).asRequired("Estado del proveedor es requerido")
+        binder.forField(state)
+                .asRequired("Estado del proveedor es requerido")
                 .bind(BasicServiceProvider::getState,BasicServiceProvider::setState);
-        binder.forField(categoryService).asRequired("Categoría Tipo Servicio es requerido")
+        binder.forField(categoryService)
+                .asRequired("Categoría Tipo Servicio es requerido")
                 .bind(BasicServiceProvider::getCategoryService,BasicServiceProvider::setCategoryService);
 
         binder.addStatusChangeListener(event -> {

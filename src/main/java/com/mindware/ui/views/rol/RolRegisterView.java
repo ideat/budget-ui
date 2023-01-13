@@ -10,6 +10,7 @@ import com.mindware.backend.entity.rol.Rol;
 import com.mindware.backend.rest.rol.RolRestTemplate;
 //import com.mindware.backend.util.GrantOptions;
 import com.mindware.backend.util.GrantOptions;
+import com.mindware.backend.util.UtilValues;
 import com.mindware.ui.MainLayout;
 import com.mindware.ui.components.FlexBoxLayout;
 import com.mindware.ui.components.detailsdrawer.DetailsDrawer;
@@ -27,6 +28,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.editor.Editor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
@@ -192,7 +194,7 @@ public class RolRegisterView extends SplitViewFrame implements HasUrlParameter<S
         TextField name = new TextField("Nombre Rol");
         name.setRequired(true);
 
-        TextField description = new TextField("Descripcion del Rol");
+        TextField description = new TextField("Descripción del Rol");
         description.setWidthFull();
 
         ComboBox<String> scope = new ComboBox<>("Alcance");
@@ -205,12 +207,18 @@ public class RolRegisterView extends SplitViewFrame implements HasUrlParameter<S
         layoutOptions.setHeight("100%");
 
 
-        binder.forField(name).asRequired("Nombre Rol es requerido").bind(Rol::getName,Rol::setName);
-        binder.forField(description).bind(Rol::getDescription,Rol::setDescription);
-        binder.forField(scope).asRequired("Alcance es requerido")
+        binder.forField(name)
+                .asRequired("Nombre Rol es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
+                .bind(Rol::getName,Rol::setName);
+        binder.forField(description)
+                .bind(Rol::getDescription,Rol::setDescription);
+        binder.forField(scope)
+                .asRequired("Alcance es requerido")
                 .bind(Rol::getScope,Rol::setScope);
 
         Grid<Option> grid = new Grid<>();
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setWidthFull();
         optionListDataProvider = new ListDataProvider<>(optionList);
         grid.setDataProvider(optionListDataProvider);

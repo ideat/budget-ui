@@ -18,6 +18,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -106,6 +107,7 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
 
     private Grid createGridRecurrentServiceDto(){
         Grid<RecurrentServiceDto> grid = new Grid();
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setMultiSort(true);
         grid.setSizeFull();
         grid.setDataProvider(dataProvider);
@@ -115,28 +117,29 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
                 .setKey("supplierName")
                 .setHeader("Proveedor")
                 .setSortable(true)
-                .setAutoWidth(true)
+                .setWidth("250px")
+//                .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(RecurrentServiceDto::getSupplierLocation)
                 .setFlexGrow(1)
                 .setKey("supplierLocation")
                 .setHeader("Ubicación Proveedor")
                 .setSortable(true)
-                .setAutoWidth(true)
+//                .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(RecurrentServiceDto::getPeriod)
                 .setFlexGrow(1)
                 .setKey("period")
                 .setHeader("Periodo")
                 .setSortable(true)
-                .setAutoWidth(true)
+//                .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(RecurrentServiceDto::getPaymentFrecuency)
                 .setFlexGrow(1)
                 .setKey("paymentFrecuency")
                 .setHeader("Frecuencia Pago")
                 .setSortable(true)
-                .setAutoWidth(true)
+//                .setAutoWidth(true)
                 .setResizable(true);
 //        grid.addColumn(RecurrentServiceDto::getCurrency)
 //                .setFlexGrow(1)
@@ -150,6 +153,7 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
                 .setFlexGrow(1)
                 .setHeader("Monto (Bs)")
                 .setSortable(true)
+                .setComparator(RecurrentServiceDto::getAmount)
                 .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(RecurrentServiceDto::getState)
@@ -157,19 +161,23 @@ public class RecurrentServiceView extends ViewFrame implements RouterLayout {
                 .setKey("state")
                 .setHeader("Estado")
                 .setSortable(true)
-                .setAutoWidth(true)
+//                .setAutoWidth(true)
                 .setResizable(true);
         grid.addColumn(new ComponentRenderer<>(this::createButtonEdit))
                 .setFlexGrow(0)
+//                .setAutoWidth(true)
                 .setTextAlign(ColumnTextAlign.START);
         grid.addColumn(new ComponentRenderer<>(this::createButtonSend))
                 .setFlexGrow(0)
+//                .setAutoWidth(true)
                 .setTextAlign(ColumnTextAlign.START);
         grid.addColumn(new ComponentRenderer<>(this::createButtonRegard))
                 .setFlexGrow(0)
+//                .setAutoWidth(true)
                 .setTextAlign(ColumnTextAlign.START);
         grid.addColumn(new ComponentRenderer<>(this::createButtonFinish))
                 .setFlexGrow(0)
+//                .setAutoWidth(true)
                 .setTextAlign(ColumnTextAlign.START);
         HeaderRow hr = grid.appendHeaderRow();
 

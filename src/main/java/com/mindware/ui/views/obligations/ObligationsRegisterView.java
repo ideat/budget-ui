@@ -7,12 +7,14 @@ import com.mindware.backend.entity.commonJson.ExpenseDistribuite;
 import com.mindware.backend.entity.config.BasicServiceProvider;
 import com.mindware.backend.entity.config.Parameter;
 import com.mindware.backend.entity.corebank.Concept;
+import com.mindware.backend.entity.historyEndedOperations.HistoryEndedOperations;
 import com.mindware.backend.entity.invoiceAuthorizer.InvoiceAuthorizer;
 import com.mindware.backend.entity.invoiceAuthorizer.SelectedInvoiceAuthorizer;
 import com.mindware.backend.entity.obligations.Obligations;
 import com.mindware.backend.entity.obligations.ObligationsDto;
 import com.mindware.backend.rest.basicServiceProvider.BasicServiceProviderRestTemplate;
 import com.mindware.backend.rest.corebank.ConceptRestTemplate;
+import com.mindware.backend.rest.historyEndedOperations.HistoryEndedOperationsRestTemplate;
 import com.mindware.backend.rest.invoiceAuthorizer.InvoiceAuthorizerRestTemplate;
 import com.mindware.backend.rest.obligations.ObligationsDtoRestTemplate;
 import com.mindware.backend.rest.obligations.ObligationsRestTemplate;
@@ -43,6 +45,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -98,6 +101,9 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
 
     @Autowired
     private ParameterRestTemplate parameterRestTemplate;
+
+    @Autowired
+    private HistoryEndedOperationsRestTemplate historyEndedOperationsRestTemplate;
 
     private ObligationsDto obligationsDto;
     private BasicServiceProvider basicServiceProviderSelected;
@@ -220,13 +226,46 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 if(binder.writeBeanIfValid(obligationsDto)){
                     obligationsDto.setIdSupplier(basicServiceProviderSelected.getId());
 
+
                     if(validateAmountExpenseDistribuite()) {
                         try{
-                            obligationsRestTemplate.add(fillObligations());
+                            Obligations obligations = null;
+                            if(obligationsDto.getState().equals("FINALIZADO")){
+
+                                try {
+                                    HistoryEndedOperations historyEndedOperations = new HistoryEndedOperations();
+                                    Obligations previousObligations = obligationsRestTemplate.getById(obligationsDto.getId().toString());
+                                    historyEndedOperations.setIdOperation(obligationsDto.getId());
+                                    historyEndedOperations.setTypeEntity(Obligations.class.getSimpleName());
+                                    historyEndedOperations.setDateChanged(LocalDate.now());
+                                    historyEndedOperations.setChangedBy(VaadinSession.getCurrent().getAttribute("login").toString());
+                                    String previous = mapper.writeValueAsString(previousObligations);
+                                    historyEndedOperations.setOriginalDataEntity(previous);
+
+                                    obligations = obligationsRestTemplate.add(fillObligations());
+                                    String current = mapper.writeValueAsString(obligations);
+                                    historyEndedOperations.setChangedDataEntity(current);
+
+                                    historyEndedOperationsRestTemplate.add(historyEndedOperations);
+
+
+
+                                }catch (Exception ex){
+                                    UIUtils.showNotificationType("Error al crear el historico. " +" \n  ","alert");
+
+                                    return;
+                                }
+                            }else {
+
+                                obligations = obligationsRestTemplate.add(fillObligations());
+                                obligationsDto.setId(obligations.getId());
+                                obligationsDto.setInvoiceAuthorizer(obligations.getInvoiceAuthorizer());
+                            }
+
                         }catch (JsonProcessingException e) {
                             e.printStackTrace();
                         }
-                        UI.getCurrent().navigate(ObligationsView.class);
+//                        UI.getCurrent().navigate(ObligationsView.class);
                         UIUtils.showNotificationType("Datos registrados", "success");
                     }else{
                         UIUtils.showNotificationType("Monto distribuido no coincide con factura , revisar","alert");
@@ -406,9 +445,11 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 .bind(ObligationsDto::getTypeObligation, ObligationsDto::setTypeObligation);
         binder.forField(description)
                 .asRequired("Descripción es requerida")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(ObligationsDto::getDescription,ObligationsDto::setDescription);
         binder.forField(nameSupplier)
                 .asRequired("Proveedor es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(ObligationsDto::getNameSupplier,ObligationsDto::setNameSupplier);
         binder.forField(period)
                 .asRequired("Periodo es requerido")
@@ -432,15 +473,24 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 .bind(ObligationsDto::getTypeDocumentReceived, ObligationsDto::setTypeDocumentReceived);
         binder.forField(numberDocumentReceived)
                 .asRequired("Nro de Factura/CAABS es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(ObligationsDto::getNumberDocumentReceived,ObligationsDto::setNumberDocumentReceived);
 
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
-                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones"));
-            }else{
-                footer.saveState(false);
+//            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+//
+//                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones"));
+//            }else{
+//                footer.saveState(false);
+//            }
+
+            if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Básicos"));
+            }else {
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Básicos")
+                && (obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")));
             }
         });
 
@@ -513,6 +563,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         List<BasicServiceProvider> basicServiceProviderList = basicServiceProviderRestTemplate.getAllByCategoryService("OBLIGACION");
         ListDataProvider<BasicServiceProvider> dataProvider = new ListDataProvider<>(basicServiceProviderList);
         Grid<BasicServiceProvider> grid = new Grid<>();
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_WRAP_CELL_CONTENT);
         grid.setWidthFull();
         grid.setDataProvider(dataProvider);
 
@@ -665,6 +716,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 .bind(ExpenseDistribuite::getCodeBusinessUnit,ExpenseDistribuite::setCodeBusinessUnit);
         expenseDistribuiteBinder.forField(nameBusinessUnit)
                 .asRequired("Nombre unidad negocio es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(ExpenseDistribuite::getNameBusinessUnit,ExpenseDistribuite::setNameBusinessUnit);
         expenseDistribuiteBinder.forField(amount)
                 .asRequired("Monto es requerido")
@@ -674,10 +726,16 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         expenseDistribuiteBinder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = expenseDistribuiteBinder.hasChanges();
-            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")){
-                footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Obligaciones"));
-            }else{
-                footerExpenseDistribuite.saveState(false);
+//            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")){
+//                footerExpenseDistribuite.saveState(hasChanges && isValid && GrantOptions.grantedOptionWrite("Obligaciones"));
+//            }else{
+//                footerExpenseDistribuite.saveState(false);
+//            }
+            if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Básicos"));
+            }else {
+                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Servicios Básicos")
+                        && (obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")));
             }
 
         });
@@ -726,10 +784,17 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 expenseDistribuiteList.add(currentExpenseDistribuite);
                 detailsDrawerExpenseDistribuite.hide();
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
-                if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
-                    footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones") );
-                }else{
-                    footer.saveState(false);
+
+//                if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+//                    footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones") );
+//                }else{
+//                    footer.saveState(false);
+//                }
+                if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
+                    footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos"));
+                }else {
+                    footer.saveState(GrantOptions.grantedOptionWrite("Servicios Básicos")
+                            && (obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")));
                 }
 
             }
@@ -792,16 +857,22 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         btn.addClickListener(event -> {
 
             SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
-                    "Deseas Eliminar la Distribución? ");
+                    "¿Deseas Eliminar la Distribución? ");
 
             sweetAlert2Vaadin.open();
             sweetAlert2Vaadin.addConfirmListener(e -> {
                 expenseDistribuiteList.remove(expenseDistribuite);
                 expenseDistribuiteGrid.getDataProvider().refreshAll();
-                if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+//                if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+//                    footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
+//                }else{
+//                    footer.saveState(false);
+//                }
+                if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
                     footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
-                }else{
-                    footer.saveState(false);
+                }else {
+                    footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones")
+                            && (obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")));
                 }
             });
             sweetAlert2Vaadin.addCancelListener(e -> e.getSource().close());
@@ -890,10 +961,17 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 detailsDrawerSelectedInvoiceAuthorizer.hide();
                 selectedInvoiceAuthorizerGrid.getDataProvider().refreshAll();
                 footerInvoiceAuthorizer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
-                if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+//                if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+//                    footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
+//                }else{
+//                    footer.saveState(false);
+//                }
+
+                if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
                     footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
-                }else{
-                    footer.saveState(false);
+                }else {
+                    footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones")
+                            && (obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")));
                 }
             }
         });
@@ -951,13 +1029,15 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
                 .asRequired("Autorizador es requerido")
                 .bind(SelectedInvoiceAuthorizer::getFullName,SelectedInvoiceAuthorizer::setFullName);
         selectedInvoiceAuthorizerBinder.forField(codePosition)
-                .asRequired("Codigo Cargo es requerido")
+                .asRequired("Código Cargo es requerido")
                 .bind(SelectedInvoiceAuthorizer::getCodePosition,SelectedInvoiceAuthorizer::setCodePosition);
         selectedInvoiceAuthorizerBinder.forField(nameBranchOffice)
                 .asRequired("Unidad Negocio es requerida")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(SelectedInvoiceAuthorizer::getNameBranchOffice,SelectedInvoiceAuthorizer::setNameBranchOffice);
         selectedInvoiceAuthorizerBinder.forField(priorityLevel)
                 .asRequired("Nivel Autorización es requerido")
+                .withConverter(new UtilValues.StringTrimValue())
                 .bind(SelectedInvoiceAuthorizer::getPriorityLevel,SelectedInvoiceAuthorizer::setPriorityLevel);
 
         FormLayout form = new FormLayout();
@@ -1042,7 +1122,7 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         btn.addClickListener(event -> {
 
             SweetAlert2Vaadin sweetAlert2Vaadin = new DialogSweetAlert().dialogConfirm("Eliminar Registro",
-                    "Deseas Eliminar al Autorizador? ");
+                    "¿Deseas Eliminar al Autorizador? ");
 
             sweetAlert2Vaadin.open();
             sweetAlert2Vaadin.addConfirmListener(e -> {
@@ -1093,12 +1173,19 @@ public class ObligationsRegisterView extends SplitViewFrame implements HasUrlPar
         binder.addStatusChangeListener(event -> {
             boolean isValid = !event.hasValidationErrors();
             boolean hasChanges = binder.hasChanges();
-            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
-                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones"));
-            }else{
-                footer.saveState(false);
-//            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones")
-//                    && !obligationsDto.getState().equals("FINALIZADO")) ;
+//            if(obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")) {
+//                footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones"));
+//            }else{
+//                footer.saveState(false);
+////            footer.saveState(isValid && hasChanges && GrantOptions.grantedOptionWrite("Obligaciones")
+////                    && !obligationsDto.getState().equals("FINALIZADO")) ;
+//            }
+
+            if(VaadinSession.getCurrent().getAttribute("memberOf").toString().contains("BUDGET_ADMIN")){
+                footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones"));
+            }else {
+                footer.saveState(GrantOptions.grantedOptionWrite("Obligaciones")
+                        && (obligationsDto.getState()==null || !obligationsDto.getState().equals("FINALIZADO")));
             }
         });
 //        }
